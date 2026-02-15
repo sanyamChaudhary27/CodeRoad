@@ -29,13 +29,13 @@ Code Road is a real-time competitive coding platform that combines AI-generated 
         │                │               │
         └────────────────┼───────────────┘
                          │
-        ┌────────────────┼────────────────┬──────────────┐
-        │                │                │              │
-┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐  ┌─▼──────────────┐
-│  Code        │  │  Judge      │  │  Data          │  │  AI Code       │
-│  Sandbox     │  │  Service    │  │  Persistence   │  │  Review        │
-│  (Isolated)  │  │             │  │  Layer         │  │  Service       │
-└──────────────┘  └─────────────┘  └────────────────┘  └────────────────┘
+        ┌────────────────┼────────────────┬──────────────┬──────────────────┐
+        │                │                │              │                  │
+┌───────▼──────┐  ┌──────▼──────┐  ┌─────▼──────────┐  ┌─▼──────────────┐  ┌─▼──────────────────┐
+│  Code        │  │  Judge      │  │  Data          │  │  AI Code       │  │  Integrity         │
+│  Sandbox     │  │  Service    │  │  Persistence   │  │  Review        │  │  Verification      │
+│  (Isolated)  │  │             │  │  Layer         │  │  Service       │  │  Service (AI)      │
+└──────────────┘  └─────────────┘  └────────────────┘  └────────────────┘  └────────────────────┘
 ```
 
 ### Architectural Principles
@@ -272,7 +272,95 @@ CodeReview {
 - Returns feedback to players
 - Does not affect match scoring or ratings
 
-### 5. Code Sandbox Service
+### 5. AI-Assisted Integrity Verification Service
+
+**Responsibility**: Analyze final submissions for potential AI-assisted code generation and ensure fair competition in ranked matches without unjust penalization
+
+**Key Functions**:
+- Stylometric Analysis: Compare current submission against player's historical coding style
+- LLM Probability Classification: Use transformer-based classifier to estimate likelihood of AI-generated code
+- Behavioral Anomaly Detection: Identify sudden complexity improvements, unnatural optimality, and abnormal submission timing
+- Cheating Probability Aggregation: Combine multiple signals into a single probability score (0–100%)
+- Rating Confidence Adjustment: Adjust player rating confidence score based on integrity signals
+- Audit Logging: Maintain review logs for transparency
+
+**Data Structures**:
+```
+IntegrityAnalysis {
+  id: UUID
+  submission_id: UUID
+  player_id: UUID
+  stylometry_score: Float (0-100)
+  llm_probability_score: Float (0-100)
+  behavioral_anomaly_score: Float (0-100)
+  overall_cheat_probability: Float (0-100)
+  flagged: Boolean
+  reviewed: Boolean
+  created_at: Timestamp
+}
+
+PlayerIntegrityProfile {
+  player_id: UUID
+  rating_confidence: Float (0-100)
+  suspicious_matches: Integer
+  clean_matches: Integer
+  last_flagged_at: Timestamp | null
+}
+```
+
+**Detection Pipeline**:
+```
+analyze_submission(submission, player_profile):
+  1. Extract code features:
+     - Token frequency
+     - Indentation style
+     - Variable naming patterns
+     - Comment density
+     - Structural patterns
+  
+  2. Stylometric Comparison:
+     - Compare against historical embedding profile
+     - stylometry_score = deviation_score (0-100)
+  
+  3. Transformer Classification:
+     - Run submission through trained AI-vs-human classifier
+     - llm_probability_score = predicted_probability (0-100)
+  
+  4. Behavioral Analysis:
+     - Compare solve time vs historical median
+     - Compare complexity vs previous 10 matches
+     - Detect unnatural improvement spikes
+     - behavioral_anomaly_score computed
+  
+  5. Aggregate:
+     overall_cheat_probability =
+       weighted_average(
+         stylometry_score,
+         llm_probability_score,
+         behavioral_anomaly_score
+       )
+  
+  6. If probability > threshold (e.g., 85%):
+     flag submission
+     notify Rating Service
+  
+  return IntegrityAnalysis
+```
+
+**Integrity Threshold Policy**:
+- Probability < 70%: No action
+- Probability 70–85%: Soft flag (monitor only)
+- Probability ≥ 85%: Rating freeze pending review
+- No automatic bans occur solely from AI detection
+
+**Interactions**:
+- Receives final submissions from Judge Service
+- Analyzes code against player history
+- Returns integrity analysis to Rating Service
+- Updates player integrity profile
+- Maintains audit logs for transparency
+
+### 6. Code Sandbox Service
 
 **Responsibility**: Safely execute untrusted code in isolated environments
 
@@ -296,7 +384,7 @@ CodeReview {
 - Returns execution results with output and status
 - Logs resource usage for monitoring
 
-### 6. Data Persistence Layer
+### 7. Data Persistence Layer
 
 **Responsibility**: Store and retrieve all system data
 
@@ -305,20 +393,24 @@ CodeReview {
 - Match Data: Persist match results and submissions
 - Challenge Data: Store challenge templates and usage
 - Leaderboard Data: Maintain ranking snapshots
+- Integrity Data: Store integrity analysis and audit logs
 
 **Database Schema Overview**:
 ```
 Tables:
   - players (id, username, email, created_at)
   - player_ratings (player_id, current_rating, matches_played, wins, losses)
+  - player_integrity_profiles (player_id, rating_confidence, suspicious_matches, clean_matches)
   - matches (id, player1_id, player2_id, challenge_id, status, result)
   - submissions (id, match_id, player_id, code, language, score, is_final)
+  - integrity_analysis (id, submission_id, player_id, cheat_probability, flagged, reviewed)
   - challenges (id, name, domain, difficulty, description, test_cases)
   - leaderboard (player_id, rank, rating, wins, losses, updated_at)
   - badges (id, player_id, badge_type, awarded_at)
   - tournaments (id, name, format, status, bracket_data)
   - match_history (player_id, match_id, opponent_id, result, rating_change)
   - code_reviews (id, submission_id, player_id, feedback, generated_at)
+  - integrity_audit_logs (id, player_id, action, details, timestamp)
 ```
 
 **Interactions**:
@@ -326,13 +418,14 @@ Tables:
 - Supports transactions for atomic operations
 - Provides query optimization for leaderboard and history
 
-### 7. Rating Service
+### 8. Rating Service
 
-**Responsibility**: Calculate and maintain player skill ratings
+**Responsibility**: Calculate and maintain player skill ratings with integrity-aware confidence scoring
 
 **Key Functions**:
 - Rating Initialization: Assign 1200 ELO to new players
 - Rating Updates: Adjust ratings after each match
+- Rating Confidence Management: Track and adjust rating confidence based on integrity signals
 - Rating Decay: Apply decay to inactive players
 - Leaderboard Maintenance: Update player rankings
 
@@ -353,11 +446,30 @@ calculate_rating_change(player_rating, opponent_rating, match_result):
   return round(rating_change)
 ```
 
+**Rating Confidence System**:
+```
+update_rating_confidence(player_id, integrity_probability):
+  current_confidence = get_player_confidence(player_id)
+  
+  if integrity_probability < 70%:
+    // Clean match
+    new_confidence = min(current_confidence + 1, 100)
+  else if integrity_probability >= 70% and < 85%:
+    // Soft flag
+    new_confidence = current_confidence - 2
+  else:
+    // Hard flag
+    new_confidence = current_confidence - 5
+  
+  return max(new_confidence, 0)
+```
+
 **Data Structures**:
 ```
 PlayerRating {
   player_id: UUID
   current_rating: Integer (default: 1200)
+  rating_confidence: Float (0-100, default: 100)
   rating_history: RatingChange[]
   matches_played: Integer
   wins: Integer
@@ -373,29 +485,34 @@ RatingChange {
   new_rating: Integer
   change: Integer
   match_result: "win" | "loss" | "draw"
+  integrity_status: "clean" | "flagged" | "frozen"
   timestamp: Timestamp
 }
 ```
 
-**Rating Decay**:
-- Applied to players inactive for 30+ days
-- Decay rate: 10 points per week of inactivity
-- Minimum rating: 800 (prevents negative ratings)
+**Rating Freeze Logic**:
+- If integrity probability ≥ 85%: Rating update temporarily frozen
+- Freeze remains until integrity review completes
+- Freeze is reversible if review clears the player
+- No permanent penalties without multi-signal confirmation
 
 **Interactions**:
 - Receives match results from Match Service
+- Receives integrity analysis from Integrity Verification Service
 - Updates Leaderboard Service
 - Provides ratings to Matchmaker for pairing
+- Maintains audit trail of all rating changes
 
-### 8. Leaderboard Service
+### 9. Leaderboard Service
 
-**Responsibility**: Maintain and serve player rankings
+**Responsibility**: Maintain and serve player rankings with integrity-aware weighting
 
 **Key Functions**:
-- Ranking Calculation: Sort players by ELO rating
+- Ranking Calculation: Sort players by ELO rating, weighted by confidence
 - Leaderboard Updates: Reflect rating changes in real-time
 - Player Statistics: Calculate win rates and metrics
 - Historical Data: Maintain match history
+- Integrity Visibility: Display rating confidence on profiles
 
 **Data Structures**:
 ```
@@ -404,6 +521,7 @@ Leaderboard {
   player_id: UUID
   rank: Integer
   rating: Integer
+  rating_confidence: Float (0-100)
   wins: Integer
   losses: Integer
   win_rate: Float
@@ -421,8 +539,10 @@ PlayerStatistics {
   average_rating_change: Float
   highest_rating: Integer
   current_rating: Integer
+  rating_confidence: Float
   badges_earned: Badge[]
   match_history: MatchRecord[]
+  integrity_status: "clean" | "under_review" | "flagged"
 }
 
 MatchRecord {
@@ -433,6 +553,7 @@ MatchRecord {
   player_score: Integer
   opponent_score: Integer
   rating_change: Integer
+  integrity_status: "clean" | "flagged" | "frozen"
   challenge_domain: String
   timestamp: Timestamp
 }
@@ -442,8 +563,9 @@ MatchRecord {
 - Receives rating updates from Rating Service
 - Serves leaderboard queries to clients
 - Provides player statistics for profiles
+- Displays rating confidence and integrity status
 
-### 9. Badge Service
+### 10. Badge Service
 
 **Responsibility**: Award and manage player achievements
 
@@ -470,6 +592,7 @@ BadgeCriteria:
   - ConsecutiveWins: Win 5+ matches in a row
   - DomainMastery: Win 10+ matches in a specific domain
   - SpeedDemon: Win a match in under 30 seconds
+  - FairPlayChampion: Maintain 95%+ rating confidence over 50 matches
 ```
 
 **Interactions**:
@@ -477,15 +600,16 @@ BadgeCriteria:
 - Receives tournament results from Tournament Service
 - Updates player profiles with badge information
 
-### 10. Tournament Service
+### 11. Tournament Service
 
-**Responsibility**: Organize and manage tournament competitions
+**Responsibility**: Organize and manage tournament competitions with integrity verification
 
 **Key Functions**:
 - Bracket Creation: Generate knockout or battle royale brackets
 - Match Scheduling: Automatically schedule matches between qualified players
 - Bracket Progression: Advance winners and eliminate losers
 - Tournament Conclusion: Determine final standings
+- Integrity Monitoring: Track integrity status during tournament
 
 **Tournament Data Structures**:
 ```
@@ -500,6 +624,7 @@ Tournament {
   registered_players: UUID[]
   bracket: Bracket
   final_standings: PlayerStanding[]
+  integrity_flags: IntegrityFlag[]
 }
 
 Bracket {
@@ -520,6 +645,7 @@ PlayerStanding {
   matches_won: Integer
   matches_lost: Integer
   final_rating_change: Integer
+  integrity_status: "clean" | "flagged"
 }
 ```
 
@@ -528,10 +654,12 @@ PlayerStanding {
 - Battle Royale: Top N performers advance each round
 - Automatic match scheduling between qualified players
 - Rating adjustments applied after each match
+- Integrity flags tracked throughout tournament
 
 **Interactions**:
 - Creates matches via Match Service
 - Receives match results to determine advancement
+- Receives integrity analysis from Integrity Verification Service
 - Awards badges via Badge Service
 - Updates ratings via Rating Service
 
@@ -570,15 +698,56 @@ PlayerStanding {
    a. Test case correctness (primary metric)
    b. AI quality assessment (secondary metric)
    c. Complexity analysis (tertiary metric)
-8. Winner determined based on scoring priority
-9. Ratings updated via Rating Service
-10. Match result displayed to both players
-11. Match added to player histories
-12. Leaderboard updated
-13. Players can request AI code review (optional, non-competitive)
+8. Integrity Verification begins:
+   a. Final submissions sent to Integrity Verification Service
+   b. Stylometric analysis performed
+   c. LLM probability classification computed
+   d. Behavioral anomaly detection executed
+   e. Overall cheat probability aggregated
+   f. If probability < 70%: Proceed to rating update
+   g. If probability 70–85%: Soft flag, monitor, proceed with rating
+   h. If probability ≥ 85%: Hard flag, freeze rating pending review
+9. Winner determined based on scoring priority
+10. Ratings updated via Rating Service (or frozen if flagged)
+11. Rating confidence adjusted based on integrity analysis
+12. Match result displayed to both players
+13. Match added to player histories
+14. Leaderboard updated
+15. Players can request AI code review (optional, non-competitive)
 ```
 
-### Flow 3: Tournament Participation
+### Flow 6: Integrity Verification During Ranked Match
+
+```
+1. Match concludes normally
+2. Final submissions selected
+3. Judge Service evaluates scoring metrics
+4. Integrity Verification Service analyzes final submissions:
+   a. Extract code stylometric features
+   b. Compare against player's historical code profile
+   c. Run through transformer-based AI classifier
+   d. Analyze behavioral anomalies (complexity jumps, timing patterns)
+   e. Aggregate signals into overall cheat probability
+5. If cheat probability < 70%:
+   a. Rating update proceeds normally
+   b. Player integrity profile updated (clean match)
+   c. Rating confidence increased by 1 point
+6. If cheat probability 70–85%:
+   a. Match marked as "Soft Flag"
+   b. Rating update proceeds with caution
+   c. Player integrity profile updated
+   d. Rating confidence decreased by 2 points
+   e. Match logged for monitoring
+7. If cheat probability ≥ 85%:
+   a. Match marked as "Under Integrity Review"
+   b. Rating update temporarily frozen
+   c. Player notified of review status
+   d. Player integrity profile updated
+   e. Rating confidence decreased by 5 points
+   f. Audit log created for manual review
+8. Rating confirmation finalized after integrity logic
+9. Player can appeal integrity decision through support
+```
 
 ```
 1. Player registers for tournament
@@ -638,6 +807,7 @@ PlayerStanding {
   - Match Service: 2-4 instances
   - Challenge Service: 1-2 instances
   - Judge Service: 4-8 instances (scales with load)
+  - Integrity Verification Service: 2-4 instances (scales with submission volume)
   - Rating Service: 1-2 instances
   - Leaderboard Service: 1-2 instances
   - Badge Service: 1 instance
@@ -650,17 +820,22 @@ PlayerStanding {
   - Challenge templates
   - Leaderboard snapshots
   - Tournament data
+  - Integrity analysis records
+  - Audit logs
 
 - **ElastiCache (Redis)**: In-memory cache for performance
   - Active match state
   - Leaderboard cache (updated every 5 minutes)
   - Player rating cache
+  - Player integrity profile cache
   - Challenge pool cache
 
-- **S3 (Simple Storage Service)**: Store challenge templates and badge icons
+- **S3 (Simple Storage Service)**: Store challenge templates, badge icons, and ML models
   - Challenge definitions (JSON)
   - Badge images
   - Tournament bracket snapshots
+  - Anonymized code embeddings for model training
+  - Trained AI classifier model for integrity verification
 
 **Networking**:
 - **API Gateway**: REST API endpoint for client requests
@@ -672,27 +847,34 @@ PlayerStanding {
   - Live score updates
   - Opponent submission notifications
   - Match conclusion broadcasts
+  - Integrity status notifications
 
 **Monitoring and Logging**:
 - **CloudWatch**: Monitor service health and performance
   - CPU, memory, network metrics
   - Request latency
   - Error rates
+  - Integrity analysis latency
+  - Flagging rate and false positive trends
 
 - **CloudWatch Logs**: Centralized logging
   - Service logs
   - Execution logs from Sandbox
+  - Integrity verification logs
+  - Audit trail for all rating changes
   - Error tracking
 
 **Security**:
 - **IAM (Identity and Access Management)**: Service-to-service authentication
   - Each service has minimal required permissions
   - Sandbox service isolated with restricted permissions
+  - Integrity Verification Service has read-only access to player history
 
 - **Secrets Manager**: Store sensitive configuration
   - Database credentials
   - API keys
   - JWT signing keys
+  - ML model credentials
 
 ### Deployment Architecture
 
@@ -821,10 +1003,12 @@ Client disconnects
 - Leaderboard cached for 5 minutes (updated after each rating change)
 - Challenge pool cached for 1 hour (refreshed periodically)
 - Player ratings cached for 1 minute (updated after each match)
+- Player integrity profiles cached for 5 minutes
 - Badge definitions cached indefinitely (rarely change)
 
 **Database Optimization**:
 - Indexes on player_id, match_id, rating for fast queries
+- Indexes on integrity_analysis for flagged match lookups
 - Partitioning match history by date for faster historical queries
 - Materialized views for leaderboard rankings
 
@@ -832,6 +1016,56 @@ Client disconnects
 - Pagination for leaderboard queries (100 players per page)
 - Compression for large responses
 - Connection pooling for database connections
+
+### Integrity Verification Logic
+
+**Stylometric Analysis**:
+1. Extract code features from submission:
+   - Token frequency distribution
+   - Indentation patterns (spaces vs tabs, depth)
+   - Variable naming conventions (camelCase, snake_case, etc.)
+   - Comment density and style
+   - Structural patterns (loop types, conditionals, etc.)
+2. Compare against player's historical code embedding profile
+3. Calculate deviation score (0–100, where 100 = maximum deviation)
+4. Stylometry score = deviation score
+
+**LLM Probability Classification**:
+1. Tokenize submission code
+2. Run through trained transformer-based classifier
+3. Classifier outputs probability that code was AI-generated (0–100)
+4. LLM probability score = classifier output
+
+**Behavioral Anomaly Detection**:
+1. Compare solve time against player's historical median
+2. Compare code complexity against previous 10 matches
+3. Detect unnatural improvement spikes (e.g., sudden O(n) → O(1) solution)
+4. Analyze submission timing patterns (multiple rapid submissions vs single submission)
+5. Behavioral anomaly score = aggregated deviation (0–100)
+
+**Probability Aggregation**:
+```
+overall_cheat_probability = 
+  0.4 * stylometry_score +
+  0.4 * llm_probability_score +
+  0.2 * behavioral_anomaly_score
+```
+
+**Rating Confidence System**:
+- New players start with 100% confidence
+- Clean match: +1 confidence (max 100%)
+- Soft flag (70–85%): -2 confidence
+- Hard flag (≥85%): -5 confidence
+- Repeated flags: progressive penalty
+- Confidence recovery: +0.5 per clean match after flagging
+- Minimum confidence: 0% (player may be restricted from ranked play)
+
+**False Positive Minimization**:
+- Multi-signal weighted aggregation (not single metric)
+- Historical consistency checks (compare against player baseline)
+- Confidence decay recovery for clean behavior
+- Continuous model calibration using audit feedback
+- Target: <5% false positive rate over rolling 1000-match window
 
 ## Correctness Properties
 
@@ -843,4 +1077,48 @@ Property-based testing validates software correctness by testing universal prope
 
 ### Core Principles
 
-1. **Universal Quantification**: Every property 
+1. **Universal Quantification**: Every property should hold for all valid inputs
+2. **Determinism**: Properties must be reproducible and verifiable
+3. **Fairness**: Properties ensure competitive integrity and player protection
+
+### Integrity Properties
+
+**Integrity Property 1: Rating Update Atomicity**
+```
+For all ranked matches:
+  Rating updates must not finalize before integrity verification completes.
+  If integrity verification flags a match, rating update must be frozen.
+  Frozen ratings must be reversible upon successful appeal.
+```
+
+**Integrity Property 2: No Unjust Permanent Penalties**
+```
+For all players:
+  No player shall be permanently penalized solely based on a single AI probability output.
+  Multi-signal confirmation required for any rating restriction.
+  All penalties must be appealable and reversible.
+```
+
+**Integrity Property 3: False Positive Rate Bound**
+```
+For all rolling 1000-match windows:
+  False positive rate (flagged clean matches) must remain < 5%.
+  Model calibration must continuously improve this metric.
+  Audit feedback must inform model retraining.
+```
+
+**Integrity Property 4: Rating Confidence Monotonicity**
+```
+For all players:
+  Clean matches must increase or maintain rating confidence.
+  Flagged matches must decrease rating confidence.
+  Confidence must never increase due to flagged matches.
+```
+
+**Integrity Property 5: Transparency and Auditability**
+```
+For all integrity decisions:
+  Every flagging decision must be logged with full reasoning.
+  Players must be able to view their integrity analysis.
+  Audit logs must be immutable and timestamped.
+``` 
