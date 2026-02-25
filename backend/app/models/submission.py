@@ -1,0 +1,201 @@
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, Enum
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+import enum
+import uuid
+
+from ..core.database import Base
+
+class SubmissionStatus(str, enum.Enum):
+    """Submission status enumeration."""
+    PENDING = "pending"
+    EXECUTING = "executing"
+    SUCCESS = "success"
+    COMPILE_ERROR = "compile_error"
+    RUNTIME_ERROR = "runtime_error"
+    TIMEOUT = "timeout"
+    MEMORY_LIMIT_EXCEEDED = "memory_limit_exceeded"
+    SECURITY_VIOLATION = "security_violation"
+
+class ProgrammingLanguage(str, enum.Enum):
+    """Supported programming languages."""
+    PYTHON = "python"
+    JAVASCRIPT = "javascript"
+    JAVA = "java"
+    CPP = "cpp"
+    # Add more languages as needed
+
+class Submission(Base):
+    """Code submission model."""
+    
+    __tablename__ = "submissions"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    
+    # Foreign keys
+    match_id = Column(String(36), ForeignKey("matches.id"), nullable=False, index=True)
+    player_id = Column(String(36), ForeignKey("players.id"), nullable=False, index=True)
+    
+    # Submission details
+    code = Column(Text, nullable=False)
+    language = Column(Enum(ProgrammingLanguage), nullable=False)
+    submission_number = Column(Integer, nullable=False)  # 1st, 2nd, 3rd submission in this match
+    
+    # Status and results
+    status = Column(Enum(SubmissionStatus), default=SubmissionStatus.PENDING, nullable=False)
+    is_final = Column(Boolean, default=False, nullable=False)  # Final submission used for scoring
+    
+    # Test case results
+    test_cases_passed = Column(Integer, default=0, nullable=False)
+    test_cases_total = Column(Integer, default=0, nullable=False)
+    
+    @property
+    def test_case_score(self) -> float:
+        """Calculate test case score percentage."""
+        if self.test_cases_total == 0:
+            return 0.0
+        return (self.test_cases_passed / self.test_cases_total) * 100
+    
+    # Execution metrics
+    execution_time_ms = Column(Integer, nullable=True)
+    memory_used_mb = Column(Float, nullable=True)
+    cpu_time_ms = Column(Integer, nullable=True)
+    
+    # Error information
+    error_message = Column(Text, nullable=True)
+    error_type = Column(String(50), nullable=True)
+    
+    # AI evaluation
+    ai_quality_score = Column(Float, nullable=True)  # 0-100
+    complexity_score = Column(Float, nullable=True)  # 0-100
+    ai_feedback = Column(Text, nullable=True)
+    
+    # Integrity analysis
+    integrity_analysis_id = Column(String(36), nullable=True, index=True)
+    cheat_probability = Column(Float, nullable=True)  # 0-100%
+    
+    # Timestamps
+    submitted_at = Column(DateTime, default=func.now(), nullable=False)
+    executed_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    match = relationship("Match", back_populates="submissions")
+    player = relationship("Player", back_populates="submissions")
+    
+    def __repr__(self):
+        return f"<Submission(id={self.id}, match={self.match_id}, player={self.player_id}, status={self.status})>"
+    
+    def to_dict(self):
+        """Convert submission to dictionary for API responses."""
+        return {
+            "id": self.id,
+            "match_id": self.match_id,
+            "player_id": self.player_id,
+            "code": self.code,
+            "language": self.language.value,
+            "submission_number": self.submission_number,
+            "status": self.status.value,
+            "is_final": self.is_final,
+            "test_cases_passed": self.test_cases_passed,
+            "test_cases_total": self.test_cases_total,
+            "test_case_score": self.test_case_score,
+            "execution_time_ms": self.execution_time_ms,
+            "memory_used_mb": self.memory_used_mb,
+            "cpu_time_ms": self.cpu_time_ms,
+            "error_message": self.error_message,
+            "error_type": self.error_type,
+            "ai_quality_score": self.ai_quality_score,
+            "complexity_score": self.complexity_score,
+            "ai_feedback": self.ai_feedback,
+            "cheat_probability": self.cheat_probability,
+            "submitted_at": self.submitted_at.isoformat() if self.submitted_at else None,
+            "executed_at": self.executed_at.isoformat() if self.executed_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+        }
+
+class Challenge(Base):
+    """Challenge model (provided by ML team)."""
+    
+    __tablename__ = "challenges"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    
+    # Challenge details
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)  # Problem statement
+    difficulty = Column(String(20), nullable=False)  # "easy", "medium", "hard"
+    domain = Column(String(50), nullable=False)  # "algorithms", "data_structures", "strings", etc.
+    
+    # Input/output specifications
+    input_specification = Column(Text, nullable=False)
+    output_specification = Column(Text, nullable=False)
+    example_input = Column(Text, nullable=False)
+    example_output = Column(Text, nullable=False)
+    
+    # Constraints
+    time_limit_seconds = Column(Integer, default=5, nullable=False)
+    memory_limit_mb = Column(Integer, default=256, nullable=False)
+    
+    # Test cases (stored as JSON)
+    test_cases = Column(Text, nullable=False)  # JSON array of test cases
+    hidden_test_cases = Column(Text, nullable=True)  # JSON array of hidden test cases
+    
+    # AI generation metadata
+    generated_by_ai = Column(Boolean, default=True, nullable=False)
+    ai_model_version = Column(String(50), nullable=True)
+    template_id = Column(String(36), nullable=True)
+    
+    # Usage statistics
+    times_used = Column(Integer, default=0, nullable=False)
+    success_rate = Column(Float, default=0.0, nullable=False)  # Percentage of successful solves
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+    
+    def __repr__(self):
+        return f"<Challenge(id={self.id}, title={self.title}, difficulty={self.difficulty})>"
+    
+    def to_dict(self):
+        """Convert challenge to dictionary for API responses."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "difficulty": self.difficulty,
+            "domain": self.domain,
+            "input_specification": self.input_specification,
+            "output_specification": self.output_specification,
+            "example_input": self.example_input,
+            "example_output": self.example_output,
+            "time_limit_seconds": self.time_limit_seconds,
+            "memory_limit_mb": self.memory_limit_mb,
+            "generated_by_ai": self.generated_by_ai,
+            "times_used": self.times_used,
+            "success_rate": self.success_rate,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+class TestCase(Base):
+    """Individual test case for challenges."""
+    
+    __tablename__ = "test_cases"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    challenge_id = Column(String(36), ForeignKey("challenges.id"), nullable=False, index=True)
+    
+    # Test case data
+    input_data = Column(Text, nullable=False)
+    expected_output = Column(Text, nullable=False)
+    
+    # Metadata
+    is_hidden = Column(Boolean, default=False, nullable=False)
+    weight = Column(Float, default=1.0, nullable=False)  # Weight for scoring
+    description = Column(String(200), nullable=True)
+    
+    # Relationships
+    challenge = relationship("Challenge")
+    
+    def __repr__(self):
+        return f"<TestCase(id={self.id}, challenge={self.challenge_id}, hidden={self.is_hidden})>"
