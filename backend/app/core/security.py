@@ -288,36 +288,3 @@ async def get_current_player(credentials = Depends(security)) -> Dict[str, Any]:
         )
 
     return player_info
-
-
-
-# FastAPI dependency for JWT authentication
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
-
-security = HTTPBearer()
-
-async def get_current_player(credentials: HTTPAuthCredentials = Depends(security)) -> Dict[str, Any]:
-    """
-    FastAPI dependency to validate JWT token and return current player.
-    
-    Args:
-        credentials: HTTP Bearer token from request
-    
-    Returns:
-        Dict[str, Any]: Player information (id, username, email)
-    
-    Raises:
-        HTTPException: If token is invalid or expired
-    """
-    token = credentials.credentials
-    player_info = validate_player_token(token)
-    
-    if player_info is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return player_info
