@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -49,7 +49,6 @@ class Player(Base):
     matches_as_player1 = relationship("Match", foreign_keys="Match.player1_id", back_populates="player1")
     matches_as_player2 = relationship("Match", foreign_keys="Match.player2_id", back_populates="player2")
     submissions = relationship("Submission", back_populates="player")
-    rating_history = relationship("RatingHistory", back_populates="player")
     badges = relationship("Badge", back_populates="player")
     
     def __repr__(self):
@@ -75,45 +74,13 @@ class Player(Base):
             "last_match_at": self.last_match_at.isoformat() if self.last_match_at else None,
         }
 
-class RatingHistory(Base):
-    """Historical rating changes for players."""
-    
-    __tablename__ = "rating_history"
-    
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    player_id = Column(String(36), nullable=False, index=True)
-    match_id = Column(String(36), nullable=True, index=True)
-    
-    # Rating change
-    old_rating = Column(Integer, nullable=False)
-    new_rating = Column(Integer, nullable=False)
-    rating_change = Column(Integer, nullable=False)
-    
-    # Match details
-    opponent_id = Column(String(36), nullable=True)
-    opponent_rating = Column(Integer, nullable=True)
-    match_result = Column(String(10), nullable=False)  # "win", "loss", "draw"
-    
-    # Integrity status
-    integrity_status = Column(String(20), default="clean", nullable=False)  # "clean", "flagged", "frozen"
-    cheat_probability = Column(Float, nullable=True)  # 0-100%
-    
-    # Timestamps
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    
-    # Relationships
-    player = relationship("Player", back_populates="rating_history")
-    
-    def __repr__(self):
-        return f"<RatingHistory(player={self.player_id}, change={self.rating_change}, result={self.match_result})>"
-
 class Badge(Base):
     """Badges earned by players for achievements."""
     
     __tablename__ = "badges"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    player_id = Column(String(36), nullable=False, index=True)
+    player_id = Column(String(36), ForeignKey("players.id"), nullable=False, index=True)
     
     # Badge details
     name = Column(String(50), nullable=False)

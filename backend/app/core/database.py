@@ -8,15 +8,22 @@ from ..config import settings
 
 logger = logging.getLogger(__name__)
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=20,
-    max_overflow=30,
-    pool_recycle=3600,
-    echo=settings.DEBUG
-)
+# Create SQLAlchemy engine with SQLite support for local development
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        settings.DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=settings.DEBUG
+    )
+else:
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=20,
+        max_overflow=30,
+        pool_recycle=3600,
+        echo=settings.DEBUG
+    )
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
