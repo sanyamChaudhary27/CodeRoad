@@ -74,6 +74,31 @@ class Submission(Base):
     integrity_analysis_id = Column(String(36), nullable=True, index=True)
     cheat_probability = Column(Float, nullable=True)  # 0-100%
     
+    # Behavioral metrics for AI detection
+    time_to_first_submission = Column(Integer, nullable=True)  # Seconds from match start to first submission
+    time_between_submissions = Column(Integer, nullable=True)  # Average seconds between submissions
+    total_submission_time = Column(Integer, nullable=True)  # Total time spent on submissions
+    code_paste_probability = Column(Float, nullable=True)  # 0-100% probability of paste detection
+    
+    # Code characteristics for classification
+    code_length = Column(Integer, nullable=True)  # Number of characters in code
+    code_lines = Column(Integer, nullable=True)  # Number of lines in code
+    unique_tokens = Column(Integer, nullable=True)  # Number of unique tokens
+    comment_ratio = Column(Float, nullable=True)  # Ratio of comments to code
+    indentation_consistency = Column(Float, nullable=True)  # 0-100% consistency score
+    variable_naming_style = Column(String(50), nullable=True)  # "camelCase", "snake_case", "mixed"
+    
+    # Keystroke dynamics (for paste detection)
+    keystroke_speed_avg = Column(Float, nullable=True)  # Average characters per second
+    keystroke_speed_variance = Column(Float, nullable=True)  # Variance in keystroke speed
+    copy_paste_events = Column(Integer, default=0, nullable=False)  # Number of detected copy/paste events
+    deletion_ratio = Column(Float, nullable=True)  # Ratio of deletions to total keystrokes
+    
+    # Submission pattern metrics
+    submission_count_in_match = Column(Integer, default=1, nullable=False)  # How many times submitted
+    time_to_solve = Column(Integer, nullable=True)  # Time from match start to final submission
+    iterations_to_solution = Column(Integer, nullable=True)  # Number of attempts before correct solution
+    
     # Timestamps
     submitted_at = Column(DateTime, default=func.now(), nullable=False)
     executed_at = Column(DateTime, nullable=True)

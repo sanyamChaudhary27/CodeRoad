@@ -39,6 +39,30 @@ class SubmissionResponse(BaseModel):
     memory_used_mb: Optional[float] = None
     ai_quality_score: Optional[float] = None  # 0-100
     complexity_score: Optional[float] = None  # 0-100
+    
+    # Classification model features
+    time_to_first_submission: Optional[int] = None  # Seconds
+    time_between_submissions: Optional[float] = None  # Average seconds
+    total_submission_time: Optional[int] = None  # Total seconds
+    keystroke_speed_avg: Optional[float] = None  # Characters per second
+    keystroke_speed_variance: Optional[float] = None
+    copy_paste_events: Optional[int] = None
+    deletion_ratio: Optional[float] = None
+    code_length: Optional[int] = None
+    code_lines: Optional[int] = None
+    unique_tokens: Optional[int] = None
+    comment_ratio: Optional[float] = None
+    indentation_consistency: Optional[float] = None
+    variable_naming_style: Optional[str] = None
+    submission_count_in_match: Optional[int] = None
+    time_to_solve: Optional[int] = None
+    iterations_to_solution: Optional[int] = None
+    
+    # Classification results
+    code_paste_probability: Optional[float] = None  # 0-100
+    ai_assisted_probability: Optional[float] = None  # 0-100
+    classification_confidence: Optional[float] = None
+    
     created_at: datetime
     completed_at: Optional[datetime] = None
     
