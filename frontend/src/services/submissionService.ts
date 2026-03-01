@@ -1,6 +1,7 @@
 import api from '../lib/api';
 
 export interface SubmissionRequest {
+  match_id: string;
   challenge_id: string;
   code: string;
   language: string;
@@ -11,19 +12,24 @@ export interface SubmissionRequest {
 }
 
 export interface SubmissionResponse {
-  id: string;
-  challenge_id: string;
+  submission_id: string;
+  match_id: string;
+  challenge_id?: string;
   player_id: string;
   status: 'pending' | 'executing' | 'success' | 'runtime_error' | 'timeout';
   code: string;
   language: string;
   test_cases_passed: number;
+  total_test_cases: number;
   execution_time_ms: number | null;
-  error_message: string | null;
-  score: number;
+  error_message?: string | null;
+  error_details?: string | null;
+  ai_quality_score: number | null;
+  complexity_score: number | null;
   ai_assisted_probability: number | null;
+  score: number;
   created_at: string;
-  concluded_at: string | null;
+  completed_at: string | null;
 }
 
 export const submissionService = {

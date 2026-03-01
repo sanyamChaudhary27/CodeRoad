@@ -93,14 +93,19 @@ class IntegrityService:
                 """
                 
                 if self.provider == "gemini":
-                    response = self.model.generate_content(prompt)
+                    # Short timeout for integrity check to prevent hangs
+                    response = self.model.generate_content(
+                        prompt,
+                        request_options={"timeout": 5.0} # 5 second timeout
+                    )
                     text = response.text
                 else:
                     response = self.client.messages.create(
                         model="claude-3-5-sonnet-20241022",
                         max_tokens=1000,
                         temperature=0.0,
-                        messages=[{"role": "user", "content": prompt}]
+                        messages=[{"role": "user", "content": prompt}],
+                        timeout=5.0
                     )
                     text = response.content[0].text
                 
@@ -112,7 +117,8 @@ class IntegrityService:
                     ai_prob = float(result["probability"])
                     submission.ai_quality_score = ai_prob # Store AI probability
             except Exception as e:
-                logger.error(f"Gemini integrity analysis failed: {e}")
+                logger.error(f"Integrity analysis AI call failed (provider: {self.provider}): {e}")
+                # Fallback to behavioral metrics only; don't raise to avoid blocking commits
         
         # 3. Aggregate Cheat Probability
         # Base it on paste detection and AI probability

@@ -7,6 +7,7 @@ export interface MatchQueueStatus {
   wait_time_seconds?: number;
   estimated_wait_seconds?: number;
   match_found?: boolean;
+  match_id?: string;
 }
 
 export interface LeaderboardPlayer {
@@ -20,6 +21,14 @@ export interface LeaderboardPlayer {
   matches_played: number;
   rating_confidence: number;
   badges: string[];
+}
+
+export interface PlayerMatchInfo {
+  player_id: string;
+  username: string;
+  current_rating: number;
+  submissions_count: number;
+  is_done: boolean;
 }
 
 export interface LeaderboardResponse {
@@ -51,6 +60,21 @@ export const matchmakingService = {
 
   async getGlobalLeaderboard(limit: number = 100, offset: number = 0): Promise<LeaderboardResponse> {
     const response = await api.get(`/leaderboard/global?limit=${limit}&offset=${offset}`);
+    return response.data;
+  },
+
+  async getMatch(matchId: string): Promise<any> {
+    const response = await api.get(`/matches/${matchId}`);
+    return response.data;
+  },
+
+  async getPlayerMatches(limit: number = 50) {
+    const response = await api.get(`/matches/player/history?limit=${limit}`);
+    return response.data;
+  },
+
+  async createPracticeMatch(difficulty: string = 'intermediate') {
+    const response = await api.post(`/matches/practice?difficulty=${difficulty}`);
     return response.data;
   }
 };

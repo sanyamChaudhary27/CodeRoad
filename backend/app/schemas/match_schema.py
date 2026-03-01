@@ -20,6 +20,7 @@ class QueueStatusResponse(BaseModel):
     queue_position: Optional[int] = None
     wait_time_seconds: Optional[int] = None
     estimated_opponent_rating: Optional[int] = None
+    match_id: Optional[str] = None
 
 class PlayerMatchInfo(BaseModel):
     """Information about a player in a match."""

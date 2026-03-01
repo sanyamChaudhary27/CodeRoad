@@ -33,20 +33,56 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  const [isPolling, setIsPolling] = useState(false);
+
   const joinQueue = async () => {
+    if (isPolling) return;
     try {
       await matchmakingService.joinQueue();
       setQueueStatus({ in_queue: true, joined_at: new Date().toISOString() });
-      // In a real app we would start an interval polling getQueueStatus here
-      // But for this premium prototype, let's fast route them to the arena
-      // assuming a match was instantly found or it's a solo session
+      setIsPolling(true);
+      
+      // Real polling for match
+      const pollInterval = setInterval(async () => {
+        try {
+          const status = await matchmakingService.getQueueStatus();
+          if (status.match_id) {
+            clearInterval(pollInterval);
+            navigate('/arena', { state: { matchId: status.match_id } });
+            setIsPolling(false);
+          } else if (!status.in_queue) {
+            // Someone else matched us or we were removed
+            clearInterval(pollInterval);
+            setQueueStatus(null);
+            setIsPolling(false);
+          }
+        } catch (e) {
+          console.error("Polling error", e);
+        }
+      }, 2000);
+
+      // Timeout safety
       setTimeout(() => {
-        navigate('/arena');
-      }, 1500); 
+        clearInterval(pollInterval);
+        setIsPolling(false);
+      }, 60000);
+
     } catch (err) {
       console.error("Failed to join queue", err);
-      // Fallback navigation to arena immediately for testing if queue is down
+    }
+  };
+
+  const startPracticeMatch = async () => {
+    try {
+      setLoading(true);
+      const match = await matchmakingService.createPracticeMatch('intermediate');
+      navigate('/arena', { state: { matchId: match.id || match.match_id } });
+    } catch (err) {
+      console.error("Failed to start practice match", err);
+      // Fallback
       navigate('/arena');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,14 +137,24 @@ const Dashboard = () => {
               Compete against other developers in real-time. Our AI engine scales the challenges to your exact skill level.
             </p>
             
-            <button 
-              onClick={joinQueue}
-              disabled={!!queueStatus?.in_queue}
-              className="btn btn-primary text-lg px-8 py-4 w-full sm:w-auto flex-between shadow-glow"
-            >
-              {queueStatus?.in_queue ? 'Finding Opponent...' : 'Find Match (1v1)'}
-              {!queueStatus?.in_queue && <ChevronRight size={20} />}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button 
+                onClick={joinQueue}
+                disabled={!!queueStatus?.in_queue}
+                className="btn btn-primary text-lg px-8 py-4 flex-1 sm:flex-none flex-between shadow-glow"
+              >
+                {queueStatus?.in_queue ? 'Finding Opponent...' : 'Competitive (1v1)'}
+                {!queueStatus?.in_queue && <ChevronRight size={20} />}
+              </button>
+
+              <button 
+                onClick={startPracticeMatch}
+                className="btn btn-secondary text-lg px-8 py-4 flex-1 sm:flex-none flex items-center justify-center gap-2 border border-white/10"
+              >
+                <Activity size={20} />
+                Solo Training
+              </button>
+            </div>
           </div>
 
           {/* Stats Grid */}

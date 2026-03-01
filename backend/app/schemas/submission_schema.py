@@ -39,6 +39,7 @@ class SubmissionResponse(BaseModel):
     memory_used_mb: Optional[float] = None
     ai_quality_score: Optional[float] = None  # 0-100
     complexity_score: Optional[float] = None  # 0-100
+    score: Optional[float] = 0.0  # Elo impact or points
     
     # Classification model features
     time_to_first_submission: Optional[int] = None  # Seconds

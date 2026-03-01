@@ -29,6 +29,7 @@ export interface Challenge {
   time_limit_seconds: number;
   test_cases: TestCase[];
   coverage_metrics?: CoverageMetrics;
+  boilerplate_code?: string;
   generated_at?: string;
 }
 
