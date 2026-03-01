@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 import logging
 from datetime import datetime
@@ -12,13 +12,30 @@ from ..schemas.submission_schema import (
     SubmissionDetailResponse,
     SubmissionListResponse
 )
+from ..services.judge_service import JudgeService
+from ..services.integrity_service import IntegrityService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+judge_service = JudgeService()
+integrity_service = IntegrityService()
+
+def process_submission_background(submission_id: str):
+    """Background task to judge code and run integrity checks."""
+    # We create a new local session for background threads
+    from ..core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        judge_service.evaluate_submission(db, submission_id)
+        integrity_service.analyze_submission(db, submission_id)
+    finally:
+        db.close()
+
 @router.post("/", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
 async def submit_code(
     request: CodeSubmissionRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_player),
     db: Session = Depends(get_db)
 ):
@@ -67,6 +84,9 @@ async def submit_code(
     db.add(submission)
     db.commit()
     db.refresh(submission)
+    
+    # Schedule background evaluation
+    background_tasks.add_task(process_submission_background, submission.id)
     
     logger.info(f"Submission created: {submission.id} for player {current_user['id']}")
     
