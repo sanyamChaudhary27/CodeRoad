@@ -7,7 +7,11 @@ import json
 import os
 from typing import List, Dict, Any
 from dataclasses import dataclass, asdict
-import anthropic
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
 
 try:
     import google.generativeai as genai
