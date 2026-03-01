@@ -33,6 +33,10 @@ class Player(Base):
             return 0.0
         return (self.wins / self.matches_played) * 100
     
+    @property
+    def badges_earned(self) -> int:
+        return len(self.badges) if self.badges else 0
+    
     # Integrity tracking
     suspicious_matches = Column(Integer, default=0, nullable=False)
     clean_matches = Column(Integer, default=0, nullable=False)

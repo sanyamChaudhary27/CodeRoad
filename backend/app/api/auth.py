@@ -71,15 +71,7 @@ async def register(player_data: PlayerRegister, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "player": {
-            "id": new_player.id,
-            "username": new_player.username,
-            "email": new_player.email,
-            "current_rating": new_player.current_rating,
-            "matches_played": new_player.matches_played,
-            "wins": new_player.wins,
-            "losses": new_player.losses
-        }
+        "player": new_player
     }
 
 @router.post("/login", response_model=TokenResponse)
@@ -110,15 +102,7 @@ async def login(credentials: PlayerLogin, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "player": {
-            "id": player.id,
-            "username": player.username,
-            "email": player.email,
-            "current_rating": player.current_rating,
-            "matches_played": player.matches_played,
-            "wins": player.wins,
-            "losses": player.losses
-        }
+        "player": player
     }
 
 @router.get("/me", response_model=PlayerResponse)
