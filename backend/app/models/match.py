@@ -95,11 +95,15 @@ class Match(Base):
     @property
     def time_remaining(self) -> int:
         """Calculate time remaining in seconds."""
-        if not self.started_at or self.ended_at:
+        if not self.started_at:
             return self.time_limit_seconds
         
-        elapsed = (func.now() - self.started_at).seconds
-        remaining = max(0, self.time_limit_seconds - elapsed)
+        if self.ended_at or self.status in [MatchStatus.CONCLUDED, MatchStatus.TIMEOUT]:
+            return 0
+        
+        from datetime import datetime
+        elapsed = (datetime.utcnow() - self.started_at).total_seconds()
+        remaining = max(0, self.time_limit_seconds - int(elapsed))
         return remaining
     
     @property

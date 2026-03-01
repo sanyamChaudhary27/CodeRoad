@@ -37,6 +37,7 @@ class ChallengeResponse(BaseModel):
     example_input: Optional[str]
     example_output: Optional[str]
     time_limit_seconds: int
+    boilerplate_code: str
     test_cases: list
     coverage_metrics: Optional[dict]
     generated_at: str
@@ -62,8 +63,9 @@ async def generate_challenge(
         # Get player rating for adaptive difficulty
         player_rating = current_user.get("rating", 1200) if isinstance(current_user, dict) else 1200
         
-        # Generate challenge
+        # Generate challenge and persist to DB
         challenge = challenge_service.generate_challenge(
+            db=db,
             difficulty=request.difficulty,
             player_rating=player_rating,
             domain=request.domain

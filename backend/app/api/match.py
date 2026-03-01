@@ -68,6 +68,18 @@ async def leave_queue(
         "message": "Successfully left matchmaking queue"
     }
 
+@router.get("/queue/status", response_model=QueueStatusResponse)
+async def get_queue_status(
+    current_user: dict = Depends(get_current_player),
+    db: Session = Depends(get_db)
+):
+    """Get matchmaking queue status."""
+    
+    match_service = MatchService(db)
+    result = match_service.get_queue_status_with_matchmaking(current_user["id"])
+    
+    return result
+
 @router.get("/{match_id}", response_model=MatchResponse)
 async def get_match(
     match_id: str,
@@ -115,6 +127,7 @@ async def get_match(
         "challenge_description": match_data.get("challenge_description"),
         "difficulty_level": match_data.get("difficulty_level"),
         "time_limit_seconds": match_data.get("time_limit_seconds", 120),
+        "time_remaining": match_data.get("time_remaining", 120),
         "created_at": match_data.get("created_at"),
         "started_at": match_data.get("started_at"),
         "concluded_at": match_data.get("ended_at"),
@@ -159,6 +172,7 @@ async def get_player_matches(
             "challenge_description": match_data.get("challenge_description"),
             "difficulty_level": match_data.get("difficulty_level"),
             "time_limit_seconds": match_data.get("time_limit_seconds", 120),
+            "time_remaining": match_data.get("time_remaining", 120),
             "created_at": match_data.get("created_at"),
             "started_at": match_data.get("started_at"),
             "concluded_at": match_data.get("concluded_at"),
@@ -210,3 +224,21 @@ async def player_done(
         "match_status": result.get("match_status"),
         "message": "Your done status has been recorded"
     }
+
+@router.post("/practice", response_model=dict)
+async def practice_match(
+    difficulty: str = "intermediate",
+    current_user: dict = Depends(get_current_player),
+    db: Session = Depends(get_db)
+):
+    """Create a solo practice match."""
+    match_service = MatchService(db)
+    result = match_service.create_solo_match(current_user["id"], difficulty)
+    
+    if "error" in result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["error"]
+        )
+    
+    return result

@@ -149,31 +149,31 @@ class Challenge(Base):
     # Challenge details
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=False)  # Problem statement
-    difficulty = Column(String(20), nullable=False)  # "easy", "medium", "hard"
-    domain = Column(String(50), nullable=False)  # "algorithms", "data_structures", "strings", etc.
+    difficulty = Column(String(20), nullable=False)  # "beginner", "intermediate", "advanced"
+    domain = Column(String(50), nullable=False)  # "algorithms", "arrays", "strings", etc.
     
-    # Input/output specifications
-    input_specification = Column(Text, nullable=False)
-    output_specification = Column(Text, nullable=False)
-    example_input = Column(Text, nullable=False)
-    example_output = Column(Text, nullable=False)
+    # Input/output formats
+    input_format = Column(Text, nullable=False)
+    output_format = Column(Text, nullable=False)
+    example_input = Column(Text, nullable=True)
+    example_output = Column(Text, nullable=True)
     
-    # Constraints
+    # Constraints & Time
+    constraints = Column(Text, nullable=False)  # JSON string of dict
     time_limit_seconds = Column(Integer, default=5, nullable=False)
     memory_limit_mb = Column(Integer, default=256, nullable=False)
     
-    # Test cases (stored as JSON)
-    test_cases = Column(Text, nullable=False)  # JSON array of test cases
-    hidden_test_cases = Column(Text, nullable=True)  # JSON array of hidden test cases
+    # Boilerplate & Tests
+    boilerplate_code = Column(Text, nullable=True)
+    test_cases = Column(Text, nullable=False)  # JSON string of list
     
     # AI generation metadata
     generated_by_ai = Column(Boolean, default=True, nullable=False)
-    ai_model_version = Column(String(50), nullable=True)
-    template_id = Column(String(36), nullable=True)
+    coverage_metrics = Column(Text, nullable=True) # JSON string
     
     # Usage statistics
     times_used = Column(Integer, default=0, nullable=False)
-    success_rate = Column(Float, default=0.0, nullable=False)  # Percentage of successful solves
+    success_rate = Column(Float, default=0.0, nullable=False)
     
     # Timestamps
     created_at = Column(DateTime, default=func.now(), nullable=False)
@@ -184,22 +184,24 @@ class Challenge(Base):
     
     def to_dict(self):
         """Convert challenge to dictionary for API responses."""
+        import json
         return {
             "id": self.id,
             "title": self.title,
             "description": self.description,
             "difficulty": self.difficulty,
             "domain": self.domain,
-            "input_specification": self.input_specification,
-            "output_specification": self.output_specification,
+            "input_format": self.input_format,
+            "output_format": self.output_format,
             "example_input": self.example_input,
             "example_output": self.example_output,
+            "constraints": json.loads(self.constraints) if self.constraints else {},
             "time_limit_seconds": self.time_limit_seconds,
             "memory_limit_mb": self.memory_limit_mb,
-            "generated_by_ai": self.generated_by_ai,
-            "times_used": self.times_used,
-            "success_rate": self.success_rate,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "boilerplate_code": self.boilerplate_code,
+            "test_cases": json.loads(self.test_cases) if self.test_cases else [],
+            "coverage_metrics": json.loads(self.coverage_metrics) if self.coverage_metrics else {},
+            "generated_at": self.created_at.isoformat() if self.created_at else None,
         }
 
 class TestCase(Base):
