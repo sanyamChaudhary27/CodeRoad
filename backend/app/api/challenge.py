@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/challenges", tags=["challenges"])
+router = APIRouter(prefix="/challenges", tags=["challenges"])
 
 
 class ChallengeRequest(BaseModel):

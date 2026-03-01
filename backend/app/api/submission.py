@@ -46,6 +46,12 @@ async def submit_code(
             detail=f"Match is not active (status: {match.status})"
         )
     
+    # Calculate submission number (how many times this player has submitted in this match)
+    existing_submissions = db.query(Submission).filter(
+        Submission.match_id == request.match_id,
+        Submission.player_id == current_user["id"]
+    ).count()
+
     # Create submission
     submission = Submission(
         match_id=request.match_id,
@@ -53,8 +59,9 @@ async def submit_code(
         code=request.code,
         language=request.language,
         status="pending",
+        submission_number=existing_submissions + 1,
         test_cases_passed=0,
-        total_test_cases=0
+        test_cases_total=0
     )
     
     db.add(submission)

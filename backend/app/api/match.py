@@ -95,7 +95,7 @@ async def get_match(
     return {
         "match_id": match_data.get("id"),
         "status": match_data.get("status"),
-        "format": match_data.get("format", "1v1"),
+        "format": match_data.get("match_format", "1v1"),
         "player1": {
             "player_id": match_data.get("player1_id"),
             "username": match_data.get("player1_username", "Unknown"),
@@ -117,7 +117,7 @@ async def get_match(
         "time_limit_seconds": match_data.get("time_limit_seconds", 120),
         "created_at": match_data.get("created_at"),
         "started_at": match_data.get("started_at"),
-        "concluded_at": match_data.get("concluded_at"),
+        "concluded_at": match_data.get("ended_at"),
         "winner_id": match_data.get("winner_id"),
         "player1_score": match_data.get("player1_score"),
         "player2_score": match_data.get("player2_score")
