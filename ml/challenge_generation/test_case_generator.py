@@ -43,15 +43,15 @@ class TestSuite:
 class TestCaseGenerator:
     """Generate test cases using AI for coding challenges"""
     
-    def __init__(self, api_key: str = None, provider: str = "anthropic"):
+    def __init__(self, api_key: str = None, provider: str = None):
         """
         Initialize with API key from env or parameter
         
         Args:
             api_key: API key (if None, will use env variable)
-            provider: "anthropic" or "gemini" (default: "anthropic")
+            provider: "anthropic" or "gemini" (if None, checks AI_PROVIDER env var, defaults to gemini)
         """
-        self.provider = provider.lower()
+        self.provider = (provider or os.getenv("AI_PROVIDER", "gemini")).lower()
         
         if self.provider == "gemini":
             if not GEMINI_AVAILABLE:

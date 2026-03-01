@@ -7,6 +7,12 @@ from datetime import datetime
 from ..models import Submission, Player
 
 try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+
+try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
 except ImportError:
@@ -18,18 +24,35 @@ class IntegrityService:
     """Service for analyzing submission integrity (catching cheating/pasting)."""
     
     def __init__(self):
-        self.gemini_available = GEMINI_AVAILABLE
-        if self.gemini_available:
-            self.api_key = os.getenv("GEMINI_API_KEY")
-            if self.api_key:
-                try:
-                    genai.configure(api_key=self.api_key)
-                    self.model = genai.GenerativeModel("gemini-1.5-flash")
-                except Exception as e:
-                    logger.error(f"Failed to initialize Gemini for IntegrityService: {e}")
-                    self.gemini_available = False
-            else:
-                self.gemini_available = False
+        self.provider = os.getenv("AI_PROVIDER", "gemini").lower()
+        self.client = None
+        self.model = None
+
+        if self.provider == "gemini":
+            self.ai_available = GEMINI_AVAILABLE
+            if self.ai_available:
+                self.api_key = os.getenv("GEMINI_API_KEY")
+                if self.api_key:
+                    try:
+                        genai.configure(api_key=self.api_key)
+                        self.model = genai.GenerativeModel("gemini-1.5-flash")
+                    except Exception as e:
+                        logger.error(f"Failed to initialize Gemini for IntegrityService: {e}")
+                        self.ai_available = False
+                else:
+                    self.ai_available = False
+        else:
+            self.ai_available = ANTHROPIC_AVAILABLE
+            if self.ai_available:
+                self.api_key = os.getenv("ANTHROPIC_API_KEY")
+                if self.api_key:
+                    try:
+                        self.client = anthropic.Anthropic(api_key=self.api_key)
+                    except Exception as e:
+                        logger.error(f"Failed to initialize Anthropic for IntegrityService: {e}")
+                        self.ai_available = False
+                else:
+                    self.ai_available = False
 
     def analyze_submission(self, db: Session, submission_id: str) -> None:
         """
@@ -52,9 +75,9 @@ class IntegrityService:
         if submission.copy_paste_events > 0:
             submission.code_paste_probability = min(100.0, submission.copy_paste_events * 25.0)
         
-        # 2. LLM Detection (Gemini)
+        # 2. LLM Detection (Gemini/Anthropic)
         ai_prob = 0.0
-        if self.gemini_available and self.api_key:
+        if self.ai_available and self.api_key:
             try:
                 prompt = f"""
                 Analyze the following Python code snippet submitted by a student in a coding competition.
@@ -69,10 +92,20 @@ class IntegrityService:
                 ```
                 """
                 
-                response = self.model.generate_content(prompt)
+                if self.provider == "gemini":
+                    response = self.model.generate_content(prompt)
+                    text = response.text
+                else:
+                    response = self.client.messages.create(
+                        model="claude-3-5-sonnet-20241022",
+                        max_tokens=1000,
+                        temperature=0.0,
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+                    text = response.content[0].text
                 
                 # Parse JSON
-                text = response.text.replace("```json", "").replace("```", "").strip()
+                text = text.replace("```json", "").replace("```", "").strip()
                 import json
                 result = json.loads(text)
                 if "probability" in result:

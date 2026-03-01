@@ -4,6 +4,12 @@ import logging
 from typing import Dict, Any, Optional
 
 try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+
+try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
 except ImportError:
@@ -14,19 +20,27 @@ logger = logging.getLogger(__name__)
 class ProblemStatementGenerator:
     """Generate problem statements using AI for coding challenges"""
     
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None, provider: str = None):
         """
         Initialize with API key from env or parameter
         """
-        if not GEMINI_AVAILABLE:
-            raise ImportError("google-generativeai not installed. Install with: pip install google-generativeai")
-            
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not found in environment")
-            
-        genai.configure(api_key=self.api_key)
-        self.client = genai.GenerativeModel("gemini-1.5-pro")
+        self.provider = (provider or os.getenv("AI_PROVIDER", "gemini")).lower()
+        
+        if self.provider == "gemini":
+            if not GEMINI_AVAILABLE:
+                raise ImportError("google-generativeai not installed. Install with: pip install google-generativeai")
+            self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError("GEMINI_API_KEY not found in environment")
+            genai.configure(api_key=self.api_key)
+            self.client = genai.GenerativeModel("gemini-1.5-pro")
+        else:
+            if not ANTHROPIC_AVAILABLE:
+                raise ImportError("anthropic not installed. Install with: pip install anthropic")
+            self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+            if not self.api_key:
+                raise ValueError("ANTHROPIC_API_KEY not found in environment")
+            self.client = anthropic.Anthropic(api_key=self.api_key)
 
     def generate_problem(self, difficulty: str, elo_rating: int, domain: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -67,15 +81,23 @@ class ProblemStatementGenerator:
         """
         
         try:
-            response = self.client.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.7,
-                    max_output_tokens=2000
+            if self.provider == "gemini":
+                response = self.client.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.7,
+                        max_output_tokens=2000
+                    )
                 )
-            )
-            
-            text = response.text.strip()
+                text = response.text.strip()
+            else:
+                response = self.client.messages.create(
+                    model="claude-3-5-sonnet-20241022",
+                    max_tokens=2000,
+                    temperature=0.7,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                text = response.content[0].text.strip()
             if text.startswith("```"):
                 lines = text.split("\\n")
                 if len(lines) > 1:
