@@ -1,14 +1,17 @@
 # Frontend Integration Guide
 
 ## Overview
+
 The backend is ready for frontend integration. All endpoints are functional and tested. The challenge generation system works with or without ML models.
 
 ## API Endpoints
 
 ### 1. Generate Challenge
+
 **Endpoint**: `POST /api/challenges/generate`
 
 **Request**:
+
 ```json
 {
   "difficulty": "intermediate",
@@ -17,6 +20,7 @@ The backend is ready for frontend integration. All endpoints are functional and 
 ```
 
 **Response**:
+
 ```json
 {
   "id": "uuid-string",
@@ -81,21 +85,25 @@ The backend is ready for frontend integration. All endpoints are functional and 
 ```
 
 **Parameters**:
+
 - `difficulty` (optional): "beginner", "intermediate", or "advanced" (default: "intermediate")
 - `domain` (optional): "arrays", "strings", "linked_lists", "trees", "graphs", "dynamic_programming", "sorting", "searching"
 
 **Status Codes**:
+
 - `200`: Challenge generated successfully
 - `500`: Challenge generation failed
 
 ---
 
 ### 2. Get Challenge by ID
+
 **Endpoint**: `GET /api/challenges/{challenge_id}`
 
 **Response**: Same as generate endpoint
 
 **Status Codes**:
+
 - `200`: Challenge found
 - `404`: Challenge not found
 - `500`: Server error
@@ -103,9 +111,11 @@ The backend is ready for frontend integration. All endpoints are functional and 
 ---
 
 ### 3. List Challenges
+
 **Endpoint**: `GET /api/challenges?difficulty=intermediate&domain=arrays&limit=10`
 
 **Response**:
+
 ```json
 [
   {
@@ -122,6 +132,7 @@ The backend is ready for frontend integration. All endpoints are functional and 
 ```
 
 **Query Parameters**:
+
 - `difficulty` (optional): Filter by difficulty
 - `domain` (optional): Filter by domain
 - `limit` (optional): Number of results (default: 10)
@@ -290,6 +301,7 @@ export function ChallengeComponent() {
    - Used only if Tier 1 and 2 fail
 
 ### Current Status
+
 - **Tier 1**: Optional (requires API key)
 - **Tier 2**: Active (9 templates available)
 - **Tier 3**: Ready as backup
@@ -299,6 +311,7 @@ export function ChallengeComponent() {
 ## Configuration
 
 ### Environment Variables
+
 Add to `.env`:
 
 ```bash
@@ -317,6 +330,7 @@ PORT=8000
 ```
 
 ### Without API Keys
+
 The system works perfectly with templates. No configuration needed for prototype.
 
 ---
@@ -324,11 +338,13 @@ The system works perfectly with templates. No configuration needed for prototype
 ## Testing
 
 ### Run Integration Tests
+
 ```bash
 python test_api_integration.py
 ```
 
 ### Run Backend Tests
+
 ```bash
 python backend/test_challenge_service_robust.py
 python test_backend_imports.py
@@ -348,12 +364,14 @@ python test_backend_imports.py
 ## Error Handling
 
 All endpoints return proper HTTP status codes:
+
 - `200`: Success
 - `400`: Bad request
 - `404`: Not found
 - `500`: Server error
 
 Error responses include:
+
 ```json
 {
   "detail": "Error message describing what went wrong"
@@ -370,13 +388,14 @@ Error responses include:
 4. → Frontend implementation
 5. → User authentication integration
 6. → Match making system
-7. → Submission evaluation
+7. ✓ Submission evaluation (Judging and Integrity ML now run asynchronously via BackgroundTasks. Frontend should poll `GET /api/v1/submissions/{id}` every 1s after submitting code until `status` changes from `"pending"` or `"executing"` to `"success"`, `"runtime_error"`, or `"timeout"`.)
 
 ---
 
 ## Support
 
 For questions or issues:
+
 - Check `BACKEND_STATUS.md` for system status
 - Review test files for usage examples
 - Check API endpoint implementations in `backend/app/api/challenge.py`
