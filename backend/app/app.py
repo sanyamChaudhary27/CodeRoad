@@ -7,7 +7,7 @@ from typing import Optional
 
 from .core.database import engine, Base, get_db
 from .core.security import verify_token
-from .api import auth, match, submission, leaderboard, websocket
+from .api import auth, match, submission, leaderboard, websocket, challenge
 from .config import settings
 
 # Configure logging
@@ -74,6 +74,7 @@ def create_app() -> FastAPI:
     app.include_router(match.router, prefix="/api/v1/matches", tags=["Matches"])
     app.include_router(submission.router, prefix="/api/v1/submissions", tags=["Submissions"])
     app.include_router(leaderboard.router, prefix="/api/v1/leaderboard", tags=["Leaderboard"])
+    app.include_router(challenge.router, prefix="/api/v1", tags=["Challenges"])
     app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
     
     # Health check endpoint
@@ -99,6 +100,7 @@ def create_app() -> FastAPI:
                 "matches": "/api/v1/matches",
                 "submissions": "/api/v1/submissions",
                 "leaderboard": "/api/v1/leaderboard",
+                "challenges": "/api/v1/challenges",
                 "websocket": "/ws"
             }
         }
