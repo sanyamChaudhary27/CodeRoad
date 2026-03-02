@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, type User } from '../services/authService';
 import { matchmakingService, type LeaderboardPlayer, type MatchQueueStatus } from '../services/matchmakingService';
-import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award, Terminal } from 'lucide-react';
+import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award, Terminal, Database, Bug, Palette, Code2, Sparkles, Clock } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -216,6 +216,88 @@ const Dashboard = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Coming Soon Features */}
+      <div className="mt-12 glass-panel p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles size={24} className="text-warning" />
+          <h3 className="text-2xl font-bold text-white">Coming Soon</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-primary/50 transition-all group">
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex-center mb-4 group-hover:scale-110 transition-transform">
+              <Database size={24} className="text-white" />
+            </div>
+            <h4 className="text-lg font-bold text-white mb-2">DBMS Arena</h4>
+            <p className="text-sm text-text-secondary">Master SQL queries and database optimization in competitive challenges</p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-primary">
+              <Clock size={14} />
+              <span>Q2 2026</span>
+            </div>
+          </div>
+
+          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-accent/50 transition-all group">
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex-center mb-4 group-hover:scale-110 transition-transform">
+              <Bug size={24} className="text-white" />
+            </div>
+            <h4 className="text-lg font-bold text-white mb-2">Debug Arena</h4>
+            <p className="text-sm text-text-secondary">Race to find and fix bugs in real codebases under time pressure</p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-accent">
+              <Clock size={14} />
+              <span>Q2 2026</span>
+            </div>
+          </div>
+
+          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-warning/50 transition-all group">
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex-center mb-4 group-hover:scale-110 transition-transform">
+              <Palette size={24} className="text-white" />
+            </div>
+            <h4 className="text-lg font-bold text-white mb-2">UI Arena</h4>
+            <p className="text-sm text-text-secondary">Build pixel-perfect interfaces from designs in competitive sprints</p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-warning">
+              <Clock size={14} />
+              <span>Q3 2026</span>
+            </div>
+          </div>
+
+          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-success/50 transition-all group">
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex-center mb-4 group-hover:scale-110 transition-transform">
+              <Code2 size={24} className="text-white" />
+            </div>
+            <h4 className="text-lg font-bold text-white mb-2">Multi-Language</h4>
+            <p className="text-sm text-text-secondary">Python, Java, C++, JavaScript, Go, Rust and more languages supported</p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-success">
+              <Clock size={14} />
+              <span>Q3 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Match History */}
+      <div className="mt-8 glass-panel p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Activity size={24} className="text-primary" />
+          <h3 className="text-2xl font-bold text-white">Recent Matches</h3>
+        </div>
+        
+        <div className="space-y-3">
+          {user.matches_played && user.matches_played > 0 ? (
+            <div className="text-center py-12 text-text-muted">
+              <Activity size={48} className="mx-auto mb-4 opacity-20" />
+              <p>Match history will be available soon!</p>
+              <p className="text-sm mt-2">Your {user.matches_played} match{user.matches_played !== 1 ? 'es' : ''} will appear here</p>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-text-muted border border-dashed border-border-light rounded-xl">
+              <Target size={48} className="mx-auto mb-4 opacity-20" />
+              <p>No matches played yet</p>
+              <p className="text-sm mt-2">Start your first match to see your history!</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
