@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from ..models import Submission, Player
+from .xgb_integrity_service import get_xgb_integrity_service
 
 try:
     import anthropic
@@ -56,7 +57,7 @@ class IntegrityService:
 
     def analyze_submission(self, db: Session, submission_id: str) -> None:
         """
-        Analyze a submission to calculate cheat_probability and behavioral metrics.
+        Analyze a submission using XGBoost model (primary) with Gemini fallback.
         """
         logger.info(f"Running integrity analysis on {submission_id}")
         
@@ -69,9 +70,6 @@ class IntegrityService:
         # 1. Behavioral Heuristics (Basic calculation)
         submission.code_length = len(code)
         submission.code_lines = len(code.split('\n'))
-        
-        # Space Complexity Heuristic (Simple estimate based on variable count/types)
-        # Using a base 0.1MB + factor of length
         submission.memory_used_mb = 0.1 + (len(code) / 10000.0)
 
         # Time Complexity Heuristic (Nested loops detection)
@@ -79,17 +77,24 @@ class IntegrityService:
         nested_loops = len(re.findall(r'(\bfor\b|\bwhile\b).*\n\s+(\bfor\b|\bwhile\b)', code))
         recursion = 1 if re.search(r'def\s+(\w+)\(.*\).* \1\(', code, re.DOTALL) else 0
         
-        # Calculate a "goodness" score (0-100)
-        # More loops/recursion reduces the score
         complexity_impact = (loops * 10) + (nested_loops * 20) + (recursion * 30)
         submission.complexity_score = max(0, min(100, 100 - complexity_impact))
 
-        # Paste heuristic: high chars submitted in very little time
-        # We don't have true frontend time_to_solve pushed yet, but if keystroke_speed is artificially provided or copy_paste_events > 0
         if submission.copy_paste_events > 0:
             submission.code_paste_probability = min(100.0, submission.copy_paste_events * 25.0)
         
-        # 2. LLM Detection (Gemini/Anthropic)
+        # 2. Try XGBoost Model First (Primary)
+        xgb_service = get_xgb_integrity_service()
+        if xgb_service.model_available:
+            try:
+                logger.info(f"Using XGBoost model for {submission_id}")
+                xgb_service.analyze_submission(db, submission_id)
+                logger.info(f"XGBoost analysis successful for {submission_id}")
+                return
+            except Exception as e:
+                logger.warning(f"XGBoost analysis failed, falling back to Gemini: {e}")
+        
+        # 3. Fallback to LLM Detection (Gemini/Anthropic)
         ai_prob = 0.0
         if self.ai_available and self.api_key:
             try:
@@ -107,10 +112,9 @@ class IntegrityService:
                 """
                 
                 if self.provider == "gemini":
-                    # Short timeout for integrity check to prevent hangs
                     response = self.model.generate_content(
                         prompt,
-                        request_options={"timeout": 5.0} # 5 second timeout
+                        request_options={"timeout": 5.0}
                     )
                     text = response.text
                 else:
@@ -123,23 +127,20 @@ class IntegrityService:
                     )
                     text = response.content[0].text
                 
-                # Parse JSON
                 text = text.replace("```json", "").replace("```", "").strip()
                 import json
                 result = json.loads(text)
                 if "probability" in result:
                     ai_prob = float(result["probability"])
-                    submission.ai_quality_score = ai_prob # Store AI probability
+                    submission.ai_quality_score = ai_prob
             except Exception as e:
-                logger.error(f"Integrity analysis AI call failed (provider: {self.provider}): {e}")
-                # Fallback to behavioral metrics only; don't raise to avoid blocking commits
+                logger.error(f"Gemini analysis failed: {e}")
         
-        # 3. Aggregate Cheat Probability
-        # Base it on paste detection and AI probability
+        # 4. Aggregate Cheat Probability
         paste_prob = submission.code_paste_probability or 0.0
-        
         overall = (paste_prob * 0.4) + (ai_prob * 0.6)
         submission.cheat_probability = min(100.0, overall)
+        submission.integrity_model_used = 'gemini'
         
         db.commit()
         logger.info(f"Integrity analysis complete for {submission_id} (Cheat Prob: {overall}%)")
