@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, type User } from '../services/authService';
 import { matchmakingService, type LeaderboardPlayer, type MatchQueueStatus } from '../services/matchmakingService';
-import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award } from 'lucide-react';
+import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award, Terminal } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -220,7 +220,5 @@ const Dashboard = () => {
     </div>
   );
 };
-  
-// I need Terminal icon from lucide-react as well, let's import it here quickly
-import { Terminal } from 'lucide-react';
+
 export default Dashboard;
