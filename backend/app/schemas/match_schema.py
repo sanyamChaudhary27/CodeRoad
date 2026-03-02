@@ -33,6 +33,16 @@ class PlayerMatchInfo(BaseModel):
     class Config:
         from_attributes = True
 
+class RatingUpdateDetail(BaseModel):
+    """Details of a single player's rating update."""
+    rating_change: Optional[int] = None
+    new_rating: Optional[int] = None
+
+class RatingUpdates(BaseModel):
+    """Rating updates for both players in a match."""
+    player1: RatingUpdateDetail
+    player2: Optional[RatingUpdateDetail] = None
+
 class MatchResponse(BaseModel):
     """Response model for match details."""
     match_id: str
@@ -51,7 +61,10 @@ class MatchResponse(BaseModel):
     winner_id: Optional[str] = None
     player1_score: Optional[float] = None
     player2_score: Optional[float] = None
+    player1_id: Optional[str] = None
+    player2_id: Optional[str] = None
     result: Optional[str] = None
+    rating_updates: Optional[RatingUpdates] = None
     
     class Config:
         from_attributes = True

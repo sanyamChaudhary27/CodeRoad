@@ -12,8 +12,8 @@ const MatchResults = ({ data, user, onDashboard }: { data: any, user: User, onDa
   const isDraw = data.result === 'draw_draw' || data.result?.includes('draw');
   const isWinner = !isDraw && data.winner_id === user.id;
   
-  // Resolve which player data is the user
-  const isPlayer1 = data.player1_id === user.id;
+  // Resolve which player data is the user — use multiple fallbacks
+  const isPlayer1 = (data.player1_id || data.player1?.player_id) === user.id;
   const ratingUpdate = isPlayer1 ? data.rating_updates?.player1 : data.rating_updates?.player2;
   const myScore = isPlayer1 ? data.player1_score : data.player2_score;
 

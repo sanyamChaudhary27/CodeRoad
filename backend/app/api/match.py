@@ -134,7 +134,10 @@ async def get_match(
         "winner_id": match_data.get("winner_id"),
         "player1_score": match_data.get("player1_score"),
         "player2_score": match_data.get("player2_score"),
-        "result": match_data.get("result")
+        "result": match_data.get("result"),
+        "rating_updates": match_data.get("rating_updates"),
+        "player1_id": match_data.get("player1_id"),
+        "player2_id": match_data.get("player2_id")
     }
 
 @router.get("/player/history", response_model=MatchListResponse)

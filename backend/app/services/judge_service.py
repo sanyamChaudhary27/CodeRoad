@@ -67,8 +67,6 @@ class JudgeService:
                 try:
                     if challenge.test_cases:
                         test_cases.extend(json.loads(challenge.test_cases))
-                    if challenge.hidden_test_cases:
-                        test_cases.extend(json.loads(challenge.hidden_test_cases))
                 except Exception as e:
                     logger.error(f"Failed to parse test cases: {e}")
             
@@ -114,17 +112,21 @@ def _main():
     params = list(sig.parameters.values())
     
     # Heuristic for mapping input to function signature
-    if len(params) == 1:
-        # e.g. solve(arr), solve(s), solve(n)
+    if len(params) == len(input_data):
+        # e.g. solve(a, b) with "5 3" -> solve(5, 3)
+        result = solve_func(*input_data)
+    elif len(params) == 1:
+        # e.g. solve(arr) with "5 7 2" -> solve([5, 7, 2])
+        # Force list if it's multiple values
         result = solve_func(input_data)
     elif len(params) == 2:
-        # e.g. solve(arr, x) or solve(a, b)
+        # e.g. solve(arr, x) with "2 7 11 15 9" -> solve([2, 7, 11, 15], 9)
         if isinstance(input_data, list) and len(input_data) >= 2:
             result = solve_func(input_data[:-1], input_data[-1])
         else:
             result = solve_func(input_data, None)
     else:
-        # Fallback for 3+ args or spread
+        # Fallback for 3+ args or other mismatches
         if isinstance(input_data, list):
             result = solve_func(*input_data[:len(params)])
         else:

@@ -547,13 +547,30 @@ class MatchService:
         if match.status == MatchStatus.CONCLUDED:
             return {"error": "Match already concluded"}
         
-        # If scores are missing (e.g. called from player_done or timeout), fetch best submissions
+        # Initialize ALL metric variables with safe defaults BEFORE conditional blocks
+        # This prevents UnboundLocalError and ensures tiebreakers work correctly
+        if player1_ai_score is None: player1_ai_score = 0.0
+        if player2_ai_score is None: player2_ai_score = 0.0
+        if player1_complexity_score is None: player1_complexity_score = 0.0
+        if player2_complexity_score is None: player2_complexity_score = 0.0
+        
+        p1_time = 999999.0
+        p1_memory = 999999.0
+        p1_cheat = 100.0
+        p2_time = 999999.0
+        p2_memory = 999999.0
+        p2_cheat = 100.0
+
+        # Fetch best submissions for scoring
         if player1_score is None:
             best1 = self._get_best_submission_for_player(match_id, match.player1_id)
             if best1:
                 player1_score = best1.test_case_score
-                player1_ai_score = best1.ai_quality_score
-                player1_complexity_score = best1.complexity_score
+                player1_ai_score = best1.ai_quality_score or 0.0
+                player1_complexity_score = best1.complexity_score or 0.0
+                p1_time = best1.execution_time_ms or 100.0
+                p1_memory = best1.memory_used_mb or 1.0
+                p1_cheat = best1.cheat_probability or 0.0
                 if cheat_probability is None: cheat_probability = best1.cheat_probability
             else:
                 player1_score = 0.0
@@ -562,18 +579,22 @@ class MatchService:
             best2 = self._get_best_submission_for_player(match_id, match.player2_id)
             if best2:
                 player2_score = best2.test_case_score
-                player2_ai_score = best2.ai_quality_score
-                player2_complexity_score = best2.complexity_score
-                # Combine cheat probabilities if needed, or take max
+                player2_ai_score = best2.ai_quality_score or 0.0
+                player2_complexity_score = best2.complexity_score or 0.0
+                p2_time = best2.execution_time_ms or 100.0
+                p2_memory = best2.memory_used_mb or 1.0
+                p2_cheat = best2.cheat_probability or 0.0
                 if best2.cheat_probability is not None:
                     curr_cheat = cheat_probability if cheat_probability is not None else 0
                     cheat_probability = max(curr_cheat, best2.cheat_probability)
             else:
                 player2_score = 0.0
         
-        # Defaults for single player or no submissions
+        # Final defaults
         if player1_score is None: player1_score = 0.0
         if player2_score is None: player2_score = 0.0
+
+        logger.info(f"conclude_match {match_id}: P1 score={player1_score}, P2 score={player2_score}, P1 time={p1_time}, P2 time={p2_time}, P1 ai={player1_ai_score}, P2 ai={player2_ai_score}, P1 complexity={player1_complexity_score}, P2 complexity={player2_complexity_score}")
 
         # Update match scores
         match.player1_score = player1_score
@@ -585,20 +606,24 @@ class MatchService:
         match.cheat_probability = cheat_probability
         
         # Calculate match result
+        logger.info(f"Concluding match {match_id}: P1 Score={player1_score}, P2 Score={player2_score}, P1 Time={p1_time}, P2 Time={p2_time}")
         player1_result, player2_result, winner = self.rating_service.calculate_match_result(
             player1_score=player1_score,
             player2_score=player2_score,
-            player1_time=match.player1_ai_quality_score, # We repurposed this as a placeholder for time
-            player2_time=match.player2_ai_quality_score,
+            player1_time=p1_time,
+            player2_time=p2_time,
             player1_ai_score=player1_ai_score,
             player1_complexity_score=player1_complexity_score,
             player2_ai_score=player2_ai_score,
             player2_complexity_score=player2_complexity_score,
-            player1_memory=match.player1_score, # Placeholder
-            player1_ai_prob=cheat_probability
+            player1_memory=p1_memory,
+            player2_memory=p2_memory,
+            player1_ai_prob=p1_cheat,
+            player2_ai_prob=p2_cheat
         )
         
         # Update match result
+        logger.info(f"Match {match_id} results: P1={player1_result}, P2={player2_result}, Winner={winner}")
         match.result = f"{player1_result}_{player2_result}"
         if winner == "player1":
             match.winner_id = match.player1_id
@@ -622,7 +647,8 @@ class MatchService:
         
         # Update player ratings if it's a 1v1 match
         rating_updates = {}
-        if match.match_format == MatchFormat.ONE_VS_ONE and match.player2_id:
+        logger.info(f"Checking rating update for {match_id}. Format: {match.match_format}, Player2: {match.player2_id}")
+        if (match.match_format == MatchFormat.ONE_VS_ONE or match.match_format == "1v1") and match.player2_id:
             logger.info(f"Updating ratings for match {match_id}")
             
             player1_update = self.rating_service.update_player_rating(
@@ -647,6 +673,15 @@ class MatchService:
             )
             rating_updates["player2"] = player2_update
             match.player2_rating_change = player2_update.get("rating_change")
+        else:
+            # For solo matches, record 0 change to satisfy the results display
+            match.player1_rating_change = 0
+            rating_updates["player1"] = {
+                "player_id": match.player1_id,
+                "old_rating": match.player1.current_rating if match.player1 else 1200,
+                "new_rating": match.player1.current_rating if match.player1 else 1200,
+                "rating_change": 0
+            }
 
         # Refresh player objects to get new ratings for the response
         if match.player1: self.db.refresh(match.player1)
