@@ -71,7 +71,7 @@ class Submission(Base):
     ai_feedback = Column(Text, nullable=True)
     
     # Integrity analysis
-    integrity_analysis_id = Column(String(36), nullable=True, index=True)
+    integrity_analysis_id = Column(String(36), ForeignKey("integrity_analysis.id"), nullable=True, index=True)
     cheat_probability = Column(Float, nullable=True)  # 0-100%
     integrity_status = Column(String(50), nullable=True)  # 'legitimate', 'ai_assisted', 'pasted'
     integrity_confidence = Column(Float, nullable=True)  # 0-1.0 confidence score
