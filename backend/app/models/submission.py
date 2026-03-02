@@ -73,6 +73,9 @@ class Submission(Base):
     # Integrity analysis
     integrity_analysis_id = Column(String(36), nullable=True, index=True)
     cheat_probability = Column(Float, nullable=True)  # 0-100%
+    integrity_status = Column(String(50), nullable=True)  # 'legitimate', 'ai_assisted', 'pasted'
+    integrity_confidence = Column(Float, nullable=True)  # 0-1.0 confidence score
+    integrity_model_used = Column(String(50), nullable=True)  # 'xgboost', 'gemini', etc.
     
     # Behavioral metrics for AI detection
     time_to_first_submission = Column(Integer, nullable=True)  # Seconds from match start to first submission
@@ -93,6 +96,12 @@ class Submission(Base):
     keystroke_speed_variance = Column(Float, nullable=True)  # Variance in keystroke speed
     copy_paste_events = Column(Integer, default=0, nullable=False)  # Number of detected copy/paste events
     deletion_ratio = Column(Float, nullable=True)  # Ratio of deletions to total keystrokes
+    pasted_code_ratio = Column(Float, nullable=True)  # Estimated ratio of pasted vs typed code
+    external_source_similarity = Column(Float, nullable=True)  # Similarity to known online solutions
+    
+    # Performance metrics
+    success_rate = Column(Float, nullable=True)  # Ratio of successful to total submissions
+    efficiency_vs_player_avg = Column(Float, nullable=True)  # Efficiency compared to player average
     
     # Submission pattern metrics
     submission_count_in_match = Column(Integer, default=1, nullable=False)  # How many times submitted
