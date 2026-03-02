@@ -1,0 +1,22 @@
+HOW TO RUN CODE ROAD
+====================
+
+1. Start the backend (Terminal 1):
+
+   cd d:\CodeRoad\backend
+   .\venv\Scripts\activate
+   python -m uvicorn app.app:app --host 127.0.0.1 --port 8000 --reload
+
+2. Start the frontend (Terminal 2):
+
+   cd d:\CodeRoad\frontend
+   npm run dev
+
+3. Open the app:
+
+   Frontend:  http://localhost:5173
+   API Docs:  http://localhost:8000/docs
+   Health:    http://localhost:8000/health
+
+Note: The SQLite database (backend/coderoad.db) persists between sessions,
+so your accounts will still be there.
