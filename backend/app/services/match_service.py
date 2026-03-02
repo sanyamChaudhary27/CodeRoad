@@ -688,20 +688,14 @@ class MatchService:
             if p1:
                 data["player1_username"] = p1.username
                 data["player1_rating"] = p1.current_rating
-                data["player1_submissions"] = self.db.query(Submission).filter(
-                    Submission.match_id == match_id,
-                    Submission.player_id == match.player1_id
-                ).count()
+                data["player1_submissions"] = match.player1_submissions
             
         if match.player2_id:
             p2 = match.player2
             if p2:
                 data["player2_username"] = p2.username
                 data["player2_rating"] = p2.current_rating
-                data["player2_submissions"] = self.db.query(Submission).filter(
-                    Submission.match_id == match_id,
-                    Submission.player_id == match.player2_id
-                ).count()
+                data["player2_submissions"] = match.player2_submissions
         
         # Add rating updates info for concluded matches
         if match.status == MatchStatus.CONCLUDED:

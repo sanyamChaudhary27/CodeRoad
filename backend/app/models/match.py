@@ -49,6 +49,10 @@ class Match(Base):
     player1_done = Column(Boolean, default=False, nullable=False)
     player2_done = Column(Boolean, default=False, nullable=False)
     
+    # Submission counters
+    player1_submissions = Column(Integer, default=0, nullable=False)
+    player2_submissions = Column(Integer, default=0, nullable=False)
+    
     # For battle royale
     players_done = Column(Text, nullable=True)  # JSON array of player IDs who are done
     
@@ -114,6 +118,8 @@ class Match(Base):
     def all_players_done(self) -> bool:
         """Check if all players have signaled they are done."""
         if self.match_format == MatchFormat.ONE_VS_ONE:
+            if self.player2_id is None:
+                return self.player1_done
             return self.player1_done and self.player2_done
         else:
             # For battle royale, check if all players in player_ids are done
@@ -139,6 +145,8 @@ class Match(Base):
             "player2_done": self.player2_done,
             "player1_score": self.player1_score,
             "player2_score": self.player2_score,
+            "player1_submissions": self.player1_submissions,
+            "player2_submissions": self.player2_submissions,
             "winner_id": self.winner_id,
             "result": self.result,
             "integrity_status": self.integrity_status,

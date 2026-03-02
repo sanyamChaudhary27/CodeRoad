@@ -89,6 +89,12 @@ async def submit_code(
         test_cases_total=0
     )
     
+    # Increment match-level submission counter
+    if match.player1_id == current_user["id"]:
+        match.player1_submissions += 1
+    elif match.player2_id == current_user["id"]:
+        match.player2_submissions += 1
+    
     db.add(submission)
     db.commit()
     db.refresh(submission)

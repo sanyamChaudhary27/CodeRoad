@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { challengeService, type Challenge } from '../services/challengeService';
 import { submissionService, type SubmissionResponse } from '../services/submissionService';
 import { matchmakingService, type PlayerMatchInfo } from '../services/matchmakingService';
-import { Play, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldAlert, Terminal as TerminalIcon, User as UserIcon, Trophy, Activity, RefreshCw } from 'lucide-react';
+import { Play, CheckCircle2, XCircle, Clock, AlertTriangle, Terminal as TerminalIcon, User as UserIcon, Trophy, Activity, RefreshCw } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { authService, type User } from '../services/authService';
 
@@ -18,7 +18,7 @@ const MatchResults = ({ data, user, onDashboard }: { data: any, user: User, onDa
   const myScore = isPlayer1 ? data.player1_score : data.player2_score;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-dark/95 backdrop-blur-[40px] animate-fade-in p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-overlay-90 backdrop-blur-xl animate-fade-in p-4 overflow-y-auto">
       <div className="glass-panel p-8 md:p-12 max-w-lg w-full border-primary/40 shadow-glow-2xl relative overflow-hidden text-center animate-scale-in bg-bg-panel/90">
         {/* Victory/Defeat Background Glow */}
         <div className={`absolute -top-32 -left-32 w-96 h-96 rounded-full blur-[120px] opacity-20 ${isWinner ? 'bg-success' : isDraw ? 'bg-warning' : 'bg-danger'}`}></div>
@@ -95,6 +95,7 @@ const Arena = () => {
   const [isDone, setIsDone] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [matchData, setMatchData] = useState<any>(null);
+  const [userSubmissions, setUserSubmissions] = useState<number>(0);
 
   useEffect(() => {
     const initializeArena = async () => {
@@ -296,6 +297,10 @@ const Arena = () => {
         if (matchDetails.player2_id) {
           setOpponent(opponentInfo);
         }
+
+        // Update local user submission count
+        const isUserP1 = matchDetails.player1_id === currentUser.id;
+        setUserSubmissions(isUserP1 ? (matchDetails.player1_submissions || 0) : (matchDetails.player2_submissions || 0));
 
         if (matchDetails.status === 'concluded') {
           setMatchData(matchDetails);
@@ -509,9 +514,16 @@ const Arena = () => {
             </div>
             <div>
               <p className="text-sm font-black text-white tracking-tight uppercase">{user?.username || 'Guest'}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Ranked Index</span>
-                <span className="text-[10px] font-black text-success bg-success/10 px-1.5 rounded">{user?.current_rating}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Index</span>
+                  <span className="text-[10px] font-black text-success bg-success/10 px-1.5 rounded">{user?.current_rating}</span>
+                </div>
+                <div className="w-px h-3 bg-white/10"></div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Syncs</span>
+                  <span className="text-[10px] font-black text-primary bg-primary/10 px-1.5 rounded">{userSubmissions}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -685,12 +697,17 @@ const Arena = () => {
                          {submissionResult.status === 'success' ? 'Tests Passed' : 'Execution Error'}
                        </span>
                      </div>
-                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div><span className="text-xs text-text-muted block">Passed</span><span className="text-white text-lg">{submissionResult.test_cases_passed} / {challenge.test_cases?.length || '?'}</span></div>
                         <div><span className="text-xs text-text-muted block">Runtime</span><span className="text-white text-lg">{submissionResult.execution_time_ms ? `${submissionResult.execution_time_ms}ms` : 'N/A'}</span></div>
                         <div><span className="text-xs text-text-muted block">Integrity</span><span className={(submissionResult.ai_assisted_probability ?? 0) > 70 ? "text-danger text-lg" : "text-success text-lg"}>{(submissionResult.ai_assisted_probability ?? 0) > 70 ? 'AI Check' : 'Human'}</span></div>
                         <div><span className="text-xs text-text-muted block">ELO</span><span className={submissionResult.score >= 0 ? "text-success text-lg" : "text-danger text-lg"}>{submissionResult.score >= 0 ? `+${submissionResult.score}` : submissionResult.score}</span></div>
-                     </div>
+                      </div>
+                      {submissionResult.status !== 'success' && submissionResult.error_details && (
+                        <div className="mt-4 p-3 bg-danger/10 border border-danger/20 rounded text-xs text-danger overflow-x-auto">
+                          <pre className="font-mono whitespace-pre-wrap">{submissionResult.error_details}</pre>
+                        </div>
+                      )}
                    </div>
                  )}
                </div>
@@ -722,8 +739,8 @@ const Arena = () => {
       </div>
 
       {/* Fixed Overlays moved to end for correct stacking and blurring */}
-      {isDone && !showResults && (
-        <div className="fixed inset-0 z-[100] bg-overlay-80 backdrop-blur-xl flex items-center justify-center animate-fade-in shadow-2xl">
+      {isDone && !showResults && opponent && (
+        <div className="fixed inset-0 z-[100] bg-overlay-90 backdrop-blur-xl flex items-center justify-center animate-fade-in">
            <div className="glass-panel p-10 text-center max-w-sm border-primary/60 shadow-glow-2xl relative z-[110] animate-scale-in bg-bg-panel/90">
               <div className="h-20 w-20 rounded-full bg-primary/20 flex-center mx-auto mb-6 border-2 border-primary/40 shadow-glow-md">
                 <RefreshCw size={40} className="text-primary animate-spin" />
