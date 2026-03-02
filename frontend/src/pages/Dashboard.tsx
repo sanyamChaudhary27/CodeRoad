@@ -14,16 +14,27 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Use cached user immediately so screen isn't blank
+        const cachedUser = authService.getUser();
+        if (cachedUser) setUser(cachedUser);
+
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
-        
+      } catch (err) {
+        console.error("Failed to fetch user profile", err);
+        // Fall back to cached user if API fails
+        const cachedUser = authService.getUser();
+        if (cachedUser) setUser(cachedUser);
+      }
+
+      try {
         const lbData = await matchmakingService.getGlobalLeaderboard(10, 0);
         setLeaderboard(lbData.leaderboard);
       } catch (err) {
-        console.error("Failed to fetch dashboard data", err);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch leaderboard", err);
       }
+
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -34,6 +45,21 @@ const Dashboard = () => {
   };
 
   const [isPolling, setIsPolling] = useState(false);
+  const [pollIntervalRef, setPollIntervalRef] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [queueTimer, setQueueTimer] = useState(0);
+
+  const cancelQueue = async () => {
+    if (pollIntervalRef) clearInterval(pollIntervalRef);
+    setPollIntervalRef(null);
+    setQueueStatus(null);
+    setIsPolling(false);
+    setQueueTimer(0);
+    try {
+      await matchmakingService.leaveQueue();
+    } catch (e) {
+      // Ignore — already cleaned up locally
+    }
+  };
 
   const joinQueue = async () => {
     if (isPolling) return;
@@ -41,34 +67,52 @@ const Dashboard = () => {
       await matchmakingService.joinQueue();
       setQueueStatus({ in_queue: true, joined_at: new Date().toISOString() });
       setIsPolling(true);
-      
+      setQueueTimer(0);
+
+      // Timer counter
+      const timerInterval = setInterval(() => {
+        setQueueTimer(prev => prev + 1);
+      }, 1000);
+
       // Real polling for match
       const pollInterval = setInterval(async () => {
         try {
           const status = await matchmakingService.getQueueStatus();
           if (status.match_id) {
             clearInterval(pollInterval);
+            clearInterval(timerInterval);
             navigate('/arena', { state: { matchId: status.match_id } });
             setIsPolling(false);
+            setQueueStatus(null);
+            setPollIntervalRef(null);
           } else if (!status.in_queue) {
-            // Someone else matched us or we were removed
             clearInterval(pollInterval);
+            clearInterval(timerInterval);
             setQueueStatus(null);
             setIsPolling(false);
+            setPollIntervalRef(null);
           }
         } catch (e) {
           console.error("Polling error", e);
         }
       }, 2000);
 
-      // Timeout safety
+      setPollIntervalRef(pollInterval);
+
+      // Timeout safety — reset everything after 60s
       setTimeout(() => {
         clearInterval(pollInterval);
+        clearInterval(timerInterval);
         setIsPolling(false);
+        setQueueStatus(null);
+        setPollIntervalRef(null);
+        setQueueTimer(0);
       }, 60000);
 
     } catch (err) {
       console.error("Failed to join queue", err);
+      setQueueStatus(null);
+      setIsPolling(false);
     }
   };
 
@@ -138,14 +182,24 @@ const Dashboard = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <button 
-                onClick={joinQueue}
-                disabled={!!queueStatus?.in_queue}
-                className="btn btn-primary text-lg px-8 py-4 flex-1 sm:flex-none flex-between shadow-glow"
-              >
-                {queueStatus?.in_queue ? 'Finding Opponent...' : 'Competitive (1v1)'}
-                {!queueStatus?.in_queue && <ChevronRight size={20} />}
-              </button>
+              {queueStatus?.in_queue ? (
+                <button 
+                  onClick={cancelQueue}
+                  className="btn text-lg px-8 py-4 flex-1 sm:flex-none flex items-center justify-center gap-3 border border-warning/40 bg-warning/10 hover:bg-warning/20 text-warning transition-all"
+                >
+                  <div className="h-3 w-3 rounded-full bg-warning animate-pulse" />
+                  Finding Opponent... ({queueTimer}s)
+                  <span className="text-sm opacity-70 ml-1">Click to cancel</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={joinQueue}
+                  className="btn btn-primary text-lg px-8 py-4 flex-1 sm:flex-none flex-between shadow-glow"
+                >
+                  Competitive (1v1)
+                  <ChevronRight size={20} />
+                </button>
+              )}
 
               <button 
                 onClick={startPracticeMatch}
