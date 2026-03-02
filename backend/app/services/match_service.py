@@ -6,7 +6,7 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc
 
-from ..models import Match, MatchQueue, Player, Challenge, MatchStatus, MatchFormat, Submission
+from ..models import Match, MatchQueue, Player, Challenge, MatchStatus, MatchFormat, Submission, SubmissionStatus
 from ..config import settings
 from .rating_service import RatingService
 
@@ -443,8 +443,16 @@ class MatchService:
         
         # Check if match should end (all players done)
         if match.all_players_done:
-            match.status = MatchStatus.CONCLUDED
-            match.ended_at = datetime.utcnow()
+            # Automatically conclude match
+            result = self.conclude_match(match_id)
+            return {
+                "match_id": match_id,
+                "player_id": player_id,
+                "player_done": True,
+                "all_players_done": True,
+                "match_status": MatchStatus.CONCLUDED.value,
+                "conclusion": result
+            }
         
         self.db.commit()
         
@@ -478,21 +486,37 @@ class MatchService:
         
         # Check if time has expired
         if match.time_remaining <= 0:
-            match.status = MatchStatus.CONCLUDED
-            match.ended_at = datetime.utcnow()
-            match.result = "timeout"
-            self.db.commit()
+            # Automatically conclude match on timeout
+            self.conclude_match(match_id)
             
-            logger.info(f"Match {match_id} timed out")
+            logger.info(f"Match {match_id} timed out and concluded")
             return True
         
         return False
     
+    def _get_best_submission_for_player(self, match_id: str, player_id: str) -> Optional[Submission]:
+        """Get the highest scoring submission for a player in a match."""
+        submissions = self.db.query(Submission).filter(
+            Submission.match_id == match_id,
+            Submission.player_id == player_id
+        ).all()
+        
+        if not submissions:
+            return None
+            
+        # Prioritize: Test case score -> AI quality -> Complexity -> Earlier timestamp
+        return max(submissions, key=lambda s: (
+            s.test_case_score, 
+            s.ai_quality_score or 0, 
+            s.complexity_score or 0,
+            -s.submitted_at.timestamp()
+        ))
+
     def conclude_match(
         self,
         match_id: str,
-        player1_score: float,
-        player2_score: float,
+        player1_score: Optional[float] = None,
+        player2_score: Optional[float] = None,
         player1_ai_score: Optional[float] = None,
         player2_ai_score: Optional[float] = None,
         player1_complexity_score: Optional[float] = None,
@@ -523,6 +547,34 @@ class MatchService:
         if match.status == MatchStatus.CONCLUDED:
             return {"error": "Match already concluded"}
         
+        # If scores are missing (e.g. called from player_done or timeout), fetch best submissions
+        if player1_score is None:
+            best1 = self._get_best_submission_for_player(match_id, match.player1_id)
+            if best1:
+                player1_score = best1.test_case_score
+                player1_ai_score = best1.ai_quality_score
+                player1_complexity_score = best1.complexity_score
+                if cheat_probability is None: cheat_probability = best1.cheat_probability
+            else:
+                player1_score = 0.0
+
+        if player2_score is None and match.player2_id:
+            best2 = self._get_best_submission_for_player(match_id, match.player2_id)
+            if best2:
+                player2_score = best2.test_case_score
+                player2_ai_score = best2.ai_quality_score
+                player2_complexity_score = best2.complexity_score
+                # Combine cheat probabilities if needed, or take max
+                if best2.cheat_probability is not None:
+                    curr_cheat = cheat_probability if cheat_probability is not None else 0
+                    cheat_probability = max(curr_cheat, best2.cheat_probability)
+            else:
+                player2_score = 0.0
+        
+        # Defaults for single player or no submissions
+        if player1_score is None: player1_score = 0.0
+        if player2_score is None: player2_score = 0.0
+
         # Update match scores
         match.player1_score = player1_score
         match.player2_score = player2_score
@@ -536,10 +588,14 @@ class MatchService:
         player1_result, player2_result, winner = self.rating_service.calculate_match_result(
             player1_score=player1_score,
             player2_score=player2_score,
+            player1_time=match.player1_ai_quality_score, # We repurposed this as a placeholder for time
+            player2_time=match.player2_ai_quality_score,
             player1_ai_score=player1_ai_score,
-            player2_ai_score=player2_ai_score,
             player1_complexity_score=player1_complexity_score,
-            player2_complexity_score=player2_complexity_score
+            player2_ai_score=player2_ai_score,
+            player2_complexity_score=player2_complexity_score,
+            player1_memory=match.player1_score, # Placeholder
+            player1_ai_prob=cheat_probability
         )
         
         # Update match result
@@ -559,10 +615,42 @@ class MatchService:
             else:
                 match.integrity_status = "clean"
         
-        # Conclude match
+        # Conclude match status before rating update to avoid double conclusion
         match.status = MatchStatus.CONCLUDED
         if not match.ended_at:
             match.ended_at = datetime.utcnow()
+        
+        # Update player ratings if it's a 1v1 match
+        rating_updates = {}
+        if match.match_format == MatchFormat.ONE_VS_ONE and match.player2_id:
+            logger.info(f"Updating ratings for match {match_id}")
+            
+            player1_update = self.rating_service.update_player_rating(
+                player_id=match.player1_id,
+                opponent_id=match.player2_id,
+                match_id=match_id,
+                match_result=player1_result,
+                opponent_rating=match.player2.current_rating if match.player2 else 1200,
+                cheat_probability=cheat_probability
+            )
+            rating_updates["player1"] = player1_update
+            match.player1_rating_change = player1_update.get("rating_change")
+            
+            # Update player 2
+            player2_update = self.rating_service.update_player_rating(
+                player_id=match.player2_id,
+                opponent_id=match.player1_id,
+                match_id=match_id,
+                match_result=player2_result,
+                opponent_rating=match.player1.current_rating if match.player1 else 1200,
+                cheat_probability=cheat_probability
+            )
+            rating_updates["player2"] = player2_update
+            match.player2_rating_change = player2_update.get("rating_change")
+
+        # Refresh player objects to get new ratings for the response
+        if match.player1: self.db.refresh(match.player1)
+        if match.player2: self.db.refresh(match.player2)
         
         self.db.commit()
         
@@ -579,7 +667,8 @@ class MatchService:
             "result": match.result,
             "integrity_status": match.integrity_status,
             "rating_frozen": match.rating_frozen,
-            "ended_at": match.ended_at.isoformat() if match.ended_at else None
+            "ended_at": match.ended_at.isoformat() if match.ended_at else None,
+            "rating_updates": rating_updates
         }
     
     def get_match(self, match_id: str) -> Optional[Dict]:
@@ -613,6 +702,19 @@ class MatchService:
                     Submission.match_id == match_id,
                     Submission.player_id == match.player2_id
                 ).count()
+        
+        # Add rating updates info for concluded matches
+        if match.status == MatchStatus.CONCLUDED:
+            data["rating_updates"] = {
+                "player1": {
+                    "rating_change": match.player1_rating_change,
+                    "new_rating": (match.player1.current_rating) if match.player1 else None
+                },
+                "player2": {
+                    "rating_change": match.player2_rating_change,
+                    "new_rating": (match.player2.current_rating) if match.player2 else None
+                } if match.player2_id else None
+            }
             
         return data
     

@@ -51,6 +51,7 @@ class MatchResponse(BaseModel):
     winner_id: Optional[str] = None
     player1_score: Optional[float] = None
     player2_score: Optional[float] = None
+    result: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -85,6 +86,7 @@ class MatchConclusionResponse(BaseModel):
     player2_id: str
     player2_score: float
     player2_rating_change: int
+    result: Optional[str] = None
     concluded_at: datetime
     
     class Config:

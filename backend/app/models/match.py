@@ -56,6 +56,10 @@ class Match(Base):
     player1_score = Column(Float, default=0.0, nullable=False)
     player2_score = Column(Float, default=0.0, nullable=False)
     
+    # Rating changes
+    player1_rating_change = Column(Integer, nullable=True)
+    player2_rating_change = Column(Integer, nullable=True)
+    
     # AI evaluation metrics
     player1_ai_quality_score = Column(Float, nullable=True)
     player2_ai_quality_score = Column(Float, nullable=True)
@@ -139,6 +143,8 @@ class Match(Base):
             "result": self.result,
             "integrity_status": self.integrity_status,
             "rating_frozen": self.rating_frozen,
+            "player1_rating_change": self.player1_rating_change,
+            "player2_rating_change": self.player2_rating_change,
             "websocket_room": self.websocket_room,
         }
 

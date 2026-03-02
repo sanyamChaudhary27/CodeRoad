@@ -4,7 +4,78 @@ import { challengeService, type Challenge } from '../services/challengeService';
 import { submissionService, type SubmissionResponse } from '../services/submissionService';
 import { matchmakingService, type PlayerMatchInfo } from '../services/matchmakingService';
 import { Play, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldAlert, Terminal as TerminalIcon, User as UserIcon, Trophy, Activity, RefreshCw } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 import { authService, type User } from '../services/authService';
+
+// Final Results Component (Moved to top for hoisting/scope clarity)
+const MatchResults = ({ data, user, onDashboard }: { data: any, user: User, onDashboard: () => void }) => {
+  const isDraw = data.result === 'draw_draw' || data.result?.includes('draw');
+  const isWinner = !isDraw && data.winner_id === user.id;
+  
+  // Resolve which player data is the user
+  const isPlayer1 = data.player1_id === user.id;
+  const ratingUpdate = isPlayer1 ? data.rating_updates?.player1 : data.rating_updates?.player2;
+  const myScore = isPlayer1 ? data.player1_score : data.player2_score;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-dark/95 backdrop-blur-[40px] animate-fade-in p-4 overflow-y-auto">
+      <div className="glass-panel p-8 md:p-12 max-w-lg w-full border-primary/40 shadow-glow-2xl relative overflow-hidden text-center animate-scale-in bg-bg-panel/90">
+        {/* Victory/Defeat Background Glow */}
+        <div className={`absolute -top-32 -left-32 w-96 h-96 rounded-full blur-[120px] opacity-20 ${isWinner ? 'bg-success' : isDraw ? 'bg-warning' : 'bg-danger'}`}></div>
+        <div className={`absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-[120px] opacity-10 ${isWinner ? 'bg-primary' : isDraw ? 'bg-primary/50' : 'bg-warning'}`}></div>
+        
+        <div className="relative z-10">
+          <div className="mb-8 flex justify-center">
+            {isWinner ? (
+              <div className="bg-success/20 p-6 rounded-full border-2 border-success/40 shadow-glow-sm shadow-success/30 animate-bounce">
+                <Trophy size={64} className="text-success" />
+              </div>
+            ) : isDraw ? (
+              <div className="bg-warning/20 p-6 rounded-full border-2 border-warning/40 shadow-glow-sm shadow-warning/30">
+                <Activity size={64} className="text-warning" />
+              </div>
+            ) : (
+              <div className="bg-danger/20 p-6 rounded-full border-2 border-danger/40 shadow-glow-sm shadow-danger/30">
+                <XCircle size={64} className="text-danger" />
+              </div>
+            )}
+          </div>
+
+          <h2 className="text-6xl font-black italic tracking-tighter text-white mb-2 uppercase leading-none filter drop-shadow-xl">
+            {isWinner ? 'Victory' : isDraw ? 'Draw' : 'Defeat'}
+          </h2>
+          <p className="text-text-secondary text-xs mb-10 tracking-[0.4em] uppercase font-black opacity-60">
+            {isWinner ? 'System dominance established' : isDraw ? 'Parity reached' : 'Neural connection severed'}
+          </p>
+
+          <div className="grid grid-cols-1 gap-4 mb-10">
+            <div className="flex items-center justify-between p-4 bg-bg-dark/40 rounded-xl border border-white/5">
+               <span className="text-[10px] uppercase tracking-[0.2em] text-text-muted font-bold">Accuracy</span>
+               <span className="text-2xl font-black text-white">{myScore?.toFixed(0)}%</span>
+            </div>
+            
+            <div className={`flex items-center justify-between p-4 rounded-xl border ${ratingUpdate?.rating_change >= 0 ? 'bg-success/5 border-success/20' : 'bg-danger/5 border-danger/20'}`}>
+               <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>Rating Impact</span>
+               <div className="flex items-center gap-3">
+                 <span className={`text-2xl font-black tabular-nums ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>
+                   {ratingUpdate?.rating_change >= 0 ? `+${ratingUpdate.rating_change}` : ratingUpdate?.rating_change || 0}
+                 </span>
+                 <span className="text-xs text-text-muted font-mono opacity-50">({ratingUpdate?.new_rating || '---'})</span>
+               </div>
+            </div>
+          </div>
+
+          <button 
+            onClick={onDashboard} 
+            className="btn btn-primary w-full py-4 text-lg font-black uppercase tracking-widest shadow-glow hover:translate-y-[-2px] active:translate-y-[0] transition-all border-b-4 border-black/20"
+          >
+            Return to Terminal
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Arena = () => {
   const navigate = useNavigate();
@@ -21,6 +92,9 @@ const Arena = () => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTime, setSearchTime] = useState<number>(30);
+  const [isDone, setIsDone] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [matchData, setMatchData] = useState<any>(null);
 
   useEffect(() => {
     const initializeArena = async () => {
@@ -138,6 +212,27 @@ const Arena = () => {
     initializeArena();
   }, []); // Run ONCE on mount
 
+  // Check if player is already marked as done in this match
+  useEffect(() => {
+    if (!matchId || !user) return;
+    const checkStatus = async () => {
+      try {
+        const details = await matchmakingService.getMatch(matchId);
+        const currentUserIsPlayer1 = details.player1_id === user.id;
+        if (currentUserIsPlayer1 ? details.player1_done : details.player2_done) {
+          setIsDone(true);
+        }
+        if (details.status === 'concluded') {
+          setMatchData(details);
+          setShowResults(true);
+        }
+      } catch (e) {
+        console.error("Match status check failed", e);
+      }
+    };
+    checkStatus();
+  }, [matchId, user]);
+
   // Search Countdown Logic
   useEffect(() => {
     if (status !== 'searching') return;
@@ -156,14 +251,21 @@ const Arena = () => {
 
   // Timer Countdown Logic
   useEffect(() => {
-     if (timeLeft === null || timeLeft <= 0 || status === 'submitting') return;
+     if (timeLeft === null || timeLeft <= 0 || status === 'submitting' || isDone) {
+        if (timeLeft === 0 && !isDone && matchId) {
+          // Auto-finish on timeout
+          matchmakingService.markPlayerDone(matchId).catch(console.error);
+          setIsDone(true);
+        }
+        return;
+     }
      
      const timerId = setInterval(() => {
        setTimeLeft(prev => (prev !== null && prev > 0) ? prev - 1 : 0);
      }, 1000);
      
      return () => clearInterval(timerId);
-  }, [timeLeft, status]);
+  }, [timeLeft, status, isDone, matchId]);
 
   // Periodic Refresh for Match Stats
   useEffect(() => {
@@ -193,6 +295,12 @@ const Arena = () => {
         
         if (matchDetails.player2_id) {
           setOpponent(opponentInfo);
+        }
+
+        if (matchDetails.status === 'concluded') {
+          setMatchData(matchDetails);
+          setShowResults(true);
+          clearInterval(refreshInterval);
         }
       } catch (e) {
         console.warn("Refresh failed", e);
@@ -335,6 +443,20 @@ const Arena = () => {
     }
   };
 
+  const handleFinishMatch = async () => {
+    if (!matchId || isDone) return;
+    
+    try {
+      setStatus('polling');
+      await matchmakingService.markPlayerDone(matchId);
+      setIsDone(true);
+      setStatus('idle');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to signal completion.");
+      setStatus('idle');
+    }
+  };
+
   if (!challenge || status === 'generating' || status === 'searching') {
     return (
       <div className="min-h-screen flex-center flex-col text-white bg-bg-dark">
@@ -369,274 +491,262 @@ const Arena = () => {
   const isSubmitting = status === 'submitting' || status === 'polling';
 
   return (
-    <div className="min-h-screen flex flex-col p-4 animate-fade-in">
+    <div className="bg-mesh-background min-h-screen">
+      <div className="bg-mesh"></div>
       
-      {/* Top HUD */}
-      <div className="glass-panel mb-4 p-4 flex items-center justify-between border-b-2 border-primary/30 bg-bg-panel/40 select-none">
-        <div className="flex items-center gap-4">
-          <div className="p-2 bg-primary/10 rounded-full border border-primary/20">
-             <UserIcon size={20} className="text-primary" />
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-bold text-white leading-tight">{user?.username || 'Guest'}</p>
-            <p className="text-[10px] text-text-muted font-mono uppercase tracking-wider">Rating: <span className="text-success">{user?.current_rating}</span></p>
-          </div>
-        </div>
 
-        <div className="flex flex-col items-center">
-          <div className={`p-2 px-4 rounded-xl border flex-center flex-col gap-0.5 min-w-[140px] ${timeLeft !== null && timeLeft < 30 ? 'bg-danger/10 border-danger/40 animate-pulse' : 'bg-bg-dark/80 border-border-light shadow-inner-white'}`}>
-             <div className="flex items-center gap-1.5 text-text-muted uppercase tracking-[0.2em] text-[9px] font-bold">
-               <Clock size={10} /> Time Remaining
-             </div>
-             <span className={`text-2xl font-mono font-bold tracking-widest ${(timeLeft !== null && timeLeft < 30) ? 'text-danger' : 'text-white'}`}>
-                {timeLeft !== null ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : '--:--'}
-             </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 text-right">
-          <div className="hidden sm:block">
-            <p className="text-sm font-bold text-white leading-tight">{opponent ? opponent.username : 'Solo Training'}</p>
-            <div className="flex items-center gap-2 justify-end mt-0.5">
-               <span className="text-[9px] bg-bg-dark px-1.5 py-0.5 rounded border border-border-light text-text-muted font-mono">
-                 {opponent ? `ELO: ${opponent.current_rating}` : 'UNRANKED'}
-               </span>
-               {opponent && (
-                 <span className="text-[9px] bg-primary/10 px-1.5 py-0.5 rounded border border-primary/30 text-primary font-mono tracking-tighter uppercase font-bold">
-                   {opponent.submissions_count || 0} Subs
-                 </span>
-               )}
-            </div>
-          </div>
-          <div className="p-2 bg-accent/10 rounded-full border border-accent/20">
-             <Trophy size={20} className="text-accent" />
-          </div>
-        </div>
-      </div>
-
-      {/* Breadcrumbs / Actions Row */}
-      <div className="flex-between mb-4 px-2">
-        <button onClick={() => navigate('/dashboard')} className="text-text-secondary hover:text-white flex items-center gap-2 transition-colors">
-           &larr; Abort Mission
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="badge badge-warning">{challenge.difficulty}</span>
-          <span className="badge badge-primary">{challenge.domain}</span>
-        </div>
-      </div>
-
-      <div className={`flex-1 grid grid-cols-1 ${opponent ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 min-h-0`}>
+      <div className="min-h-screen flex flex-col p-4 animate-fade-in relative z-0">
         
-        {/* Left Pane - Problem Description */}
-        <div className="glass-panel p-6 overflow-y-auto flex flex-col">
-          <h2 className="text-2xl font-bold text-white mb-2">{challenge.title}</h2>
-          <div className="bg-bg-panel-light p-4 rounded-lg border border-border-light mb-6">
-            <p className="whitespace-pre-wrap text-text-primary text-sm leading-relaxed">{challenge.description}</p>
+        {/* Top HUD */}
+        <div className="glass-panel mb-6 p-4 flex items-center justify-between border-b-2 border-primary/30 bg-bg-panel/60 shadow-glow-sm relative z-20">
+          {/* User Section */}
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative">
+              <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20 shadow-inner">
+                 <UserIcon size={22} className="text-primary" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-bg-panel"></div>
+            </div>
+            <div>
+              <p className="text-sm font-black text-white tracking-tight uppercase">{user?.username || 'Guest'}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Ranked Index</span>
+                <span className="text-[10px] font-black text-success bg-success/10 px-1.5 rounded">{user?.current_rating}</span>
+              </div>
+            </div>
           </div>
 
-          <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">I/O Specification</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-bg-dark rounded p-3 border border-border-light">
-              <span className="text-xs text-text-secondary mb-1 block">Input Format</span>
-              <p className="text-sm font-mono text-white whitespace-pre-wrap">{challenge.input_format}</p>
-            </div>
-            <div className="bg-bg-dark rounded p-3 border border-border-light">
-              <span className="text-xs text-text-secondary mb-1 block">Output Format</span>
-              <p className="text-sm font-mono text-white whitespace-pre-wrap">{challenge.output_format}</p>
+          {/* Timer Section - Center */}
+          <div className="flex-1 flex justify-center">
+            <div className={`relative group transition-all duration-500 ${timeLeft !== null && timeLeft < 30 ? 'scale-110' : ''}`}>
+              <div className={`p-1 px-6 rounded-2xl border-2 flex flex-col items-center justify-center min-w-[160px] transition-all ${timeLeft !== null && timeLeft < 30 ? 'bg-danger/10 border-danger/60 shadow-glow shadow-danger/40 animate-pulse' : 'bg-bg-dark/90 border-primary/20 shadow-glow shadow-primary/10'}`}>
+                 <div className="flex items-center gap-2 text-text-muted uppercase tracking-[0.3em] text-[8px] font-black opacity-60 mb-0.5">
+                   <Clock size={10} /> Sync Time
+                 </div>
+                 <span className={`text-3xl font-mono font-black tracking-[0.2em] leading-none ${(timeLeft !== null && timeLeft < 30) ? 'text-danger' : 'text-white'}`}>
+                    {timeLeft !== null ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : '--:--'}
+                 </span>
+              </div>
             </div>
           </div>
 
-          <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">Constraints & Boundaries</h3>
-          <ul className="list-disc pl-5 mb-6 text-sm text-text-secondary space-y-1">
-             {challenge.constraints && Object.entries(challenge.constraints).map(([_, v], i) => (
-                <li key={i}><span className="text-white font-mono">{String(v)}</span></li>
-             ))}
-             <li>Time Limit: <span className="text-warning">{challenge.time_limit_seconds || 120}s</span></li>
-          </ul>
-
-          <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">Example Scenarios</h3>
-          <div className="space-y-4 mb-4">
-             {challenge.test_cases?.filter((t: any) => !t.is_hidden).map((tc: any, idx: number) => (
-               <div key={idx} className="bg-bg-dark rounded p-4 border border-border-light">
-                  <div className="flex-between mb-2">
-                    <span className="text-xs text-primary font-bold">Example {idx + 1}</span>
-                    <span className="badge badge-secondary">{tc.category}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs text-text-secondary block mb-1">Input</span>
-                      <pre className="text-sm font-mono text-white bg-black/40 p-2 rounded">{tc.input}</pre>
-                    </div>
-                    <div>
-                      <span className="text-xs text-text-secondary block mb-1">Expected Output</span>
-                      <pre className="text-sm font-mono text-success bg-black/40 p-2 rounded">{tc.expected_output}</pre>
-                    </div>
-                  </div>
-                  {tc.description && <p className="text-xs text-text-muted mt-2 mt-2 pt-2 border-t border-border-light">{tc.description}</p>}
+          {/* Match Stats Section */}
+          <div className="flex items-center gap-6 flex-1 justify-end">
+             <div className="text-right flex flex-col items-end gap-1">
+               <div className="flex items-center gap-2">
+                 <span className={`text-[10px] font-black uppercase tracking-widest ${opponent ? 'text-accent' : 'text-text-muted'}`}>
+                   {opponent ? 'Competitive 1v1' : 'Training Routine'}
+                 </span>
+                 <div className={`w-2 h-2 rounded-full ${opponent ? 'bg-accent animate-pulse' : 'bg-text-muted'}`}></div>
                </div>
-             ))}
-          </div>
-        </div>
-
-        {/* Center Column - Code Editor */}
-        <div className="flex flex-col gap-4">
-          <div className="glass-panel flex-1 flex flex-col overflow-hidden relative">
-            <div className="bg-bg-dark border-b border-border-light p-2 px-4 flex-between items-center text-sm">
-              <span className="text-text-secondary font-mono flex items-center gap-2">
-                 <TerminalIcon size={14} /> solution.py
-              </span>
-              <span className="badge badge-primary">Python 3</span>
-            </div>
-            
-            <textarea
-              className="flex-1 w-full bg-transparent text-white font-mono p-4 resize-none focus:outline-none"
-              spellCheck={false}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="# Write your Python code here"
-              style={{ lineHeight: '1.5', color: 'white', caretColor: 'var(--primary)' }}
-            />
-            
-            <div className="absolute bottom-4 right-4">
-              <button 
-                onClick={handleSubmitCode} 
-                className="btn btn-primary shadow-glow transition-all"
-                disabled={isSubmitting || code.trim() === ''}
-              >
-                {isSubmitting ? (
-                  <><Clock className="animate-spin" size={18} /> Executing...</>
-                ) : (
-                  <><Play size={18} fill="currentColor" /> Compile & Run</>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Terminal Output */}
-          <div className="glass-panel h-64 overflow-y-auto flex flex-col font-mono text-sm relative">
-             <div className="bg-bg-dark border-b border-border-light p-2 px-4 sticky top-0 uppercase tracking-widest text-xs text-text-muted font-bold z-10">
-               Execution Terminal
+               
+               <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] text-text-muted uppercase font-bold opacity-40 leading-none mb-1">Peer ELO</span>
+                    <span className="text-xs font-black text-white font-mono">{opponent ? opponent.current_rating : 'N/A'}</span>
+                  </div>
+                  <div className="h-6 w-px bg-white/10"></div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] text-text-muted uppercase font-bold opacity-40 leading-none mb-1">Submissions</span>
+                    <span className="text-xs font-black text-primary font-mono">{opponent ? opponent.submissions_count : '0'}</span>
+                  </div>
+               </div>
              </div>
              
-             <div className="p-4 flex-1">
-                {!submissionResult && status === 'idle' && (
-                  <div className="flex flex-col gap-2">
-                    <span className="text-text-secondary">&gt; Awaiting execution command...</span>
-                    {error && (
-                      <div className="text-danger mt-2 p-3 bg-danger/10 border border-danger/20 rounded font-mono text-xs animate-in fade-in slide-in-from-top-1">
-                        <div className="flex items-center gap-2 mb-1 font-bold">
-                          <XCircle size={14} /> SYSTEM_EXCEPTION_TRACEBACK
-                        </div>
-                        <pre className="whitespace-pre-wrap break-all opacity-90">{error}</pre>
-                      </div>
-                    )}
-                  </div>
-                )}
-               
-               {status === 'polling' && (
-                 <div className="flex items-center gap-2 text-warning animate-pulse">
-                   &gt; Requesting secure execution container...<br/>
-                   &gt; Compiling against {challenge.test_cases?.length || '?'} parallel test suites...<br/>
-                   &gt; Awaiting ML validation heuristics...
-                 </div>
-               )}
-
-               {submissionResult && (
-                 <div className="space-y-4 animate-fade-in">
-                   <div className="flex items-center gap-3 border-b border-border-light pb-3">
-                     {submissionResult.status === 'success' ? (
-                       <><CheckCircle2 size={24} className="text-success" /> <span className="text-xl font-bold text-success">Verification Successful</span></>
-                     ) : (
-                       <><XCircle size={24} className="text-danger" /> <span className="text-xl font-bold text-danger">Execution Failed</span></>
-                     )}
-                   </div>
-                   
-                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <span className="text-xs text-text-muted block">Tests Passed</span>
-                        <span className="text-white text-lg">{submissionResult.test_cases_passed} / {challenge.test_cases?.length || '?'}</span>
-                      </div>
-                      <div>
-                        <span className="text-xs text-text-muted block">Runtime</span>
-                        <span className="text-white text-lg">{submissionResult.execution_time_ms ? `${submissionResult.execution_time_ms}ms` : 'N/A'}</span>
-                      </div>
-                      <div>
-                        <span className="text-xs text-text-muted block">Integrity Score</span>
-                        <div className="flex items-center gap-2">
-                           {submissionResult.ai_assisted_probability !== null && submissionResult.ai_assisted_probability > 70 ? (
-                             <><ShieldAlert size={16} className="text-danger" /><span className="text-danger text-lg">{submissionResult.ai_assisted_probability.toFixed(0)}% AI</span></>
-                           ) : (
-                             <span className="text-success text-lg">Human</span>
-                           )}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-xs text-text-muted block">Elo Impact</span>
-                        <span className={submissionResult.score > 0 ? "text-success text-lg" : "text-danger text-lg"}>
-                           {submissionResult.score > 0 ? `+${submissionResult.score}` : submissionResult.score}
-                        </span>
-                      </div>
-                   </div>
-
-                   {submissionResult.status !== 'success' && submissionResult.error_message && (
-                     <div className="mt-4 p-3 bg-danger/10 border border-danger/20 rounded">
-                        <span className="text-xs text-danger uppercase tracking-wider block mb-1 font-bold flex items-center gap-2">
-                          <AlertTriangle size={14} /> Traceback Context
-                        </span>
-                        <pre className="text-xs text-danger/90 whitespace-pre-wrap">{submissionResult.error_message}</pre>
-                     </div>
-                   )}
+             <div className="flex items-center gap-3">
+               {!isDone ? (
+                 <button 
+                  onClick={handleFinishMatch}
+                  disabled={status === 'submitting' || status === 'polling'}
+                  className="btn btn-primary h-12 px-6 flex items-center gap-2 shadow-glow group border-b-4 border-black/20 hover:translate-y-[-2px] active:translate-y-[0] transition-all"
+                 >
+                   <CheckCircle2 size={18} className="group-hover:scale-110 transition-transform" /> 
+                   <span className="uppercase text-xs font-black tracking-widest">Conclude</span>
+                 </button>
+               ) : (
+                 <div className="bg-success/10 text-success border border-success/30 h-12 px-6 rounded-lg flex items-center gap-3 font-black text-xs uppercase tracking-widest animate-pulse border-b-4 border-success/40">
+                   <Activity size={18} className="animate-spin-slow" /> Awaiting Peer
                  </div>
                )}
              </div>
           </div>
         </div>
 
-        {/* Right Column - Opponent Feed */}
-        {opponent && (
-          <div className="flex flex-col gap-4">
-          {/* AI/Opponent Editor - Only show if not solo match */}
-        {opponent?.player_id && (
-          <div className="flex-1 flex flex-col min-w-0 border-l border-border-light relative">
-            <div className="flex-between p-3 px-4 glass-panel border-0 rounded-none border-b border-border-light">
-              <div className="flex items-center gap-3">
-                <div className="h-6 w-6 rounded-full bg-danger/20 flex-center">
-                  <Activity size={12} className="text-danger" />
-                </div>
-                <span className="text-sm font-bold text-white tracking-wide">
-                  OPPONENT TERMINAL
-                </span>
+        <div className="flex-between mb-4 px-2">
+          <button onClick={() => navigate('/dashboard')} className="text-text-secondary hover:text-white flex items-center gap-2 transition-colors">
+             &larr; Abort Mission
+          </button>
+          <div className="flex items-center gap-3">
+            <span className="badge badge-warning">{challenge.difficulty}</span>
+            <span className="badge badge-primary">{challenge.domain}</span>
+          </div>
+        </div>
+
+        <div className={`flex-1 grid grid-cols-1 ${opponent ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4 min-h-0`}>
+          <div className="glass-panel p-6 overflow-y-auto flex flex-col">
+            <h2 className="text-2xl font-bold text-white mb-2">{challenge.title}</h2>
+            <div className="bg-bg-panel-light p-4 rounded-lg border border-border-light mb-6">
+              <p className="whitespace-pre-wrap text-text-primary text-sm leading-relaxed">{challenge.description}</p>
+            </div>
+            <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">I/O Specification</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-bg-dark rounded p-3 border border-border-light">
+                <span className="text-xs text-text-secondary mb-1 block">Input Format</span>
+                <p className="text-sm font-mono text-white whitespace-pre-wrap">{challenge.input_format}</p>
               </div>
-              <div className="flex items-center gap-4">
-                 <span className="text-xs text-text-muted font-mono">ID: {opponent.player_id.slice(0, 8)}</span>
+              <div className="bg-bg-dark rounded p-3 border border-border-light">
+                <span className="text-xs text-text-secondary mb-1 block">Output Format</span>
+                <p className="text-sm font-mono text-white whitespace-pre-wrap">{challenge.output_format}</p>
               </div>
             </div>
-            
-            <div className="flex-1 overflow-hidden bg-bg-panel/40 backdrop-blur-sm relative group">
-              <div className="absolute inset-0 flex-center flex-col p-8 text-center opacity-40 group-hover:opacity-60 transition-opacity pointer-events-none">
-                 <Activity size={32} className="text-primary mb-4 animate-pulse" />
-                 <p className="text-sm text-primary font-mono lowercase tracking-widest">
-                   &gt; live_sync: active<br/>
-                   &gt; state: processing
-                 </p>
-              </div>
-              <div className="h-full w-full p-4 pointer-events-none opacity-20 filter blur-[1px]">
-                <pre className="text-xs font-mono text-primary">
-                  {opponentCode || `def solve(arr, x):\n  # opponent thinking...\n  # analyzing patterns\n  for i in range(len(arr)):\n    if arr[i] == x:\n      return i\n  return -1`}
-                </pre>
-              </div>
+            <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">Constraints</h3>
+            <ul className="list-disc pl-5 mb-6 text-sm text-text-secondary space-y-1">
+               {challenge.constraints && Object.entries(challenge.constraints).map(([_, v], i) => (
+                  <li key={i}><span className="text-white font-mono">{String(v)}</span></li>
+               ))}
+               <li>Time Limit: <span className="text-warning">{challenge.time_limit_seconds || 120}s</span></li>
+            </ul>
+            <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">Examples</h3>
+            <div className="space-y-4 mb-4">
+               {challenge.test_cases?.filter((t: any) => !t.is_hidden).map((tc: any, idx: number) => (
+                 <div key={idx} className="bg-bg-dark rounded p-4 border border-border-light">
+                    <div className="flex-between mb-2">
+                      <span className="text-xs text-primary font-bold">Example {idx + 1}</span>
+                      <span className="badge badge-secondary">{tc.category}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-xs text-text-secondary block mb-1">Input</span>
+                        <pre className="text-sm font-mono text-white bg-black/40 p-2 rounded">{tc.input}</pre>
+                      </div>
+                      <div>
+                        <span className="text-xs text-text-secondary block mb-1">Output</span>
+                        <pre className="text-sm font-mono text-success bg-black/40 p-2 rounded">{tc.expected_output}</pre>
+                      </div>
+                    </div>
+                 </div>
+               ))}
             </div>
           </div>
-        )}
 
-      </div>
-        )}
+          <div className="flex flex-col gap-4">
+            <div className="glass-panel flex-1 flex flex-col overflow-hidden relative">
+              <div className="bg-bg-dark border-b border-border-light p-2 px-4 flex-between items-center text-sm">
+                <span className="text-text-secondary font-mono flex items-center gap-2">
+                   <TerminalIcon size={14} /> solution.py
+                </span>
+                <span className="badge badge-primary">Python 3</span>
+              </div>
+              <div className="flex-1 min-h-0 bg-bg-dark/20">
+                <Editor
+                  height="100%"
+                  defaultLanguage="python"
+                  theme="vs-dark"
+                  value={code}
+                  onChange={(value) => setCode(value || '')}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    padding: { top: 16 },
+                    fontFamily: "'Fira Code', monospace",
+                    bracketPairColorization: { enabled: true },
+                    formatOnType: true,
+                    autoClosingBrackets: 'always',
+                    suggestOnTriggerCharacters: true,
+                    acceptSuggestionOnEnter: 'on',
+                    tabSize: 4,
+                  }}
+                />
+              </div>
+              <div className="absolute bottom-6 right-6 z-20">
+                <button onClick={handleSubmitCode} className="btn btn-primary shadow-glow-lg px-6 py-3 transition-all transform hover:scale-105 active:scale-95" disabled={isSubmitting || code.trim() === ''}>
+                  {isSubmitting ? <Clock className="animate-spin" size={18} /> : <Play size={18} fill="currentColor" />} {isSubmitting ? 'Verifying...' : 'Submit Neural Data'}
+                </button>
+              </div>
+            </div>
+            <div className="glass-panel h-64 overflow-y-auto flex flex-col font-mono text-sm">
+               <div className="bg-bg-dark border-b border-border-light p-2 px-4 sticky top-0 uppercase tracking-widest text-xs text-text-muted font-bold z-10">Terminal</div>
+               <div className="p-4 flex-1">
+                  {!submissionResult && status === 'idle' && (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-text-secondary">&gt; Ready for execution...</span>
+                      {error && <div className="text-danger mt-2 p-3 bg-danger/10 border border-danger/20 rounded text-xs"><pre className="whitespace-pre-wrap">{error}</pre></div>}
+                    </div>
+                  )}
+                 {status === 'polling' && <div className="text-warning animate-pulse">&gt; Executing test suites...</div>}
+                 {submissionResult && (
+                   <div className="space-y-4 animate-fade-in">
+                     <div className="flex items-center gap-3 border-b border-border-light pb-3">
+                       {submissionResult.status === 'success' ? <CheckCircle2 size={24} className="text-success" /> : <XCircle size={24} className="text-danger" />}
+                       <span className={`text-xl font-bold ${submissionResult.status === 'success' ? 'text-success' : 'text-danger'}`}>
+                         {submissionResult.status === 'success' ? 'Tests Passed' : 'Execution Error'}
+                       </span>
+                     </div>
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div><span className="text-xs text-text-muted block">Passed</span><span className="text-white text-lg">{submissionResult.test_cases_passed} / {challenge.test_cases?.length || '?'}</span></div>
+                        <div><span className="text-xs text-text-muted block">Runtime</span><span className="text-white text-lg">{submissionResult.execution_time_ms ? `${submissionResult.execution_time_ms}ms` : 'N/A'}</span></div>
+                        <div><span className="text-xs text-text-muted block">Integrity</span><span className={(submissionResult.ai_assisted_probability ?? 0) > 70 ? "text-danger text-lg" : "text-success text-lg"}>{(submissionResult.ai_assisted_probability ?? 0) > 70 ? 'AI Check' : 'Human'}</span></div>
+                        <div><span className="text-xs text-text-muted block">ELO</span><span className={submissionResult.score >= 0 ? "text-success text-lg" : "text-danger text-lg"}>{submissionResult.score >= 0 ? `+${submissionResult.score}` : submissionResult.score}</span></div>
+                     </div>
+                   </div>
+                 )}
+               </div>
+            </div>
+          </div>
 
+          {opponent && (
+            <div className="flex flex-col gap-4">
+              <div className="flex-1 flex flex-col glass-panel border border-border-light relative overflow-hidden">
+                <div className="flex-between p-3 px-4 border-b border-border-light bg-bg-panel/40">
+                  <div className="flex items-center gap-3">
+                    <Activity size={12} className="text-danger animate-pulse" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Opponent Feed</span>
+                  </div>
+                  <span className="text-[10px] text-text-muted font-mono">{opponent.username}</span>
+                </div>
+                <div className="flex-1 p-4 bg-black/20 backdrop-blur-sm relative group overflow-hidden">
+                  <div className="absolute inset-0 flex-center opacity-10 pointer-events-none">
+                     <Activity size={48} className="text-primary animate-pulse" />
+                  </div>
+                  <pre className="text-[10px] font-mono text-primary/60 select-none pointer-events-none">
+                    {opponentCode || '// Opponent is analyzing...'}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Fixed Overlays moved to end for correct stacking and blurring */}
+      {isDone && !showResults && (
+        <div className="fixed inset-0 z-[100] bg-overlay-80 backdrop-blur-xl flex items-center justify-center animate-fade-in shadow-2xl">
+           <div className="glass-panel p-10 text-center max-w-sm border-primary/60 shadow-glow-2xl relative z-[110] animate-scale-in bg-bg-panel/90">
+              <div className="h-20 w-20 rounded-full bg-primary/20 flex-center mx-auto mb-6 border-2 border-primary/40 shadow-glow-md">
+                <RefreshCw size={40} className="text-primary animate-spin" />
+              </div>
+              <h1 className="text-2xl font-black text-white mb-3 uppercase italic tracking-tighter">Synchronizing</h1>
+              <p className="text-text-secondary text-sm leading-relaxed opacity-90">
+                Peer consensus is being validated across the distributed neural net.
+              </p>
+              <div className="mt-8 flex flex-col gap-3">
+                 <div className="h-1.5 w-full bg-bg-dark rounded-full overflow-hidden border border-white/5">
+                    <div className="h-full bg-primary animate-progress-indefinite shadow-glow-sm"></div>
+                 </div>
+                 <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-black animate-pulse">Syncing...</span>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {showResults && matchData && user && (
+        <MatchResults data={matchData} user={user} onDashboard={() => navigate('/dashboard')} />
+      )}
     </div>
   );
 };
-    
-// Final component export
+
 export default Arena;

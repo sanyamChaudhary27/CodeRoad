@@ -133,7 +133,8 @@ async def get_match(
         "concluded_at": match_data.get("ended_at"),
         "winner_id": match_data.get("winner_id"),
         "player1_score": match_data.get("player1_score"),
-        "player2_score": match_data.get("player2_score")
+        "player2_score": match_data.get("player2_score"),
+        "result": match_data.get("result")
     }
 
 @router.get("/player/history", response_model=MatchListResponse)
@@ -178,7 +179,8 @@ async def get_player_matches(
             "concluded_at": match_data.get("concluded_at"),
             "winner_id": match_data.get("winner_id"),
             "player1_score": match_data.get("player1_score"),
-            "player2_score": match_data.get("player2_score")
+            "player2_score": match_data.get("player2_score"),
+            "result": match_data.get("result")
         })
     
     return {

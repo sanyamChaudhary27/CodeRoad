@@ -70,6 +70,20 @@ class IntegrityService:
         submission.code_length = len(code)
         submission.code_lines = len(code.split('\n'))
         
+        # Space Complexity Heuristic (Simple estimate based on variable count/types)
+        # Using a base 0.1MB + factor of length
+        submission.memory_used_mb = 0.1 + (len(code) / 10000.0)
+
+        # Time Complexity Heuristic (Nested loops detection)
+        loops = len(re.findall(r'\b(for|while)\b', code))
+        nested_loops = len(re.findall(r'(\bfor\b|\bwhile\b).*\n\s+(\bfor\b|\bwhile\b)', code))
+        recursion = 1 if re.search(r'def\s+(\w+)\(.*\).* \1\(', code, re.DOTALL) else 0
+        
+        # Calculate a "goodness" score (0-100)
+        # More loops/recursion reduces the score
+        complexity_impact = (loops * 10) + (nested_loops * 20) + (recursion * 30)
+        submission.complexity_score = max(0, min(100, 100 - complexity_impact))
+
         # Paste heuristic: high chars submitted in very little time
         # We don't have true frontend time_to_solve pushed yet, but if keystroke_speed is artificially provided or copy_paste_events > 0
         if submission.copy_paste_events > 0:

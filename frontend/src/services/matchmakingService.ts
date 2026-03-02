@@ -76,5 +76,10 @@ export const matchmakingService = {
   async createPracticeMatch(difficulty: string = 'intermediate') {
     const response = await api.post(`/matches/practice?difficulty=${difficulty}`);
     return response.data;
+  },
+
+  async markPlayerDone(matchId: string) {
+    const response = await api.post(`/matches/${matchId}/done`);
+    return response.data;
   }
 };
