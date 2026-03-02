@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { challengeService, type Challenge } from '../services/challengeService';
 import { submissionService, type SubmissionResponse } from '../services/submissionService';
 import { matchmakingService, type PlayerMatchInfo } from '../services/matchmakingService';
-import { Play, CheckCircle2, XCircle, Clock, AlertTriangle, ShieldAlert, Terminal as TerminalIcon, User as UserIcon, Trophy, Activity, RefreshCw } from 'lucide-react';
+import { Play, CheckCircle2, XCircle, Clock, AlertTriangle, Terminal as TerminalIcon, User as UserIcon, Trophy, Activity, RefreshCw } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { authService, type User } from '../services/authService';
 
