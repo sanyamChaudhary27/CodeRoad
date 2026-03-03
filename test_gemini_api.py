@@ -47,7 +47,55 @@ def test_gemini_api():
         
         # Test basic generation
         print("\n📝 Testing basic text generation...")
-        model = genai.GenerativeModel('gemini-3-flash-preview')
+        
+        # Try to find available models
+        print("🔍 Detecting available Gemini models...")
+        available_models = []
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    available_models.append(m.name)
+                    print(f"  ✓ Found: {m.name}")
+        except Exception as e:
+            print(f"  ⚠️  Could not list models: {e}")
+        
+        # Try models in order of preference
+        model_names = [
+            'gemini-1.5-flash',
+            'gemini-1.5-pro', 
+            'gemini-pro',
+            'gemini-2.0-flash-exp'
+        ]
+        
+        model = None
+        model_name = None
+        
+        for name in model_names:
+            try:
+                print(f"\n  Trying {name}...")
+                test_model = genai.GenerativeModel(name)
+                response = test_model.generate_content("Say 'Hello'", 
+                    generation_config=genai.types.GenerationConfig(
+                        temperature=0.7,
+                        max_output_tokens=100,
+                    ),
+                    request_options={'timeout': 10}
+                )
+                if response and response.text:
+                    model = test_model
+                    model_name = name
+                    print(f"  ✓ {name} works!")
+                    break
+            except Exception as e:
+                print(f"  ✗ {name} failed: {str(e)[:50]}")
+                continue
+        
+        if not model:
+            print("\n❌ No working Gemini model found")
+            print("Your API key may not have access to Gemini models")
+            return False
+        
+        print(f"\n✓ Using model: {model_name}")
         response = model.generate_content("Say 'Hello, API is working!'")
         
         if response and response.text:

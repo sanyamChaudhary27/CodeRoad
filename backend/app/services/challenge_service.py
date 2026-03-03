@@ -33,9 +33,30 @@ class ChallengeService:
             if api_key:
                 try:
                     genai.configure(api_key=api_key)
-                    self.gemini_model = genai.GenerativeModel("gemini-2.0-flash")
-                    self.ai_available = True
-                    logger.info("Gemini AI challenge generator initialized")
+                    # Try models in order of preference
+                    model_names = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+                    for model_name in model_names:
+                        try:
+                            self.gemini_model = genai.GenerativeModel(model_name)
+                            # Test the model with a simple request
+                            test_response = self.gemini_model.generate_content(
+                                "Say 'OK'",
+                                generation_config=genai.types.GenerationConfig(
+                                    temperature=0.7,
+                                    max_output_tokens=10,
+                                ),
+                                request_options={'timeout': 5}
+                            )
+                            if test_response and test_response.text:
+                                self.ai_available = True
+                                logger.info(f"Gemini AI initialized with model: {model_name}")
+                                break
+                        except Exception as e:
+                            logger.debug(f"Model {model_name} not available: {e}")
+                            continue
+                    
+                    if not self.ai_available:
+                        logger.warning("No Gemini models available, using templates")
                 except Exception as e:
                     logger.warning(f"Failed to initialize Gemini: {e}")
         
