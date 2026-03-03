@@ -26,6 +26,9 @@ class Player(Base):
     losses = Column(Integer, default=0, nullable=False)
     draws = Column(Integer, default=0, nullable=False)
     
+    # Profile customization
+    profile_picture = Column(String(500), nullable=True)  # URL or base64 data
+    
     # Win rate calculated property
     @property
     def win_rate(self) -> float:

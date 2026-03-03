@@ -131,5 +131,43 @@ async def get_me(
         "losses": player.losses,
         "badges_earned": len(player.badges) if player.badges else 0,
         "created_at": player.created_at,
-        "last_match_at": player.last_match_at
+        "last_match_at": player.last_match_at,
+        "profile_picture": player.profile_picture
+    }
+
+@router.put("/profile-picture")
+async def update_profile_picture(
+    profile_picture: str,
+    current_user: dict = Depends(get_current_player),
+    db: Session = Depends(get_db)
+):
+    """Update player profile picture."""
+    
+    player = db.query(Player).filter(Player.id == current_user["id"]).first()
+    
+    if not player:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Player not found"
+        )
+    
+    # Validate profile picture (basic validation for base64 or URL)
+    if not profile_picture:
+        player.profile_picture = None
+    elif len(profile_picture) > 500000:  # 500KB limit for base64
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profile picture too large (max 500KB)"
+        )
+    else:
+        player.profile_picture = profile_picture
+    
+    db.commit()
+    db.refresh(player)
+    
+    logger.info(f"Profile picture updated for player: {player.username}")
+    
+    return {
+        "message": "Profile picture updated successfully",
+        "profile_picture": player.profile_picture
     }

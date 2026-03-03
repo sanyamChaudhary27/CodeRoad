@@ -9,6 +9,7 @@ export interface User {
   wins?: number;
   losses?: number;
   created_at?: string;
+  profile_picture?: string;
 }
 
 export interface AuthResponse {
@@ -34,6 +35,13 @@ export const authService = {
     const response = await api.get('/auth/me');
     // Update local storage user profile with latest data
     localStorage.setItem('user', JSON.stringify(response.data));
+    return response.data;
+  },
+
+  async updateProfilePicture(profilePicture: string): Promise<any> {
+    const response = await api.put('/auth/profile-picture', { profile_picture: profilePicture });
+    // Refresh user data
+    await this.getCurrentUser();
     return response.data;
   },
 

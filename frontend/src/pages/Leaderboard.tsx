@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, type User } from '../services/authService';
 import { matchmakingService, type LeaderboardPlayer } from '../services/matchmakingService';
-import { ArrowLeft, Trophy, Medal, Crown, Award, TrendingUp, Users } from 'lucide-react';
+import { Trophy, Medal, Crown, Award, TrendingUp, Users } from 'lucide-react';
+import Header from '../components/Header';
 
 const Leaderboard = () => {
   const navigate = useNavigate();
@@ -54,14 +55,7 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
       
-      {/* Back Button */}
-      <button 
-        onClick={() => navigate('/dashboard')}
-        className="mb-6 flex items-center gap-2 text-text-secondary hover:text-primary transition-colors group"
-      >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-        <span>Back to Dashboard</span>
-      </button>
+      {user && <Header user={user} showLeaderboard={false} />}
 
       {/* Header */}
       <div className="glass-panel p-8 mb-8">

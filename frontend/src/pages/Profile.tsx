@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, type User } from '../services/authService';
-import { ArrowLeft, Trophy, Target, Activity, Award, TrendingUp, Calendar, Zap, Shield } from 'lucide-react';
+import { Trophy, Target, Activity, Award, TrendingUp, Calendar, Zap, Shield, Camera } from 'lucide-react';
+import Header from '../components/Header';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -22,6 +24,44 @@ const Profile = () => {
     };
     fetchUser();
   }, [navigate]);
+
+  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 500KB)
+    if (file.size > 500000) {
+      alert('Image too large. Please select an image under 500KB');
+      return;
+    }
+
+    setUploadingPicture(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        await authService.updateProfilePicture(base64String);
+        
+        // Refresh user data
+        const updatedUser = await authService.getCurrentUser();
+        setUser(updatedUser);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to upload profile picture', err);
+      alert('Failed to upload profile picture');
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
 
   if (loading || !user) {
     return (
@@ -39,23 +79,48 @@ const Profile = () => {
   return (
     <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
       
-      {/* Back Button */}
-      <button 
-        onClick={() => navigate('/dashboard')}
-        className="mb-6 flex items-center gap-2 text-text-secondary hover:text-primary transition-colors group"
-      >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-        <span>Back to Dashboard</span>
-      </button>
+      <Header user={user} />
 
       {/* Profile Header */}
       <div className="glass-panel p-8 mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          {/* Avatar */}
-          <div className="relative">
-            <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-4xl font-bold shadow-glow">
-              {user.username.charAt(0).toUpperCase()}
-            </div>
+          {/* Avatar with Upload */}
+          <div className="relative group">
+            {user.profile_picture ? (
+              <img 
+                src={user.profile_picture} 
+                alt={user.username}
+                className="h-24 w-24 rounded-2xl object-cover shadow-glow"
+              />
+            ) : (
+              <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-4xl font-bold shadow-glow">
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+            )}
+            
+            {/* Upload Button Overlay */}
+            <label 
+              htmlFor="profile-picture-upload"
+              className="absolute inset-0 rounded-2xl bg-black/60 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            >
+              {uploadingPicture ? (
+                <Activity size={24} className="text-white animate-spin" />
+              ) : (
+                <div className="text-center">
+                  <Camera size={24} className="text-white mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">Change</p>
+                </div>
+              )}
+            </label>
+            <input
+              id="profile-picture-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              className="hidden"
+              disabled={uploadingPicture}
+            />
+            
             <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-lg bg-warning flex-center shadow-lg">
               <Trophy size={20} className="text-white" />
             </div>

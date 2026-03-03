@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, type User as AuthUser } from '../services/authService';
 import { matchmakingService, type MatchQueueStatus } from '../services/matchmakingService';
-import { LogOut, Trophy, Activity, Users, ChevronRight, Award, Terminal, Database, Bug, Palette, Code2, User, Clock } from 'lucide-react';
+import { Activity, Users, ChevronRight, Award, Database, Bug, Palette, Code2, Clock, Trophy } from 'lucide-react';
+import Header from '../components/Header';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [queueStatus, setQueueStatus] = useState<MatchQueueStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,13 +25,6 @@ const Dashboard = () => {
     };
     fetchData();
   }, []);
-
-  const handleLogout = () => {
-    authService.logout();
-    navigate('/login');
-  };
-
-  const [isPolling, setIsPolling] = useState(false);
 
   const joinQueue = async () => {
     if (isPolling) return;
@@ -95,28 +90,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
       
-      {/* Header */}
-      <header className="flex-between mb-12 glass-panel p-4 px-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex-center">
-            <Terminal size={20} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-wide">Code Road</h1>
-            <p className="text-xs text-primary uppercase tracking-widest font-mono">Terminal Active</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <div className="text-right hidden sm:block">
-            <p className="text-white font-medium">{user.username}</p>
-            <p className="text-sm text-success font-mono">Rating: {user.current_rating}</p>
-          </div>
-          <button onClick={handleLogout} className="text-text-muted hover:text-danger transition-colors p-2 rounded-lg hover:bg-white/5">
-            <LogOut size={20} />
-          </button>
-        </div>
-      </header>
+      <Header user={user} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -274,36 +248,6 @@ const Dashboard = () => {
 
       </div>
 
-      {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <button 
-          onClick={() => navigate('/leaderboard')}
-          className="glass-panel p-6 hover:border-warning/50 transition-all group text-left"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-warning to-warning/60 flex-center group-hover:scale-110 transition-transform">
-              <Trophy size={24} className="text-white" />
-            </div>
-            <ChevronRight size={24} className="text-text-muted group-hover:text-warning transition-colors" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">Global Leaderboard</h3>
-          <p className="text-sm text-text-secondary">See where you rank among the best developers worldwide</p>
-        </button>
-
-        <button 
-          onClick={() => navigate('/profile')}
-          className="glass-panel p-6 hover:border-primary/50 transition-all group text-left"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center group-hover:scale-110 transition-transform">
-              <User size={24} className="text-white" />
-            </div>
-            <ChevronRight size={24} className="text-text-muted group-hover:text-primary transition-colors" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">Your Profile</h3>
-          <p className="text-sm text-text-secondary">View your stats, achievements, and match history</p>
-        </button>
-      </div>
     </div>
   );
 };
