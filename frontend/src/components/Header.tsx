@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Trophy, Code } from 'lucide-react';
+import { LogOut, Trophy } from 'lucide-react';
 import { authService, type User } from '../services/authService';
 
 interface HeaderProps {
@@ -18,9 +18,12 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
   return (
     <header className="flex-between mb-12 glass-panel p-4 px-6">
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary via-accent to-success flex-center shadow-lg cursor-pointer" onClick={() => navigate('/dashboard')}>
-          <Code size={24} className="text-white" />
-        </div>
+        <img 
+          src="/logo.svg" 
+          alt="Code Road Logo" 
+          className="h-12 w-12 cursor-pointer hover:scale-105 transition-transform"
+          onClick={() => navigate('/dashboard')}
+        />
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight cursor-pointer" onClick={() => navigate('/dashboard')}>Code Road</h1>
           <p className="text-xs text-primary/80 uppercase tracking-wider font-mono">Competitive Coding Arena</p>
@@ -44,7 +47,6 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
         >
           <div className="text-right hidden sm:block">
             <p className="text-white font-medium text-sm">{user.username}</p>
-            <p className="text-xs text-success font-mono">ELO: {user.current_rating}</p>
           </div>
           {user.profile_picture ? (
             <img 

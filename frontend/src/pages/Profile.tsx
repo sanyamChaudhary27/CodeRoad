@@ -47,18 +47,28 @@ const Profile = () => {
       // Convert to base64
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        await authService.updateProfilePicture(base64String);
-        
-        // Refresh user data
-        const updatedUser = await authService.getCurrentUser();
-        setUser(updatedUser);
+        try {
+          const base64String = reader.result as string;
+          await authService.updateProfilePicture(base64String);
+          
+          // Refresh user data
+          const updatedUser = await authService.getCurrentUser();
+          setUser(updatedUser);
+          setUploadingPicture(false);
+        } catch (err) {
+          console.error('Failed to upload profile picture', err);
+          alert('Failed to upload profile picture');
+          setUploadingPicture(false);
+        }
+      };
+      reader.onerror = () => {
+        alert('Failed to read image file');
+        setUploadingPicture(false);
       };
       reader.readAsDataURL(file);
     } catch (err) {
-      console.error('Failed to upload profile picture', err);
-      alert('Failed to upload profile picture');
-    } finally {
+      console.error('Failed to process image', err);
+      alert('Failed to process image');
       setUploadingPicture(false);
     }
   };
