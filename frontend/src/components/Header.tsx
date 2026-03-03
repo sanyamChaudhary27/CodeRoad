@@ -34,10 +34,10 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
         {showLeaderboard && (
           <button 
             onClick={() => navigate('/leaderboard')}
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-warning/10 border border-warning/20 hover:bg-warning/20 transition-all text-warning font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-warning/10 border border-warning/20 hover:bg-warning/20 transition-all text-warning font-medium"
           >
             <Trophy size={18} />
-            <span>Leaderboard</span>
+            <span className="hidden sm:inline">Leaderboard</span>
           </button>
         )}
         

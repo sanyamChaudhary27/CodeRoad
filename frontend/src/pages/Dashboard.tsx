@@ -129,14 +129,6 @@ const Dashboard = () => {
         <div className="glass-panel p-6 hover:border-primary/50 transition-all relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
           
-          {/* ELO Badge */}
-          <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-primary/20 border border-primary/30 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              <Trophy size={16} className="text-primary" />
-              <span className="text-primary font-bold">{user.current_rating} ELO</span>
-            </div>
-          </div>
-          
           <div className="relative flex items-center gap-6">
             <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center shrink-0">
               <Code2 size={32} className="text-white" />
@@ -162,9 +154,18 @@ const Dashboard = () => {
                   <Activity size={18} />
                   Solo Practice
                 </button>
-                <div className="ml-auto flex items-center gap-2 text-sm">
-                  <span className="text-text-muted">Difficulty:</span>
-                  <span className="text-success font-semibold">Dynamic</span>
+                <div className="ml-auto flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-text-muted">Difficulty:</span>
+                    <span className="text-success font-semibold">Dynamic</span>
+                  </div>
+                  {/* ELO Badge */}
+                  <div className="px-4 py-2 rounded-lg bg-primary/20 border border-primary/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                      <Trophy size={16} className="text-primary" />
+                      <span className="text-primary font-bold">{user.current_rating} ELO</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -174,14 +175,6 @@ const Dashboard = () => {
         {/* Debug Arena Card */}
         <div className="glass-panel p-6 hover:border-red-500/50 transition-all relative overflow-hidden opacity-60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
-          
-          {/* ELO Badge */}
-          <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              <Trophy size={16} className="text-red-400" />
-              <span className="text-red-400 font-bold">1200 ELO</span>
-            </div>
-          </div>
           
           <div className="relative flex items-center gap-6">
             <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-center shrink-0">
@@ -199,9 +192,18 @@ const Dashboard = () => {
                 <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
                   Solo Practice
                 </button>
-                <div className="ml-auto flex items-center gap-2 text-sm text-accent">
-                  <Clock size={16} />
-                  <span>Coming Q2 2026</span>
+                <div className="ml-auto flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm text-accent">
+                    <Clock size={16} />
+                    <span>Coming Q2 2026</span>
+                  </div>
+                  {/* ELO Badge */}
+                  <div className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                      <Trophy size={16} className="text-red-400" />
+                      <span className="text-red-400 font-bold">1200 ELO</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -211,14 +213,6 @@ const Dashboard = () => {
         {/* DBMS Arena Card */}
         <div className="glass-panel p-6 hover:border-blue-500/50 transition-all relative overflow-hidden opacity-60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-          
-          {/* ELO Badge */}
-          <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              <Trophy size={16} className="text-blue-400" />
-              <span className="text-blue-400 font-bold">1200 ELO</span>
-            </div>
-          </div>
           
           <div className="relative flex items-center gap-6">
             <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex-center shrink-0">
@@ -236,9 +230,18 @@ const Dashboard = () => {
                 <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
                   Solo Practice
                 </button>
-                <div className="ml-auto flex items-center gap-2 text-sm text-warning">
-                  <Clock size={16} />
-                  <span>Coming Q2 2026</span>
+                <div className="ml-auto flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm text-warning">
+                    <Clock size={16} />
+                    <span>Coming Q2 2026</span>
+                  </div>
+                  {/* ELO Badge */}
+                  <div className="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                      <Trophy size={16} className="text-blue-400" />
+                      <span className="text-blue-400 font-bold">1200 ELO</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -248,14 +251,6 @@ const Dashboard = () => {
         {/* UI Arena Card */}
         <div className="glass-panel p-6 hover:border-purple-500/50 transition-all relative overflow-hidden opacity-60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-          
-          {/* ELO Badge */}
-          <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              <Trophy size={16} className="text-purple-400" />
-              <span className="text-purple-400 font-bold">1200 ELO</span>
-            </div>
-          </div>
           
           <div className="relative flex items-center gap-6">
             <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex-center shrink-0">
@@ -273,9 +268,18 @@ const Dashboard = () => {
                 <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
                   Solo Practice
                 </button>
-                <div className="ml-auto flex items-center gap-2 text-sm text-warning">
-                  <Clock size={16} />
-                  <span>Coming Q3 2026</span>
+                <div className="ml-auto flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm text-warning">
+                    <Clock size={16} />
+                    <span>Coming Q3 2026</span>
+                  </div>
+                  {/* ELO Badge */}
+                  <div className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                      <Trophy size={16} className="text-purple-400" />
+                      <span className="text-purple-400 font-bold">1200 ELO</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

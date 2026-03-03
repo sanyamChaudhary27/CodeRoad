@@ -111,15 +111,12 @@ const Profile = () => {
             {/* Upload Button Overlay */}
             <label 
               htmlFor="profile-picture-upload"
-              className="absolute inset-0 rounded-full bg-black/60 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              className="absolute inset-0 rounded-full bg-black/70 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             >
               {uploadingPicture ? (
-                <Activity size={28} className="text-white animate-spin" />
+                <Activity size={32} className="text-white animate-spin" />
               ) : (
-                <div className="text-center">
-                  <Camera size={28} className="text-white mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Change Photo</p>
-                </div>
+                <Camera size={32} className="text-white" />
               )}
             </label>
             <input
