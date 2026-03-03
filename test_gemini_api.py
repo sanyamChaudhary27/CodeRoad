@@ -61,10 +61,11 @@ def test_gemini_api():
         
         # Try models in order of preference
         model_names = [
-            'gemini-1.5-flash',
-            'gemini-1.5-pro', 
-            'gemini-pro',
-            'gemini-2.0-flash-exp'
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-flash-latest',
+            'gemini-3-flash-preview',
+            'gemini-pro-latest'
         ]
         
         model = None

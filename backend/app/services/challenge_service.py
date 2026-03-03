@@ -34,7 +34,7 @@ class ChallengeService:
                 try:
                     genai.configure(api_key=api_key)
                     # Try models in order of preference
-                    model_names = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+                    model_names = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-3-flash-preview']
                     for model_name in model_names:
                         try:
                             self.gemini_model = genai.GenerativeModel(model_name)
