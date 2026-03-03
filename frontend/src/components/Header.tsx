@@ -52,10 +52,10 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
             <img 
               src={user.profile_picture} 
               alt={user.username}
-              className="h-10 w-10 rounded-lg object-cover shadow-md"
+              className="h-10 w-10 rounded-full object-cover shadow-md border-2 border-primary/30"
             />
           ) : (
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-md">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-md border-2 border-primary/30">
               {user.username.charAt(0).toUpperCase()}
             </div>
           )}

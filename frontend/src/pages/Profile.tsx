@@ -100,10 +100,10 @@ const Profile = () => {
               <img 
                 src={user.profile_picture} 
                 alt={user.username}
-                className="h-24 w-24 rounded-2xl object-cover shadow-glow"
+                className="h-32 w-32 rounded-full object-cover shadow-glow border-4 border-primary/20"
               />
             ) : (
-              <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-4xl font-bold shadow-glow">
+              <div className="h-32 w-32 rounded-full bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-5xl font-bold shadow-glow border-4 border-primary/20">
                 {user.username.charAt(0).toUpperCase()}
               </div>
             )}
@@ -111,14 +111,14 @@ const Profile = () => {
             {/* Upload Button Overlay */}
             <label 
               htmlFor="profile-picture-upload"
-              className="absolute inset-0 rounded-2xl bg-black/60 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              className="absolute inset-0 rounded-full bg-black/60 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             >
               {uploadingPicture ? (
-                <Activity size={24} className="text-white animate-spin" />
+                <Activity size={28} className="text-white animate-spin" />
               ) : (
                 <div className="text-center">
-                  <Camera size={24} className="text-white mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Change</p>
+                  <Camera size={28} className="text-white mx-auto mb-1" />
+                  <p className="text-xs text-white font-medium">Change Photo</p>
                 </div>
               )}
             </label>
@@ -131,8 +131,8 @@ const Profile = () => {
               disabled={uploadingPicture}
             />
             
-            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-lg bg-warning flex-center shadow-lg">
-              <Trophy size={20} className="text-white" />
+            <div className="absolute -bottom-2 -right-2 h-12 w-12 rounded-full bg-warning flex-center shadow-lg border-4 border-bg-panel">
+              <Trophy size={24} className="text-white" />
             </div>
           </div>
 
