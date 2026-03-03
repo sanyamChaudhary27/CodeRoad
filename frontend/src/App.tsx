@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Arena from './pages/Arena';
+import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/arena" element={<Arena />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

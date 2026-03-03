@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, type User } from '../services/authService';
-import { matchmakingService, type LeaderboardPlayer, type MatchQueueStatus } from '../services/matchmakingService';
-import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award, Terminal, Database, Bug, Palette, Code2, Sparkles, Clock } from 'lucide-react';
+import { authService, type User as AuthUser } from '../services/authService';
+import { matchmakingService, type MatchQueueStatus } from '../services/matchmakingService';
+import { LogOut, Trophy, Activity, Users, ChevronRight, Award, Terminal, Database, Bug, Palette, Code2, User, Clock } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [queueStatus, setQueueStatus] = useState<MatchQueueStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -16,9 +15,6 @@ const Dashboard = () => {
       try {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
-        
-        const lbData = await matchmakingService.getGlobalLeaderboard(10, 0);
-        setLeaderboard(lbData.leaderboard);
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
       } finally {
@@ -122,182 +118,191 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
+          <Award className="text-warning mb-2" size={24} />
+          <p className="text-3xl font-bold text-white">{user.wins || 0}</p>
+          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Victories</p>
+        </div>
+        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
+          <Activity className="text-accent mb-2" size={24} />
+          <p className="text-3xl font-bold text-white">{(user.matches_played || 0) > 0 ? Math.round(((user.wins || 0) / (user.matches_played || 1)) * 100) : 0}%</p>
+          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Win Rate</p>
+        </div>
+        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
+          <Users className="text-primary mb-2" size={24} />
+          <p className="text-3xl font-bold text-white">{user.matches_played || 0}</p>
+          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Matches</p>
+        </div>
+        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
+          <Trophy className="text-success mb-2" size={24} />
+          <p className="text-3xl font-bold text-white">{user.current_rating}</p>
+          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Elo</p>
+        </div>
+      </div>
+
+      {/* Arena Selection Title */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Choose Your Arena</h2>
+        <p className="text-text-secondary text-lg">Select a challenge type and compete in 1v1 battles or practice solo</p>
+      </div>
+
+      {/* Arena Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         
-        {/* Main Actions column */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Hero Banner */}
-          <div className="glass-panel p-8 md:p-10 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-               <Target size={120} />
+        {/* DSA Arena Card */}
+        <div className="glass-panel p-6 hover:border-primary/50 transition-all group relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
+          <div className="relative">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center mb-4 group-hover:scale-110 transition-transform">
+              <Code2 size={28} className="text-white" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">Enter the <br/><span className="text-gradient">Proving Grounds</span></h2>
-            <p className="text-text-secondary mb-8 max-w-md text-lg">
-              Compete against other developers in real-time. Our AI engine scales the challenges to your exact skill level.
-            </p>
+            <h3 className="text-xl font-bold text-white mb-2">DSA Arena</h3>
+            <p className="text-sm text-text-secondary mb-6">Data Structures & Algorithms challenges</p>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="space-y-3">
               <button 
                 onClick={joinQueue}
                 disabled={!!queueStatus?.in_queue}
-                className="btn btn-primary text-lg px-8 py-4 flex-1 sm:flex-none flex-between shadow-glow"
+                className="w-full btn btn-primary py-3 text-sm flex items-center justify-center gap-2"
               >
-                {queueStatus?.in_queue ? 'Finding Opponent...' : 'Competitive (1v1)'}
-                {!queueStatus?.in_queue && <ChevronRight size={20} />}
+                {queueStatus?.in_queue ? 'Finding...' : '1v1 Battle'}
+                {!queueStatus?.in_queue && <ChevronRight size={16} />}
               </button>
-
               <button 
                 onClick={startPracticeMatch}
-                className="btn btn-secondary text-lg px-8 py-4 flex-1 sm:flex-none flex items-center justify-center gap-2 border border-white/10"
+                className="w-full btn btn-secondary py-3 text-sm flex items-center justify-center gap-2 border border-white/10"
               >
-                <Activity size={20} />
-                Solo Training
+                <Activity size={16} />
+                Solo Practice
               </button>
             </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-              <Award className="text-warning mb-2" size={24} />
-              <p className="text-3xl font-bold text-white">{user.wins || 0}</p>
-              <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Victories</p>
-            </div>
-            <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-              <Activity className="text-accent mb-2" size={24} />
-              <p className="text-3xl font-bold text-white">{(user.matches_played || 0) > 0 ? Math.round(((user.wins || 0) / (user.matches_played || 1)) * 100) : 0}%</p>
-              <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Win Rate</p>
-            </div>
-            <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-              <Users className="text-primary mb-2" size={24} />
-              <p className="text-3xl font-bold text-white">{user.matches_played || 0}</p>
-              <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Matches</p>
-            </div>
-            <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-              <Trophy className="text-success mb-2" size={24} />
-              <p className="text-3xl font-bold text-white">{user.current_rating}</p>
-              <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Elo</p>
+            
+            <div className="mt-4 pt-4 border-t border-border-light">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-text-muted">Difficulty</span>
+                <span className="text-success font-semibold">Dynamic</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Leaderboard Column */}
-        <div className="glass-panel p-6 flex flex-col h-[600px]">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Trophy size={20} className="text-warning" />
-            Global Top 10
-          </h3>
-          
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {leaderboard.length > 0 ? (
-               leaderboard.map((player) => (
-                 <div key={player.player_id} className={`p-4 rounded-xl border flex items-center justify-between ${player.username === user.username ? 'bg-primary/10 border-primary/30' : 'bg-bg-panel-light/50 border-border-light'}`}>
-                   <div className="flex items-center gap-4">
-                     <span className={`font-mono font-bold w-6 text-center ${player.rank <= 3 ? 'text-warning' : 'text-text-muted'}`}>
-                       #{player.rank}
-                     </span>
-                     <div>
-                       <p className="text-white font-medium">{player.username}</p>
-                       <p className="text-xs text-text-secondary">{player.wins}W - {player.losses}L</p>
-                     </div>
-                   </div>
-                   <div className="text-right">
-                     <span className="text-primary font-mono font-bold">{player.current_rating}</span>
-                   </div>
-                 </div>
-               ))
-            ) : (
-               <div className="h-full flex-center flex-col text-text-muted text-center p-6 border border-dashed border-border-light rounded-xl">
-                 <Trophy size={48} className="mb-4 opacity-20" />
-                 <p>No rankings available yet. Be the first to conquer the board!</p>
-               </div>
-            )}
+        {/* DBMS Arena Card */}
+        <div className="glass-panel p-6 hover:border-blue-500/50 transition-all group relative overflow-hidden opacity-60">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+          <div className="relative">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex-center mb-4">
+              <Database size={28} className="text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">DBMS Arena</h3>
+            <p className="text-sm text-text-secondary mb-6">SQL queries and database optimization</p>
+            
+            <div className="space-y-3">
+              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed">
+                1v1 Battle
+              </button>
+              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed border border-white/10">
+                Solo Practice
+              </button>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-border-light">
+              <div className="flex items-center gap-2 text-xs text-warning">
+                <Clock size={14} />
+                <span>Coming Q2 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Debug Arena Card */}
+        <div className="glass-panel p-6 hover:border-red-500/50 transition-all group relative overflow-hidden opacity-60">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
+          <div className="relative">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-center mb-4">
+              <Bug size={28} className="text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Debug Arena</h3>
+            <p className="text-sm text-text-secondary mb-6">Find and fix bugs under pressure</p>
+            
+            <div className="space-y-3">
+              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed">
+                1v1 Battle
+              </button>
+              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed border border-white/10">
+                Solo Practice
+              </button>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-border-light">
+              <div className="flex items-center gap-2 text-xs text-accent">
+                <Clock size={14} />
+                <span>Coming Q2 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* UI Arena Card */}
+        <div className="glass-panel p-6 hover:border-purple-500/50 transition-all group relative overflow-hidden opacity-60">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+          <div className="relative">
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex-center mb-4">
+              <Palette size={28} className="text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">UI Arena</h3>
+            <p className="text-sm text-text-secondary mb-6">Build pixel-perfect interfaces fast</p>
+            
+            <div className="space-y-3">
+              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed">
+                1v1 Battle
+              </button>
+              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed border border-white/10">
+                Solo Practice
+              </button>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-border-light">
+              <div className="flex items-center gap-2 text-xs text-warning">
+                <Clock size={14} />
+                <span>Coming Q3 2026</span>
+              </div>
+            </div>
           </div>
         </div>
 
       </div>
 
-      {/* Coming Soon Features */}
-      <div className="mt-12 glass-panel p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <Sparkles size={24} className="text-warning" />
-          <h3 className="text-2xl font-bold text-white">Coming Soon</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-primary/50 transition-all group">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex-center mb-4 group-hover:scale-110 transition-transform">
-              <Database size={24} className="text-white" />
+      {/* Quick Links */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <button 
+          onClick={() => navigate('/leaderboard')}
+          className="glass-panel p-6 hover:border-warning/50 transition-all group text-left"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-warning to-warning/60 flex-center group-hover:scale-110 transition-transform">
+              <Trophy size={24} className="text-white" />
             </div>
-            <h4 className="text-lg font-bold text-white mb-2">DBMS Arena</h4>
-            <p className="text-sm text-text-secondary">Master SQL queries and database optimization in competitive challenges</p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-primary">
-              <Clock size={14} />
-              <span>Q2 2026</span>
-            </div>
+            <ChevronRight size={24} className="text-text-muted group-hover:text-warning transition-colors" />
           </div>
+          <h3 className="text-xl font-bold text-white mb-2">Global Leaderboard</h3>
+          <p className="text-sm text-text-secondary">See where you rank among the best developers worldwide</p>
+        </button>
 
-          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-accent/50 transition-all group">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex-center mb-4 group-hover:scale-110 transition-transform">
-              <Bug size={24} className="text-white" />
+        <button 
+          onClick={() => navigate('/profile')}
+          className="glass-panel p-6 hover:border-primary/50 transition-all group text-left"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center group-hover:scale-110 transition-transform">
+              <User size={24} className="text-white" />
             </div>
-            <h4 className="text-lg font-bold text-white mb-2">Debug Arena</h4>
-            <p className="text-sm text-text-secondary">Race to find and fix bugs in real codebases under time pressure</p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-accent">
-              <Clock size={14} />
-              <span>Q2 2026</span>
-            </div>
+            <ChevronRight size={24} className="text-text-muted group-hover:text-primary transition-colors" />
           </div>
-
-          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-warning/50 transition-all group">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex-center mb-4 group-hover:scale-110 transition-transform">
-              <Palette size={24} className="text-white" />
-            </div>
-            <h4 className="text-lg font-bold text-white mb-2">UI Arena</h4>
-            <p className="text-sm text-text-secondary">Build pixel-perfect interfaces from designs in competitive sprints</p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-warning">
-              <Clock size={14} />
-              <span>Q3 2026</span>
-            </div>
-          </div>
-
-          <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light hover:border-success/50 transition-all group">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex-center mb-4 group-hover:scale-110 transition-transform">
-              <Code2 size={24} className="text-white" />
-            </div>
-            <h4 className="text-lg font-bold text-white mb-2">Multi-Language</h4>
-            <p className="text-sm text-text-secondary">Python, Java, C++, JavaScript, Go, Rust and more languages supported</p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-success">
-              <Clock size={14} />
-              <span>Q3 2026</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Match History */}
-      <div className="mt-8 glass-panel p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <Activity size={24} className="text-primary" />
-          <h3 className="text-2xl font-bold text-white">Recent Matches</h3>
-        </div>
-        
-        <div className="space-y-3">
-          {user.matches_played && user.matches_played > 0 ? (
-            <div className="text-center py-12 text-text-muted">
-              <Activity size={48} className="mx-auto mb-4 opacity-20" />
-              <p>Match history will be available soon!</p>
-              <p className="text-sm mt-2">Your {user.matches_played} match{user.matches_played !== 1 ? 'es' : ''} will appear here</p>
-            </div>
-          ) : (
-            <div className="text-center py-12 text-text-muted border border-dashed border-border-light rounded-xl">
-              <Target size={48} className="mx-auto mb-4 opacity-20" />
-              <p>No matches played yet</p>
-              <p className="text-sm mt-2">Start your first match to see your history!</p>
-            </div>
-          )}
-        </div>
+          <h3 className="text-xl font-bold text-white mb-2">Your Profile</h3>
+          <p className="text-sm text-text-secondary">View your stats, achievements, and match history</p>
+        </button>
       </div>
     </div>
   );
