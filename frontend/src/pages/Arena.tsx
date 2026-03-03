@@ -86,7 +86,7 @@ const Arena = () => {
   const [code, setCode] = useState<string>('def solve():\n    # Write your code here\n    pass');
   const [opponentCode, setOpponentCode] = useState('// Opponent is typing...');
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [status, setStatus] = useState<'idle' | 'generating' | 'submitting' | 'polling' | 'searching'>('generating');
+  const [status, setStatus] = useState<'idle' | 'generating' | 'submitting' | 'polling' | 'searching' | 'loading_skeleton'>('loading_skeleton');
   const [submissionResult, setSubmissionResult] = useState<SubmissionResponse | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -462,7 +462,77 @@ const Arena = () => {
     }
   };
 
-  if (!challenge || status === 'generating' || status === 'searching') {
+  // Show skeleton after 1 second if still loading
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  
+  useEffect(() => {
+    if (!challenge && (status === 'generating' || status === 'loading_skeleton')) {
+      const timer = setTimeout(() => setShowSkeleton(true), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowSkeleton(false);
+    }
+  }, [challenge, status]);
+
+  if (!challenge || status === 'generating' || status === 'searching' || status === 'loading_skeleton') {
+    // Show skeleton UI after 1 second
+    if (showSkeleton && status !== 'searching') {
+      return (
+        <div className="min-h-screen p-4 md:p-6 flex flex-col animate-fade-in bg-bg-dark">
+          <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
+            <div className="flex-between mb-6">
+              <button onClick={() => navigate('/dashboard')} className="btn btn-secondary">
+                ← Back
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-20 bg-warning/20 rounded animate-pulse"></div>
+                <div className="h-6 w-20 bg-primary/20 rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+              {/* Problem Skeleton */}
+              <div className="glass-panel p-6 overflow-y-auto flex flex-col">
+                <div className="h-8 w-3/4 bg-white/10 rounded mb-4 animate-pulse"></div>
+                <div className="bg-bg-panel-light p-4 rounded-lg border border-border-light mb-6">
+                  <div className="space-y-2">
+                    <div className="h-4 w-full bg-white/5 rounded animate-pulse"></div>
+                    <div className="h-4 w-5/6 bg-white/5 rounded animate-pulse"></div>
+                    <div className="h-4 w-4/6 bg-white/5 rounded animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="h-4 w-32 bg-white/10 rounded mb-3 animate-pulse"></div>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-bg-dark rounded p-3 border border-border-light h-20 animate-pulse"></div>
+                  <div className="bg-bg-dark rounded p-3 border border-border-light h-20 animate-pulse"></div>
+                </div>
+                <div className="text-center py-8">
+                  <Activity size={48} className="mx-auto mb-4 text-primary animate-spin" />
+                  <p className="text-primary font-semibold">AI is generating your challenge...</p>
+                  <p className="text-text-muted text-sm mt-2">This usually takes 5-10 seconds</p>
+                </div>
+              </div>
+
+              {/* Editor Skeleton */}
+              <div className="flex flex-col gap-4">
+                <div className="glass-panel flex-1 flex flex-col overflow-hidden">
+                  <div className="bg-bg-dark border-b border-border-light p-2 px-4 h-10 animate-pulse"></div>
+                  <div className="flex-1 bg-bg-dark/50 p-4">
+                    <div className="space-y-2">
+                      <div className="h-4 w-48 bg-white/5 rounded animate-pulse"></div>
+                      <div className="h-4 w-64 bg-white/5 rounded animate-pulse"></div>
+                      <div className="h-4 w-40 bg-white/5 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Show simple loading for first second or searching
     return (
       <div className="min-h-screen flex-center flex-col text-white bg-bg-dark">
          <div className="animate-pulse-glow h-20 w-20 bg-primary/20 flex-center rounded-full mb-6 border border-primary/30">

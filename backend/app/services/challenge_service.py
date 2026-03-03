@@ -33,8 +33,8 @@ class ChallengeService:
             if api_key:
                 try:
                     genai.configure(api_key=api_key)
-                    # Try models in order of preference (only 2 models)
-                    model_names = ['gemini-2.5-flash', 'gemini-2.0-flash']
+                    # Use only gemini-2.0-flash (faster and more reliable)
+                    model_names = ['gemini-2.0-flash']
                     for model_name in model_names:
                         try:
                             self.gemini_model = genai.GenerativeModel(model_name)
@@ -149,14 +149,15 @@ Requirements:
 - Test cases must have deterministic, verifiable answers
 - Keep it simple enough to solve in under 5 minutes
 
-Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
+IMPORTANT: Respond with ONLY valid JSON. No markdown, no code blocks, no backticks, no explanations.
+
 {{
-  "title": "Problem Title",
-  "description": "Full problem description with clear instructions",
-  "domain": "arrays|strings|math|sorting|dynamic_programming",
+  "title": "Problem Title (short, clear)",
+  "description": "Full problem description with clear instructions. Be specific about what the function should do.",
+  "domain": "arrays",
   "input_format": "Description of input format",
   "output_format": "Description of output format",
-  "constraints": {{"input_size": "1 ≤ n ≤ 1000"}},
+  "constraints": {{"input_size": "1 <= n <= 1000"}},
   "boilerplate_code": "def solve(arr):\\n    # Write your code here\\n    return 0",
   "test_cases": [
     {{"input": "1 2 3", "expected_output": "6", "category": "basic", "description": "Basic test"}},
@@ -164,26 +165,39 @@ Respond ONLY with valid JSON (no markdown, no backticks) in this exact format:
     {{"input": "-1 -2 -3", "expected_output": "-6", "category": "edge", "description": "Negative numbers"}},
     {{"input": "100 200 300", "expected_output": "600", "category": "boundary", "description": "Large values"}}
   ]
-}}"""
+}}
+
+Generate the JSON now:"""
 
         response = self.gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
-                temperature=0.9,
+                temperature=0.7,  # Lower temperature for more consistent JSON
                 max_output_tokens=2000,
             ),
-            request_options={"timeout": 30.0}
+            request_options={"timeout": 20.0}  # Reduced timeout for faster fallback
         )
         text = response.text.strip()
         
-        # Clean up any markdown wrapping
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-        text = text.strip()
+        # Aggressive JSON cleaning
+        # Remove markdown code blocks
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0].strip()
         
-        data = json.loads(text)
+        # Remove any text before first { and after last }
+        start_idx = text.find('{')
+        end_idx = text.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            text = text[start_idx:end_idx+1]
+        
+        # Try to parse JSON
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON parse error: {e}. Text: {text[:200]}")
+            raise ValueError(f"Invalid JSON from AI: {str(e)}")
         
         # Build test cases with proper IDs and hidden flags
         test_cases = []
