@@ -836,3 +836,169 @@ select {
 /* --- Ease Utility --- */
 .ease-linear { transition-timing-function: linear; }
 
+
+
+/* --- Grid Pattern Background --- */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* --- Blur Utilities --- */
+.blur-3xl { filter: blur(64px); }
+.blur-2xl { filter: blur(40px); }
+.blur { filter: blur(8px); }
+
+/* --- Additional Width Classes --- */
+.max-w-6xl { max-width: 72rem; }
+
+/* --- Inline Flex --- */
+.inline-flex { display: inline-flex; }
+
+/* --- Transform Utilities --- */
+.-translate-x-1\/2 { transform: translateX(-50%); }
+.-translate-y-1\/2 { transform: translateY(-50%); }
+.translate-x-1 { transform: translateX(0.25rem); }
+.group-hover\:translate-x-1:hover { transform: translateX(0.25rem); }
+
+/* --- Top/Left/Right/Bottom Positioning --- */
+.top-1\/2 { top: 50%; }
+.left-1\/2 { left: 50%; }
+
+/* --- Additional Spacing --- */
+.space-y-6 > * + * { margin-top: 1.5rem; }
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.-inset-1 { top: -0.25rem; right: -0.25rem; bottom: -0.25rem; left: -0.25rem; }
+
+/* --- Height Classes --- */
+.h-5 { height: 1.25rem; }
+.w-5 { width: 1.25rem; }
+.h-14 { height: 3.5rem; }
+
+/* --- Padding Classes --- */
+.pl-4 { padding-left: 1rem; }
+.pr-4 { padding-right: 1rem; }
+.pl-12 { padding-left: 3rem; }
+
+/* --- Border Radius --- */
+.rounded-2xl { border-radius: 1rem; }
+.rounded-3xl { border-radius: 1.5rem; }
+
+/* --- Ring Utilities --- */
+.focus\:ring-2:focus { box-shadow: 0 0 0 2px var(--tw-ring-color); }
+.focus\:ring-primary\/20:focus { --tw-ring-color: rgba(99, 102, 241, 0.2); }
+
+/* --- Outline --- */
+.outline-none { outline: none; }
+
+/* --- Placeholder --- */
+.placeholder-text-muted::placeholder { color: var(--text-muted); }
+
+/* --- Focus Within --- */
+.group-focus-within\:text-primary:focus-within { color: var(--primary); }
+
+/* --- Animate Spin --- */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Animate Shake --- */
+.animate-shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* --- Border Width --- */
+.border-t-white { border-top-color: white; }
+.border-white\/30 { border-color: rgba(255, 255, 255, 0.3); }
+
+/* --- Gradient Backgrounds --- */
+.bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+.from-primary { --tw-gradient-from: var(--primary); --tw-gradient-to: rgba(99, 102, 241, 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.via-accent { --tw-gradient-stops: var(--tw-gradient-from), var(--accent), var(--tw-gradient-to); }
+.to-primary { --tw-gradient-to: var(--primary); }
+.to-transparent { --tw-gradient-to: transparent; }
+.from-accent\/5 { --tw-gradient-from: rgba(236, 72, 153, 0.05); --tw-gradient-to: rgba(236, 72, 153, 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-success\/5 { --tw-gradient-from: rgba(16, 185, 129, 0.05); --tw-gradient-to: rgba(16, 185, 129, 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.from-bg-dark { --tw-gradient-from: var(--bg-dark); --tw-gradient-to: rgba(15, 17, 21, 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.via-bg-panel { --tw-gradient-stops: var(--tw-gradient-from), var(--bg-panel), var(--tw-gradient-to); }
+.to-bg-dark { --tw-gradient-to: var(--bg-dark); }
+
+/* --- Border Colors --- */
+.border-accent\/10 { border-color: rgba(236, 72, 153, 0.1); }
+.border-accent\/30 { border-color: rgba(236, 72, 153, 0.3); }
+.border-success\/10 { border-color: rgba(16, 185, 129, 0.1); }
+.border-success\/30 { border-color: rgba(16, 185, 129, 0.3); }
+.hover\:border-primary\/30:hover { border-color: rgba(99, 102, 241, 0.3); }
+.hover\:border-accent\/30:hover { border-color: rgba(236, 72, 153, 0.3); }
+.hover\:border-success\/30:hover { border-color: rgba(16, 185, 129, 0.3); }
+
+/* --- Background Colors --- */
+.bg-accent\/10 { background-color: rgba(236, 72, 153, 0.1); }
+.bg-accent\/20 { background-color: rgba(236, 72, 153, 0.2); }
+.group-hover\:bg-primary\/20:hover { background-color: rgba(99, 102, 241, 0.2); }
+.group-hover\:bg-accent\/20:hover { background-color: rgba(236, 72, 153, 0.2); }
+.group-hover\:bg-success\/20:hover { background-color: rgba(16, 185, 129, 0.2); }
+
+/* --- Text Colors --- */
+.text-accent { color: var(--accent); }
+.text-red-400 { color: #f87171; }
+
+/* --- Responsive lg: (1024px+) --- */
+@media (min-width: 1024px) {
+  .lg\:hidden { display: none; }
+  .lg\:block { display: block; }
+  .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lg\:p-10 { padding: 2.5rem; }
+}
+
+/* --- Duration --- */
+.duration-300 { transition-duration: 300ms; }
+.duration-1000 { transition-duration: 1000ms; }
+
+/* --- Hover Opacity --- */
+.group-hover\:opacity-30:hover { opacity: 0.3; }
+
+/* --- Focus Border --- */
+.focus\:border-primary:focus { border-color: var(--primary); }
+
+/* --- Grid Cols --- */
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* --- Padding Top --- */
+.pt-4 { padding-top: 1rem; }
+
+/* --- Background Panel --- */
+.bg-bg-panel { background-color: var(--bg-panel); }
+
+/* --- Items Start --- */
+.items-start { align-items: flex-start; }
+
+/* --- Font Semibold --- */
+.font-semibold { font-weight: 600; }
+
+/* --- Margin Bottom --- */
+.mb-1 { margin-bottom: 0.25rem; }
+
+/* --- Hover Shadow Glow --- */
+.hover\:shadow-glow:hover { box-shadow: 0 0 15px var(--primary-glow); }
+
+/* --- Disabled Cursor --- */
+.disabled\:cursor-not-allowed:disabled { cursor: not-allowed; }
+.disabled\:opacity-50:disabled { opacity: 0.5; }
+
+/* --- Hover Text Primary --- */
+.hover\:text-primary-hover:hover { color: var(--primary-hover); }
+

@@ -148,125 +148,125 @@ const Dashboard = () => {
         <p className="text-text-secondary text-lg">Select a challenge type and compete in 1v1 battles or practice solo</p>
       </div>
 
-      {/* Arena Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      {/* Arena Cards - Full Width */}
+      <div className="space-y-4 mb-12">
         
         {/* DSA Arena Card */}
-        <div className="glass-panel p-6 hover:border-primary/50 transition-all group relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
-          <div className="relative">
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center mb-4 group-hover:scale-110 transition-transform">
-              <Code2 size={28} className="text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">DSA Arena</h3>
-            <p className="text-sm text-text-secondary mb-6">Data Structures & Algorithms challenges</p>
-            
-            <div className="space-y-3">
-              <button 
-                onClick={joinQueue}
-                disabled={!!queueStatus?.in_queue}
-                className="w-full btn btn-primary py-3 text-sm flex items-center justify-center gap-2"
-              >
-                {queueStatus?.in_queue ? 'Finding...' : '1v1 Battle'}
-                {!queueStatus?.in_queue && <ChevronRight size={16} />}
-              </button>
-              <button 
-                onClick={startPracticeMatch}
-                className="w-full btn btn-secondary py-3 text-sm flex items-center justify-center gap-2 border border-white/10"
-              >
-                <Activity size={16} />
-                Solo Practice
-              </button>
+        <div className="glass-panel p-6 hover:border-primary/50 transition-all relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
+          <div className="relative flex items-center gap-6">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center shrink-0">
+              <Code2 size={32} className="text-white" />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-border-light">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-text-muted">Difficulty</span>
-                <span className="text-success font-semibold">Dynamic</span>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-white mb-2">DSA Arena</h3>
+              <p className="text-text-secondary mb-4">Data Structures & Algorithms challenges - Test your problem-solving skills</p>
+              
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={joinQueue}
+                  disabled={!!queueStatus?.in_queue}
+                  className="btn btn-primary px-6 py-3 flex items-center gap-2"
+                >
+                  {queueStatus?.in_queue ? 'Finding Opponent...' : '1v1 Battle'}
+                  {!queueStatus?.in_queue && <ChevronRight size={18} />}
+                </button>
+                <button 
+                  onClick={startPracticeMatch}
+                  className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10"
+                >
+                  <Activity size={18} />
+                  Solo Practice
+                </button>
+                <div className="ml-auto flex items-center gap-2 text-sm">
+                  <span className="text-text-muted">Difficulty:</span>
+                  <span className="text-success font-semibold">Dynamic</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* DBMS Arena Card */}
-        <div className="glass-panel p-6 hover:border-blue-500/50 transition-all group relative overflow-hidden opacity-60">
+        <div className="glass-panel p-6 hover:border-blue-500/50 transition-all relative overflow-hidden opacity-60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-          <div className="relative">
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex-center mb-4">
-              <Database size={28} className="text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">DBMS Arena</h3>
-            <p className="text-sm text-text-secondary mb-6">SQL queries and database optimization</p>
-            
-            <div className="space-y-3">
-              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed">
-                1v1 Battle
-              </button>
-              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed border border-white/10">
-                Solo Practice
-              </button>
+          <div className="relative flex items-center gap-6">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex-center shrink-0">
+              <Database size={32} className="text-white" />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-border-light">
-              <div className="flex items-center gap-2 text-xs text-warning">
-                <Clock size={14} />
-                <span>Coming Q2 2026</span>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-white mb-2">DBMS Arena</h3>
+              <p className="text-text-secondary mb-4">SQL queries and database optimization challenges</p>
+              
+              <div className="flex items-center gap-3">
+                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed">
+                  1v1 Battle
+                </button>
+                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
+                  Solo Practice
+                </button>
+                <div className="ml-auto flex items-center gap-2 text-sm text-warning">
+                  <Clock size={16} />
+                  <span>Coming Q2 2026</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Debug Arena Card */}
-        <div className="glass-panel p-6 hover:border-red-500/50 transition-all group relative overflow-hidden opacity-60">
+        <div className="glass-panel p-6 hover:border-red-500/50 transition-all relative overflow-hidden opacity-60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
-          <div className="relative">
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-center mb-4">
-              <Bug size={28} className="text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Debug Arena</h3>
-            <p className="text-sm text-text-secondary mb-6">Find and fix bugs under pressure</p>
-            
-            <div className="space-y-3">
-              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed">
-                1v1 Battle
-              </button>
-              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed border border-white/10">
-                Solo Practice
-              </button>
+          <div className="relative flex items-center gap-6">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-center shrink-0">
+              <Bug size={32} className="text-white" />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-border-light">
-              <div className="flex items-center gap-2 text-xs text-accent">
-                <Clock size={14} />
-                <span>Coming Q2 2026</span>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-white mb-2">Debug Arena</h3>
+              <p className="text-text-secondary mb-4">Find and fix bugs in code under time pressure</p>
+              
+              <div className="flex items-center gap-3">
+                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed">
+                  1v1 Battle
+                </button>
+                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
+                  Solo Practice
+                </button>
+                <div className="ml-auto flex items-center gap-2 text-sm text-accent">
+                  <Clock size={16} />
+                  <span>Coming Q2 2026</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* UI Arena Card */}
-        <div className="glass-panel p-6 hover:border-purple-500/50 transition-all group relative overflow-hidden opacity-60">
+        <div className="glass-panel p-6 hover:border-purple-500/50 transition-all relative overflow-hidden opacity-60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-          <div className="relative">
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex-center mb-4">
-              <Palette size={28} className="text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">UI Arena</h3>
-            <p className="text-sm text-text-secondary mb-6">Build pixel-perfect interfaces fast</p>
-            
-            <div className="space-y-3">
-              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed">
-                1v1 Battle
-              </button>
-              <button disabled className="w-full btn btn-secondary py-3 text-sm opacity-50 cursor-not-allowed border border-white/10">
-                Solo Practice
-              </button>
+          <div className="relative flex items-center gap-6">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex-center shrink-0">
+              <Palette size={32} className="text-white" />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-border-light">
-              <div className="flex items-center gap-2 text-xs text-warning">
-                <Clock size={14} />
-                <span>Coming Q3 2026</span>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-white mb-2">UI Arena</h3>
+              <p className="text-text-secondary mb-4">Build pixel-perfect interfaces from designs in competitive sprints</p>
+              
+              <div className="flex items-center gap-3">
+                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed">
+                  1v1 Battle
+                </button>
+                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
+                  Solo Practice
+                </button>
+                <div className="ml-auto flex items-center gap-2 text-sm text-warning">
+                  <Clock size={16} />
+                  <span>Coming Q3 2026</span>
+                </div>
               </div>
             </div>
           </div>

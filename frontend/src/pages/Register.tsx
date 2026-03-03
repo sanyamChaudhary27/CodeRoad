@@ -110,22 +110,6 @@ const Register = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Testimonial */}
-              <div className="p-6 rounded-2xl bg-bg-panel-light border border-border-light">
-                <p className="text-text-secondary italic mb-4">
-                  "Code Road transformed my coding skills. The competitive environment pushed me to become a better developer."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold">
-                    A
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold">Alex Chen</div>
-                    <div className="text-text-muted text-sm">Top 10 Global Rank</div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right Side - Register Form */}

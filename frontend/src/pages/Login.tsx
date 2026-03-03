@@ -99,21 +99,6 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 pt-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">1000+</div>
-                  <div className="text-sm text-text-muted">Active Users</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-accent">50K+</div>
-                  <div className="text-sm text-text-muted">Matches Played</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-success">100+</div>
-                  <div className="text-sm text-text-muted">Challenges</div>
-                </div>
-              </div>
             </div>
 
             {/* Right Side - Login Form */}
