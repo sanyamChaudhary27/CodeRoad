@@ -19,11 +19,15 @@ const Login = () => {
       await authService.login({ email, password });
       navigate('/dashboard');
     } catch (err: any) {
-      setError(
-        err.response?.data?.detail?.[0]?.msg || 
-        err.response?.data?.detail || 
-        'Invalid credentials. Please try again.'
-      );
+      if (err.code === 'ERR_NETWORK' || !err.response) {
+        setError('Cannot connect to the backend server.');
+      } else {
+        setError(
+          err.response?.data?.detail?.[0]?.msg || 
+          err.response?.data?.detail || 
+          'Invalid credentials. Please try again.'
+        );
+      }
     } finally {
       setLoading(false);
     }

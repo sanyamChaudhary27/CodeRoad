@@ -31,7 +31,7 @@ const Register = () => {
       } else if (errMsg) {
         setError(errMsg);
       } else if (err.code === 'ERR_NETWORK' || !err.response) {
-        setError('Network error: Unable to connect to the profile service. Please check your internet connection and ensure the backend is running.');
+        setError('Cannot connect to the backend server.');
       } else {
         setError('Registration failed. Please try a stronger password or check your details.');
       }

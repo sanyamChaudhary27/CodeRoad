@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, type User } from '../services/authService';
 import { matchmakingService, type LeaderboardPlayer, type MatchQueueStatus } from '../services/matchmakingService';
-import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award, Terminal } from 'lucide-react';
+import { checkBackendHealth } from '../lib/api';
+import { LogOut, Trophy, Target, Activity, Users, ChevronRight, Award, Terminal, WifiOff } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -10,33 +11,51 @@ const Dashboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const [queueStatus, setQueueStatus] = useState<MatchQueueStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [backendOnline, setBackendOnline] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        // Use cached user immediately so screen isn't blank
-        const cachedUser = authService.getUser();
-        if (cachedUser) setUser(cachedUser);
+      // Check backend health first
+      const isOnline = await checkBackendHealth();
+      setBackendOnline(isOnline);
 
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
-      } catch (err) {
-        console.error("Failed to fetch user profile", err);
-        // Fall back to cached user if API fails
-        const cachedUser = authService.getUser();
-        if (cachedUser) setUser(cachedUser);
-      }
+      // Use cached user immediately so screen isn't blank
+      const cachedUser = authService.getUser();
+      if (cachedUser) setUser(cachedUser);
 
-      try {
-        const lbData = await matchmakingService.getGlobalLeaderboard(10, 0);
-        setLeaderboard(lbData.leaderboard);
-      } catch (err) {
-        console.error("Failed to fetch leaderboard", err);
+      if (isOnline) {
+        try {
+          const currentUser = await authService.getCurrentUser();
+          setUser(currentUser);
+        } catch (err) {
+          console.error("Failed to fetch user profile", err);
+        }
+
+        try {
+          const lbData = await matchmakingService.getGlobalLeaderboard(10, 0);
+          setLeaderboard(lbData.leaderboard);
+        } catch (err) {
+          console.error("Failed to fetch leaderboard", err);
+        }
       }
 
       setLoading(false);
     };
     fetchData();
+
+    // Periodically check backend health so banner disappears when backend starts
+    const healthCheck = setInterval(async () => {
+      const online = await checkBackendHealth();
+      setBackendOnline(prev => {
+        if (!prev && online) {
+          // Backend just came online — refresh data
+          fetchData();
+        }
+        return online;
+      });
+    }, 5000);
+
+    return () => clearInterval(healthCheck);
   }, []);
 
   const handleLogout = () => {
@@ -143,6 +162,17 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
       
+      {/* Backend Offline Banner */}
+      {!backendOnline && (
+        <div className="mb-6 p-4 rounded-xl bg-warning/10 border border-warning/30 flex items-center gap-3 text-warning">
+          <WifiOff size={20} className="shrink-0" />
+          <div>
+            <p className="font-medium">Backend server is not running</p>
+            <p className="text-sm opacity-80">Start it with: <code className="bg-black/30 px-2 py-0.5 rounded text-xs">cd backend &amp;&amp; .\venv\Scripts\activate &amp;&amp; python -m uvicorn app.app:app --host 127.0.0.1 --port 8000 --reload</code></p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex-between mb-12 glass-panel p-4 px-6">
         <div className="flex items-center gap-3">
