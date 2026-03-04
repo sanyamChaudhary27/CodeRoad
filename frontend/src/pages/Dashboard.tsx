@@ -187,21 +187,28 @@ const Dashboard = () => {
               
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => navigate('/debug-arena')}
+                  onClick={() => navigate('/debug-arena', { state: { mode: '1v1' } })}
                   className="btn btn-danger px-6 py-3 flex items-center gap-2"
                 >
-                  Enter Debug Arena
+                  1v1 Battle
                   <ChevronRight size={18} />
+                </button>
+                <button 
+                  onClick={() => navigate('/debug-arena', { state: { mode: 'solo' } })}
+                  className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10"
+                >
+                  <Activity size={18} />
+                  Solo Practice
                 </button>
                 <div className="ml-auto flex items-center gap-4">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-text-muted">Time Limits:</span>
-                    <span className="text-danger font-semibold">150s / 300s</span>
+                    <span className="text-text-muted">Difficulty:</span>
+                    <span className="text-danger font-semibold">Dynamic</span>
                   </div>
                   {/* Debug ELO Badge */}
                   <div className="px-4 py-2 rounded-lg bg-danger/20 border border-danger/30 backdrop-blur-sm">
                     <div className="flex items-center gap-2">
-                      <Bug size={16} className="text-danger" />
+                      <Trophy size={16} className="text-danger" />
                       <span className="text-danger font-bold">{user.debug_rating || 300} ELO</span>
                     </div>
                   </div>
