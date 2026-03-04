@@ -10,6 +10,11 @@ export interface User {
   losses?: number;
   created_at?: string;
   profile_picture?: string;
+  // Debug Arena stats
+  debug_rating?: number;
+  debug_matches_played?: number;
+  debug_wins?: number;
+  debug_losses?: number;
 }
 
 export interface AuthResponse {

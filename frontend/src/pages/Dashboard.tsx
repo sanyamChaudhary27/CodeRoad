@@ -210,17 +210,6 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-                  <div className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-red-400" />
-                      <span className="text-red-400 font-bold">1200 ELO</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* DBMS Arena Card */}
         <div className="glass-panel p-6 hover:border-blue-500/50 transition-all relative overflow-hidden opacity-60">
