@@ -194,7 +194,12 @@ const Dashboard = () => {
                   <ChevronRight size={18} />
                 </button>
                 <button 
-                  onClick={() => navigate('/debug-arena', { state: { mode: 'solo' } })}
+                  onClick={() => {
+                    // Start debug solo match directly
+                    matchmakingService.createPracticeMatch('intermediate', 'debug')
+                      .then(match => navigate('/arena', { state: { matchId: match.id || match.match_id, challengeType: 'debug' } }))
+                      .catch(err => console.error("Failed to start debug match", err));
+                  }}
                   className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10"
                 >
                   <Activity size={18} />
