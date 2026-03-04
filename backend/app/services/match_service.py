@@ -163,7 +163,11 @@ class MatchService:
             if player_id < opponent_id:
                 from .challenge_service import get_challenge_service
                 challenge_service = get_challenge_service()
-                challenge = challenge_service.generate_challenge(db=self.db, difficulty="intermediate")
+                challenge = challenge_service.generate_challenge(
+                    db=self.db, 
+                    difficulty="intermediate",
+                    player_id=player_id
+                )
                 
                 match_data = self.create_match(
                     player1_id=player_id,
@@ -360,12 +364,12 @@ class MatchService:
                 'id': challenge.id,
                 'title': challenge.title,
                 'description': challenge.description,
-                'difficulty_level': challenge.difficulty_level,
+                'difficulty_level': challenge.difficulty,
                 'time_limit_seconds': challenge.time_limit_seconds,
                 'boilerplate_code': challenge.boilerplate_code,
-                'solution_code': challenge.solution_code,
+                'solution_code': getattr(challenge, 'solution_code', None),
                 'test_cases': challenge.test_cases,
-                'examples': challenge.examples
+                'examples': getattr(challenge, 'examples', None)
             }
         else:
             # Generate a new challenge
@@ -375,7 +379,8 @@ class MatchService:
             challenge_data = challenge_service.generate_challenge(
                 db=self.db,
                 difficulty=difficulty,
-                player_rating=player_rating
+                player_rating=player_rating,
+                player_id=player_id
             )
         
         # Create WebSocket room ID
@@ -734,7 +739,7 @@ class MatchService:
     
     def get_match(self, match_id: str) -> Optional[Dict]:
         """
-        Get match information with enriched player data.
+        Get match information with enriched player data and challenge details.
         """
         match = self.db.query(Match).filter(Match.id == match_id).first()
         
@@ -758,6 +763,17 @@ class MatchService:
                 data["player2_rating"] = p2.current_rating
                 data["player2_submissions"] = match.player2_submissions
         
+        # Fetch challenge details
+        challenge = self.db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
+        if challenge:
+            data["challenge_title"] = challenge.title
+            data["challenge_description"] = challenge.description
+            data["difficulty_level"] = challenge.difficulty
+        else:
+            data["challenge_title"] = None
+            data["challenge_description"] = None
+            data["difficulty_level"] = None
+        
         # Add rating updates info for concluded matches
         if match.status == MatchStatus.CONCLUDED:
             data["rating_updates"] = {
@@ -775,7 +791,7 @@ class MatchService:
     
     def get_player_matches(self, player_id: str, limit: int = 50) -> List[Dict]:
         """
-        Get player's recent matches with enriched data.
+        Get player's recent matches with enriched data including challenge details.
         """
         matches = self.db.query(Match).filter(
             or_(
@@ -793,6 +809,18 @@ class MatchService:
             if m.player2:
                 d["player2_username"] = m.player2.username
                 d["player2_rating"] = m.player2.current_rating
+            
+            # Fetch challenge details
+            challenge = self.db.query(Challenge).filter(Challenge.id == m.challenge_id).first()
+            if challenge:
+                d["challenge_title"] = challenge.title
+                d["challenge_description"] = challenge.description
+                d["difficulty_level"] = challenge.difficulty
+            else:
+                d["challenge_title"] = None
+                d["challenge_description"] = None
+                d["difficulty_level"] = None
+            
             result.append(d)
             
         return result

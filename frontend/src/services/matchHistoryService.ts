@@ -15,9 +15,9 @@ export interface Match {
   player1: MatchPlayer;
   player2: MatchPlayer | null;
   challenge_id: string;
-  challenge_title: string;
-  challenge_description: string;
-  difficulty_level: string;
+  challenge_title: string | null;
+  challenge_description: string | null;
+  difficulty_level: string | null;
   time_limit_seconds: number;
   time_remaining: number;
   created_at: string;

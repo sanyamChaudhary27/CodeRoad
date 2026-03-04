@@ -113,18 +113,37 @@ class ChallengeService:
             ]
 
     
-    def generate_challenge(self, db: Session, difficulty: str = "intermediate", player_rating: int = 300, domain: Optional[str] = None, use_ai: bool = True) -> Dict[str, Any]:
+    def generate_challenge(self, db: Session, difficulty: str = "intermediate", player_rating: int = 300, domain: Optional[str] = None, use_ai: bool = True, player_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate a challenge with Groq AI (multi-key rotation) and template fallback
         
         Tries Groq with automatic key rotation, falls back to templates if all keys fail.
+        Now includes player history for personalized challenge generation.
         """
+        # DIVERSITY FIX: Load recent challenges from database to avoid repetition
+        try:
+            from datetime import timedelta
+            from sqlalchemy import desc
+            cutoff = datetime.utcnow() - timedelta(hours=24)
+            recent = db.query(Challenge).filter(
+                Challenge.created_at >= cutoff,
+                Challenge.difficulty == difficulty
+            ).order_by(desc(Challenge.created_at)).limit(15).all()
+            
+            for c in recent:
+                self._recently_used_titles.add(c.title)
+            
+            if recent:
+                logger.info(f"Loaded {len(recent)} recent {difficulty} challenges to avoid repetition")
+        except Exception as e:
+            logger.warning(f"Could not load recent challenges: {e}")
+        
         challenge_data = None
         try:
             if use_ai and self.ai_available and self.groq_clients:
                 # Try Groq with key rotation
                 try:
                     logger.info(f"Attempting Groq AI generation for {difficulty} challenge (rating: {player_rating})")
-                    challenge_data = self._generate_groq_challenge(difficulty, player_rating, domain)
+                    challenge_data = self._generate_groq_challenge(difficulty, player_rating, domain, db, player_id)
                     challenge_data['generation_method'] = 'groq_ai'
                 except Exception as e:
                     logger.warning(f"Groq generation failed: {e}")
@@ -200,8 +219,48 @@ class ChallengeService:
         return '\n'.join(clean_lines)
 
     
-    def _generate_groq_challenge(self, difficulty: str, player_rating: int, domain: Optional[str]) -> Dict[str, Any]:
+    def _generate_groq_challenge(self, difficulty: str, player_rating: int, domain: Optional[str], db: Session = None, player_id: str = None) -> Dict[str, Any]:
         """Generate challenge using Groq AI with automatic key rotation and ELO-smart difficulty"""
+        
+        # PERSONALIZATION: Get player's recent match history for learning
+        player_history = ""
+        if db and player_id:
+            try:
+                from ..models import Match
+                from sqlalchemy import desc, or_
+                
+                recent_matches = db.query(Match).filter(
+                    or_(Match.player1_id == player_id, Match.player2_id == player_id),
+                    Match.status == 'concluded'
+                ).order_by(desc(Match.concluded_at)).limit(5).all()
+                
+                if recent_matches:
+                    history_challenges = []
+                    for match in recent_matches:
+                        challenge = db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
+                        if challenge:
+                            # Get player's score for this match
+                            player_score = match.player1_score if match.player1_id == player_id else match.player2_score
+                            max_score = 4  # Assuming 4 test cases
+                            success_rate = (player_score / max_score * 100) if player_score else 0
+                            
+                            history_challenges.append({
+                                'title': challenge.title,
+                                'difficulty': challenge.difficulty,
+                                'domain': challenge.domain,
+                                'success_rate': f"{success_rate:.0f}%"
+                            })
+                    
+                    if history_challenges:
+                        player_history = "\n\nPLAYER'S RECENT MATCH HISTORY (Learn from these but generate something NEW):\n"
+                        for i, ch in enumerate(history_challenges, 1):
+                            player_history += f"{i}. \"{ch['title']}\" ({ch['difficulty']}, {ch['domain']}) - Success: {ch['success_rate']}\n"
+                        player_history += "\nGENERATE a problem SIMILAR in style/difficulty to these, but with a DIFFERENT concept/algorithm. DO NOT repeat any of these exact problems!"
+                        
+                        logger.info(f"Using player history: {len(history_challenges)} recent challenges for personalization")
+            except Exception as e:
+                logger.warning(f"Could not load player history: {e}")
+        
         # Build exclusion list
         exclusion = ""
         if self._recently_used_titles:
@@ -282,7 +341,7 @@ EXAMPLES FOR ADVANCED:
 Difficulty: {difficulty}
 Player Rating: {player_rating}
 Domain: {domain or 'arrays'}
-Hint: {hint}{exclusion}
+Hint: {hint}{player_history}{exclusion}
 
 CRITICAL REQUIREMENTS:
 1. Match complexity to player rating (see COMPLEXITY LEVEL above)
@@ -346,7 +405,7 @@ Generate a problem appropriate for rating {player_rating}!"""
                         {"role": "system", "content": "You are a coding challenge generator. Generate problems appropriate for the player's skill level. For beginners (rating < 500), create simple fundamental problems. For intermediate (500-800), create moderate algorithmic problems. For advanced (800+), create challenging problems requiring advanced techniques. NEVER include solution logic in boilerplate code."},
                         {"role": "user", "content": prompt}
                     ],
-                    temperature=0.8,
+                    temperature=1.0,  # Increased from 0.8 for more variety
                     max_tokens=2500,
                 )
                 

@@ -50,7 +50,7 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
   const handleRecodeMatch = async (match: Match) => {
     try {
       const result = await matchmakingService.createPracticeMatch(
-        match.difficulty_level,
+        match.difficulty_level || 'intermediate',
         match.challenge_id
       );
       
@@ -99,7 +99,8 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
     );
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: string | null) => {
+    if (!difficulty) return 'text-text-secondary';
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'text-success';
       case 'intermediate': return 'text-warning';
@@ -166,7 +167,7 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
                   <div className="flex items-center gap-3 mb-2">
                     {getResultBadge(match)}
                     <span className={`text-xs font-semibold uppercase ${getDifficultyColor(match.difficulty_level)}`}>
-                      {match.difficulty_level}
+                      {match.difficulty_level || 'Unknown'}
                     </span>
                     <span className="text-xs text-text-muted">
                       {isSolo ? 'Solo Practice' : '1v1 Match'}
@@ -174,7 +175,7 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
                   </div>
                   
                   <h3 className="text-white font-semibold truncate mb-1">
-                    {match.challenge_title}
+                    {match.challenge_title || 'Untitled Challenge'}
                   </h3>
                   
                   <div className="flex items-center gap-4 text-sm text-text-secondary">
@@ -242,11 +243,11 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
           <div className="glass-panel max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-bg-panel/95 backdrop-blur-sm p-6 border-b border-border-light flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{selectedMatch.challenge_title}</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">{selectedMatch.challenge_title || 'Untitled Challenge'}</h2>
                 <div className="flex items-center gap-3">
                   {getResultBadge(selectedMatch)}
                   <span className={`text-sm font-semibold ${getDifficultyColor(selectedMatch.difficulty_level)}`}>
-                    {selectedMatch.difficulty_level}
+                    {selectedMatch.difficulty_level || 'Unknown'}
                   </span>
                 </div>
               </div>

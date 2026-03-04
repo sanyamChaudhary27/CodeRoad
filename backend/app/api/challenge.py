@@ -62,13 +62,15 @@ async def generate_challenge(
         
         # Get player rating for adaptive difficulty
         player_rating = current_user.get("rating", 1200) if isinstance(current_user, dict) else 1200
+        player_id = current_user.get("id") if isinstance(current_user, dict) else None
         
         # Generate challenge and persist to DB
         challenge = challenge_service.generate_challenge(
             db=db,
             difficulty=request.difficulty,
             player_rating=player_rating,
-            domain=request.domain
+            domain=request.domain,
+            player_id=player_id
         )
         
         logger.info(f"Generated challenge {challenge['id']} for player {current_user.get('id', 'unknown')}")

@@ -203,7 +203,14 @@ const Profile = () => {
               Recent Matches
             </h2>
             
-            <MatchHistory userId={user.id} limit={10} />
+            {user && user.id ? (
+              <MatchHistory userId={user.id} limit={10} />
+            ) : (
+              <div className="text-center py-12 text-text-muted">
+                <Activity size={48} className="mx-auto mb-4 opacity-20" />
+                <p>Loading match history...</p>
+              </div>
+            )}
           </div>
         </div>
 
