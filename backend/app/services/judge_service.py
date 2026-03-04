@@ -111,26 +111,27 @@ def _main():
     sig = _inspect.signature(solve_func)
     params = list(sig.parameters.values())
     
+    # Ensure input_data is always a list for easier handling
+    if not isinstance(input_data, list):
+        input_data = [input_data]
+    
     # Heuristic for mapping input to function signature
-    if len(params) == len(input_data):
+    if len(params) == len(input_data) and len(params) > 1:
         # e.g. solve(a, b) with "5 3" -> solve(5, 3)
         result = solve_func(*input_data)
     elif len(params) == 1:
         # e.g. solve(arr) with "5 7 2" -> solve([5, 7, 2])
-        # Force list if it's multiple values
+        # Always pass as list for single parameter functions
         result = solve_func(input_data)
     elif len(params) == 2:
         # e.g. solve(arr, x) with "2 7 11 15 9" -> solve([2, 7, 11, 15], 9)
-        if isinstance(input_data, list) and len(input_data) >= 2:
+        if len(input_data) >= 2:
             result = solve_func(input_data[:-1], input_data[-1])
         else:
             result = solve_func(input_data, None)
     else:
         # Fallback for 3+ args or other mismatches
-        if isinstance(input_data, list):
-            result = solve_func(*input_data[:len(params)])
-        else:
-            result = solve_func(input_data)
+        result = solve_func(*input_data[:len(params)])
 
     # Consistent output formatting
     if result is None:

@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     MATCH_DURATION_MAX_SECONDS: int = 120
     ELO_MATCHING_RANGE: int = 200
     ELO_K_FACTOR: int = 32
-    INITIAL_ELO_RATING: int = 1200
+    INITIAL_ELO_RATING: int = 300
     
     # Code execution
     CODE_EXECUTION_TIMEOUT_SECONDS: int = 5

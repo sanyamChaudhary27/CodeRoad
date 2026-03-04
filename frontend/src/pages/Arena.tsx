@@ -86,7 +86,7 @@ const Arena = () => {
   const [code, setCode] = useState<string>('def solve():\n    # Write your code here\n    pass');
   const [opponentCode, setOpponentCode] = useState('// Opponent is typing...');
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [status, setStatus] = useState<'idle' | 'generating' | 'submitting' | 'polling' | 'searching' | 'loading_skeleton'>('loading_skeleton');
+  const [status, setStatus] = useState<'idle' | 'generating' | 'submitting' | 'polling' | 'searching' | 'loading_skeleton'>('idle');
   const [submissionResult, setSubmissionResult] = useState<SubmissionResponse | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -103,6 +103,9 @@ const Arena = () => {
       
       // Prevent multiple concurrent initializations
       if (status === 'polling' || status === 'submitting') return;
+
+      // Set generating status to trigger skeleton loading
+      setStatus('generating');
 
       let localMatchId = matchId;
       let localChallenge: Challenge | null = null;

@@ -17,7 +17,7 @@ class Player(Base):
     hashed_password = Column(String(255), nullable=False)
     
     # Rating information
-    current_rating = Column(Integer, default=1200, nullable=False)
+    current_rating = Column(Integer, default=300, nullable=False)
     rating_confidence = Column(Float, default=100.0, nullable=False)  # 0-100%
     
     # Statistics

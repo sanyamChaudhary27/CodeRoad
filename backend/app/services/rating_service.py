@@ -117,8 +117,8 @@ class RatingService:
         # Update rating
         new_rating = old_rating + adjusted_rating_change
         
-        # Ensure rating doesn't go below minimum
-        new_rating = max(800, new_rating)
+        # Ensure rating doesn't go below minimum (100 is the floor)
+        new_rating = max(100, new_rating)
         
         # Update peak rating if applicable
         if new_rating > rating.peak_rating:

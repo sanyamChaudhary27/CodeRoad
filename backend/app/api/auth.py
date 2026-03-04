@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from ..core.database import get_db
+from ..config import settings
 from ..core.security import (
     get_password_hash,
     verify_password,
@@ -55,7 +56,7 @@ async def register(player_data: PlayerRegister, db: Session = Depends(get_db)):
         username=player_data.username,
         email=player_data.email,
         hashed_password=hashed_password,
-        current_rating=1200,
+        current_rating=settings.INITIAL_ELO_RATING,
         rating_confidence=100.0
     )
     
