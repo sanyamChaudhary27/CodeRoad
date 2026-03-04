@@ -809,7 +809,16 @@ Return ONLY valid JSON with this exact structure:
                 elif "```" in content:
                     content = content.split("```")[1].split("```")[0].strip()
                 
-                challenge_data = json.loads(content)
+                # Try to parse JSON with strict=False to handle control characters
+                try:
+                    challenge_data = json.loads(content, strict=False)
+                except json.JSONDecodeError as e:
+                    # If that fails, try cleaning the content
+                    logger.warning(f"JSON parse error: {e}, attempting to clean content")
+                    # Remove control characters except newlines in JSON structure
+                    import re
+                    content_cleaned = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', content)
+                    challenge_data = json.loads(content_cleaned, strict=False)
                 challenge_data['id'] = str(uuid.uuid4())
                 
                 logger.info(f"Successfully generated debug challenge with Groq key {self.current_key_index + 1}")
