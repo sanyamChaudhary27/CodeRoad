@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -15,17 +16,9 @@ function App() {
       
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
-        {/* Splash screen redirect logic */}
-        <Route path="/" element={
-           <div className="min-h-screen flex-center flex-col p-8">
-             <h1 className="text-gradient mb-4 text-4xl">Code Road</h1>
-             <p className="text-secondary mb-8 text-lg">Premium Hacker Arena</p>
-             <a href="/login" className="btn btn-primary">Enter the Arena</a>
-           </div>
-        } />
         
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
