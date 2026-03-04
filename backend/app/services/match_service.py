@@ -19,6 +19,35 @@ class MatchService:
         self.db = db
         self.rating_service = RatingService(db)
     
+    def _get_difficulty_from_rating(self, rating: int, challenge_type: str = "dsa") -> str:
+        """
+        Map player rating to appropriate difficulty level.
+        Debug challenges use more conservative thresholds since they're harder.
+        
+        Args:
+            rating: Player's ELO rating
+            challenge_type: Type of challenge ("dsa" or "debug")
+        
+        Returns:
+            str: Difficulty level ("beginner", "intermediate", or "advanced")
+        """
+        if challenge_type == "debug":
+            # More conservative thresholds for debug challenges
+            if rating < 350:
+                return "beginner"
+            elif rating < 450:
+                return "intermediate"
+            else:
+                return "advanced"
+        else:
+            # Standard DSA thresholds
+            if rating < 500:
+                return "beginner"
+            elif rating < 800:
+                return "intermediate"
+            else:
+                return "advanced"
+    
     def join_match_queue(
         self,
         player_id: str,
@@ -189,18 +218,21 @@ class MatchService:
                 else:
                     player_rating = player.current_rating if player else 1200
                 
+                # Determine difficulty from rating
+                difficulty = self._get_difficulty_from_rating(player_rating, challenge_type)
+                
                 # Generate appropriate challenge type
                 if challenge_type == "debug":
                     challenge = challenge_service.generate_debug_challenge(
                         db=self.db,
-                        difficulty="intermediate",
+                        difficulty=difficulty,
                         player_rating=player_rating,
                         player_id=player_id
                     )
                 else:
                     challenge = challenge_service.generate_challenge(
                         db=self.db, 
-                        difficulty="intermediate",
+                        difficulty=difficulty,
                         player_rating=player_rating,
                         player_id=player_id
                     )
@@ -438,6 +470,10 @@ class MatchService:
                 player_rating = player.debug_rating if player else settings.DEBUG_INITIAL_RATING
             else:
                 player_rating = player.current_rating if player else 1200
+            
+            # If difficulty not specified, determine from rating
+            if not difficulty or difficulty == "intermediate":
+                difficulty = self._get_difficulty_from_rating(player_rating, challenge_type)
             
             if challenge_type == "debug":
                 challenge_data = challenge_service.generate_debug_challenge(

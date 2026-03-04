@@ -59,6 +59,16 @@ const Leaderboard = () => {
       
       {user && <Header user={user} showLeaderboard={false} />}
 
+      {/* Back to Dashboard Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="text-text-muted hover:text-primary transition-colors flex items-center gap-2 text-sm font-semibold uppercase tracking-wider"
+        >
+          <span>←</span> Back to Dashboard
+        </button>
+      </div>
+
       {/* Header */}
       <div className="glass-panel p-8 mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
