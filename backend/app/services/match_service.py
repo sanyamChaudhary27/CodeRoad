@@ -180,17 +180,28 @@ class MatchService:
                 from .challenge_service import get_challenge_service
                 challenge_service = get_challenge_service()
                 
+                # Get player for rating
+                player = self.db.query(Player).filter(Player.id == player_id).first()
+                
+                # Use appropriate rating based on challenge type
+                if challenge_type == "debug":
+                    player_rating = player.debug_rating if player else settings.DEBUG_INITIAL_RATING
+                else:
+                    player_rating = player.current_rating if player else 1200
+                
                 # Generate appropriate challenge type
                 if challenge_type == "debug":
                     challenge = challenge_service.generate_debug_challenge(
                         db=self.db,
                         difficulty="intermediate",
+                        player_rating=player_rating,
                         player_id=player_id
                     )
                 else:
                     challenge = challenge_service.generate_challenge(
                         db=self.db, 
                         difficulty="intermediate",
+                        player_rating=player_rating,
                         player_id=player_id
                     )
                 
@@ -416,7 +427,12 @@ class MatchService:
         else:
             # Generate a new challenge
             player = self.db.query(Player).filter(Player.id == player_id).first()
-            player_rating = player.current_rating if player else 300
+            
+            # Use appropriate rating based on challenge type
+            if challenge_type == "debug":
+                player_rating = player.debug_rating if player else settings.DEBUG_INITIAL_RATING
+            else:
+                player_rating = player.current_rating if player else 1200
             
             if challenge_type == "debug":
                 challenge_data = challenge_service.generate_debug_challenge(
