@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
 
@@ -78,7 +78,7 @@ const Landing = () => {
   ];
 
   const howItWorks = [
-    { step: '01', title: 'Queue Up', description: 'Hit "Find Match" and enter the matchmaking queue. We\'ll find an opponent within your ELO range.', icon: '🎯' },
+    { step: '01', title: 'Queue Up', description: 'Hit "Find Match" and enter the matchmaking queue. We\'ll find an opponent within your ELO range.', icon: '🎮' },
     { step: '02', title: 'Get Matched', description: 'Our algorithm pairs you with a worthy opponent (±200 ELO). The challenge is revealed simultaneously.', icon: '🤝' },
     { step: '03', title: 'Battle', description: 'Code your solution in a real-time editor. Submit as many times as you want before the timer runs out.', icon: '⌨️' },
     { step: '04', title: 'Climb', description: 'Win to gain ELO. Lose to learn. Track your progress, earn badges, and dominate the leaderboard.', icon: '🏆' },
@@ -162,7 +162,7 @@ const Landing = () => {
               </div>
               <div className="vs-badge">VS</div>
               <div className="player-side player-right">
-                <div className="player-avatar">🧑</div>
+                <div className="player-avatar">🧠</div>
                 <span className="player-name">Opponent</span>
                 <span className="player-elo">1380 ELO</span>
                 <div className="player-progress">

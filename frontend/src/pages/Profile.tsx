@@ -114,10 +114,10 @@ const Profile = () => {
               <img 
                 src={user.profile_picture} 
                 alt={user.username}
-                className="h-20 w-20 rounded-full object-cover shadow-glow border-2 border-primary/20"
+                className="h-24 w-24 rounded-2xl object-cover shadow-glow-md border-2 border-primary/30 transition-transform group-hover:scale-105"
               />
             ) : (
-              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-3xl font-bold shadow-glow border-2 border-primary/20">
+              <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-4xl font-bold shadow-glow-md border-2 border-primary/30 transition-transform group-hover:scale-105">
                 {user.username.charAt(0).toUpperCase()}
               </div>
             )}
@@ -125,12 +125,12 @@ const Profile = () => {
             {/* Upload Button Overlay */}
             <label 
               htmlFor="profile-picture-upload"
-              className="absolute inset-0 rounded-full bg-black/70 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              className="absolute inset-0 rounded-2xl bg-black/80 flex-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-sm"
             >
               {uploadingPicture ? (
-                <Activity size={20} className="text-white animate-spin" />
+                <Activity size={24} className="text-white animate-spin" />
               ) : (
-                <Camera size={20} className="text-white" />
+                <Camera size={24} className="text-white" />
               )}
             </label>
             <input
@@ -142,8 +142,8 @@ const Profile = () => {
               disabled={uploadingPicture}
             />
             
-            <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-warning flex-center shadow-lg border-2 border-bg-panel">
-              <Trophy size={16} className="text-white" />
+            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-xl bg-gradient-to-br from-warning to-warning/80 flex-center shadow-glow-sm border-2 border-bg-panel">
+              <Trophy size={20} className="text-white" />
             </div>
           </div>
 
