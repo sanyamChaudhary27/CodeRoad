@@ -67,6 +67,17 @@ class MatchResponse(BaseModel):
     player2_id: Optional[str] = None
     result: Optional[str] = None
     rating_updates: Optional[RatingUpdates] = None
+    # Flat fields for frontend compatibility
+    player1_username: Optional[str] = None
+    player1_rating: Optional[int] = None
+    player1_submissions: Optional[int] = None
+    player1_done: Optional[bool] = None
+    player2_username: Optional[str] = None
+    player2_rating: Optional[int] = None
+    player2_submissions: Optional[int] = None
+    player2_done: Optional[bool] = None
+    challenge_type: Optional[str] = None
+    time_remaining: Optional[int] = None
     
     class Config:
         from_attributes = True

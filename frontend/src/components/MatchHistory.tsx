@@ -51,6 +51,7 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
     try {
       const result = await matchmakingService.createPracticeMatch(
         match.difficulty_level || 'intermediate',
+        match.challenge_type || 'dsa',
         match.challenge_id
       );
       
@@ -201,14 +202,14 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
                 {match.status === 'concluded' && (
                   <div className="flex items-center gap-2 px-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{playerScore ?? 0}</div>
+                      <div className="text-2xl font-bold text-white">{typeof playerScore === 'number' ? playerScore.toFixed(1) : 0}</div>
                       <div className="text-xs text-text-muted">You</div>
                     </div>
                     {!isSolo && (
                       <>
                         <div className="text-text-muted">-</div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-white">{opponentScore ?? 0}</div>
+                          <div className="text-2xl font-bold text-white">{typeof opponentScore === 'number' ? opponentScore.toFixed(1) : 0}</div>
                           <div className="text-xs text-text-muted">{opponent?.username}</div>
                         </div>
                       </>

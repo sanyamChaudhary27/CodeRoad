@@ -43,6 +43,12 @@ class PlayerResponse(BaseModel):
     badges_earned: int
     created_at: datetime
     last_match_at: Optional[datetime] = None
+    profile_picture: Optional[str] = None
+    # Debug Arena fields
+    debug_rating: Optional[int] = None
+    debug_matches_played: Optional[int] = None
+    debug_wins: Optional[int] = None
+    debug_losses: Optional[int] = None
     
     class Config:
         from_attributes = True

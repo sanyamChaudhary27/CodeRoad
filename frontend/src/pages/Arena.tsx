@@ -8,7 +8,7 @@ import Editor from '@monaco-editor/react';
 import { authService, type User } from '../services/authService';
 
 // Final Results Component (Moved to top for hoisting/scope clarity)
-const MatchResults = ({ data, user, onDashboard }: { data: any, user: User, onDashboard: () => void }) => {
+const MatchResults = ({ data, user, onDashboard, challengeType }: { data: any, user: User, onDashboard: () => void, challengeType?: 'dsa' | 'debug' }) => {
   const isDraw = data.result === 'draw_draw' || data.result?.includes('draw');
   const isWinner = !isDraw && data.winner_id === user.id;
   
@@ -16,6 +16,11 @@ const MatchResults = ({ data, user, onDashboard }: { data: any, user: User, onDa
   const isPlayer1 = (data.player1_id || data.player1?.player_id) === user.id;
   const ratingUpdate = isPlayer1 ? data.rating_updates?.player1 : data.rating_updates?.player2;
   const myScore = isPlayer1 ? data.player1_score : data.player2_score;
+  
+  // Determine which rating to display based on challenge type
+  const isDebugChallenge = challengeType === 'debug' || data.challenge_type === 'debug';
+  const displayRating = ratingUpdate?.new_rating || (isDebugChallenge ? user.debug_rating : user.current_rating);
+  const ratingLabel = isDebugChallenge ? 'Debug Rating' : 'DSA Rating';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-overlay-90 backdrop-blur-xl animate-fade-in p-4 overflow-y-auto">
@@ -55,12 +60,12 @@ const MatchResults = ({ data, user, onDashboard }: { data: any, user: User, onDa
             </div>
             
             <div className={`flex items-center justify-between p-4 rounded-xl border ${ratingUpdate?.rating_change >= 0 ? 'bg-success/5 border-success/20' : 'bg-danger/5 border-danger/20'}`}>
-               <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>Rating Impact</span>
+               <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>{ratingLabel} Impact</span>
                <div className="flex items-center gap-3">
                  <span className={`text-2xl font-black tabular-nums ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>
                    {ratingUpdate?.rating_change >= 0 ? `+${ratingUpdate.rating_change}` : ratingUpdate?.rating_change || 0}
                  </span>
-                 <span className="text-xs text-text-muted font-mono opacity-50">({ratingUpdate?.new_rating || '---'})</span>
+                 <span className="text-xs text-text-muted font-mono opacity-50">({displayRating || '---'})</span>
                </div>
             </div>
           </div>
@@ -149,6 +154,8 @@ const Arena = () => {
             // Detect challenge type from match details
             if (matchDetails.challenge_type === 'debug') {
               setChallengeType('debug');
+            } else if (matchDetails.challenge_type === 'dsa') {
+              setChallengeType('dsa');
             }
             
             // API Response uses 'format', not 'match_format'
@@ -164,17 +171,23 @@ const Arena = () => {
               const p1_id = matchDetails.player1?.player_id || matchDetails.player1_id;
               const isUserPlayer1 = p1_id === currentUser.id;
               
-              const opponentSource = isUserPlayer1 
-                ? (matchDetails.player2 || {}) 
-                : (matchDetails.player1 || {});
-
+              // Use flat fields from backend (player2_username, player2_rating, etc.)
               localOpponent = {
-                player_id: opponentSource.player_id || (isUserPlayer1 ? matchDetails.player2_id : matchDetails.player1_id),
-                username: opponentSource.username || 'Opponent',
-                current_rating: opponentSource.current_rating || 1200,
-                submissions_count: opponentSource.submissions_count || 0,
-                is_done: opponentSource.is_done || false
+                player_id: isUserPlayer1 ? matchDetails.player2_id : matchDetails.player1_id,
+                username: isUserPlayer1 ? (matchDetails.player2_username || 'Opponent') : (matchDetails.player1_username || 'Opponent'),
+                current_rating: isUserPlayer1 ? (matchDetails.player2_rating || 1200) : (matchDetails.player1_rating || 1200),
+                submissions_count: isUserPlayer1 ? (matchDetails.player2_submissions || 0) : (matchDetails.player1_submissions || 0),
+                is_done: isUserPlayer1 ? (matchDetails.player2_done || false) : (matchDetails.player1_done || false)
               };
+              
+              console.log("S5: Opponent data set:", localOpponent);
+              console.log("S5: Match details:", {
+                player1_username: matchDetails.player1_username,
+                player1_rating: matchDetails.player1_rating,
+                player2_username: matchDetails.player2_username,
+                player2_rating: matchDetails.player2_rating,
+                isUserPlayer1
+              });
             }
 
             // Sync timer with backend
@@ -286,8 +299,18 @@ const Arena = () => {
         const matchDetails = await matchmakingService.getMatch(matchId);
         const currentUser = user || await authService.getCurrentUser();
         
+        console.log("Periodic refresh - match details:", {
+          player1_username: matchDetails.player1_username,
+          player1_rating: matchDetails.player1_rating,
+          player1_submissions: matchDetails.player1_submissions,
+          player2_username: matchDetails.player2_username,
+          player2_rating: matchDetails.player2_rating,
+          player2_submissions: matchDetails.player2_submissions
+        });
+        
         // Update opponent stats (submission counts) using enriched flat fields
-        const opponentInfo = matchDetails.player1_id === currentUser.id 
+        const isUserP1 = matchDetails.player1_id === currentUser.id;
+        const opponentInfo = isUserP1
           ? {
               player_id: matchDetails.player2_id,
               username: matchDetails.player2_username || 'Opponent',
@@ -303,13 +326,16 @@ const Arena = () => {
               is_done: matchDetails.player1_done || false
             };
         
+        console.log("Periodic refresh - opponent info:", opponentInfo);
+        
         if (matchDetails.player2_id) {
           setOpponent(opponentInfo);
         }
 
-        // Update local user submission count
-        const isUserP1 = matchDetails.player1_id === currentUser.id;
-        setUserSubmissions(isUserP1 ? (matchDetails.player1_submissions || 0) : (matchDetails.player2_submissions || 0));
+        // Update local user submission count from server - only if server count is higher
+        // This prevents overwriting optimistic updates with stale data
+        const serverCount = isUserP1 ? (matchDetails.player1_submissions || 0) : (matchDetails.player2_submissions || 0);
+        setUserSubmissions(prev => Math.max(prev, serverCount));
 
         if (matchDetails.status === 'concluded') {
           setMatchData(matchDetails);
@@ -319,7 +345,7 @@ const Arena = () => {
       } catch (e) {
         console.warn("Refresh failed", e);
       }
-    }, 5000);
+    }, 3000); // Refresh every 3 seconds for more responsive updates
     
     return () => clearInterval(refreshInterval);
   }, [matchId, user]);
@@ -415,6 +441,9 @@ const Arena = () => {
         throw new Error("Backend did not return a valid submission ID.");
       }
       console.log("Submission created:", submissionId);
+      
+      // Increment local submission count immediately for instant feedback
+      setUserSubmissions(prev => prev + 1);
 
       setStatus('polling');
       
@@ -600,24 +629,26 @@ const Arena = () => {
             </div>
             <div>
               <p className="text-sm font-black text-white tracking-tight uppercase">{user?.username || 'Guest'}</p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Index</span>
-                  <span className={`text-[10px] font-black px-1.5 rounded ${challengeType === 'debug' ? 'text-danger bg-danger/10' : 'text-success bg-success/10'}`}>
-                    {challengeType === 'debug' ? (user?.debug_rating || 300) : user?.current_rating}
-                  </span>
-                </div>
-                <div className="w-px h-3 bg-white/10"></div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Syncs</span>
-                  <span className="text-[10px] font-black text-primary bg-primary/10 px-1.5 rounded">{userSubmissions}</span>
-                </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Index</span>
+                <span className={`text-[10px] font-black px-1.5 rounded ${challengeType === 'debug' ? 'text-danger bg-danger/10' : 'text-success bg-success/10'}`}>
+                  {challengeType === 'debug' ? (user?.debug_rating || 300) : user?.current_rating}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Timer Section - Center */}
-          <div className="flex-1 flex justify-center">
+          {/* Timer Section - Center with Submission Counts */}
+          <div className="flex-1 flex justify-center items-center gap-4">
+            {/* Left: Your Submissions */}
+            <div className="flex flex-col items-center">
+              <div className="bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5">
+                <div className="text-[8px] text-text-muted uppercase tracking-widest mb-0.5 text-center">You</div>
+                <div className="text-xl font-black text-primary font-mono">{userSubmissions}</div>
+              </div>
+            </div>
+
+            {/* Center: Timer */}
             <div className={`relative group transition-all duration-500 ${timeLeft !== null && timeLeft < 30 ? 'scale-110' : ''}`}>
               <div className={`p-1 px-6 rounded-2xl border-2 flex flex-col items-center justify-center min-w-[160px] transition-all ${timeLeft !== null && timeLeft < 30 ? 'bg-danger/10 border-danger/60 shadow-glow shadow-danger/40 animate-pulse' : 'bg-bg-dark/90 border-primary/20 shadow-glow shadow-primary/10'}`}>
                  <div className="flex items-center gap-2 text-text-muted uppercase tracking-[0.3em] text-[8px] font-black opacity-60 mb-0.5">
@@ -628,30 +659,48 @@ const Arena = () => {
                  </span>
               </div>
             </div>
+
+            {/* Right: Opponent Submissions (only in 1v1) */}
+            {opponent ? (
+              <div className="flex flex-col items-center">
+                <div className="bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5">
+                  <div className="text-[8px] text-text-muted uppercase tracking-widest mb-0.5 text-center">Opp</div>
+                  <div className="text-xl font-black text-accent font-mono">{opponent.submissions_count}</div>
+                </div>
+              </div>
+            ) : (
+              <div className="w-[60px]"></div>
+            )}
           </div>
 
-          {/* Match Stats Section */}
+          {/* Match Stats Section - Opponent Info */}
           <div className="flex items-center gap-6 flex-1 justify-end">
-             <div className="text-right flex flex-col items-end gap-1">
-               <div className="flex items-center gap-2">
-                 <span className={`text-[10px] font-black uppercase tracking-widest ${opponent ? 'text-accent' : 'text-text-muted'}`}>
-                   {opponent ? 'Competitive 1v1' : 'Training Routine'}
-                 </span>
-                 <div className={`w-2 h-2 rounded-full ${opponent ? 'bg-accent animate-pulse' : 'bg-text-muted'}`}></div>
+             {opponent ? (
+               <div className="text-right flex flex-col items-end gap-1">
+                 <div className="flex items-center gap-2">
+                   <span className="text-sm font-black text-white uppercase tracking-tight">
+                     {opponent.username}
+                   </span>
+                   <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+                 </div>
+                 
+                 <div className="flex items-center gap-2">
+                   <span className="text-[10px] text-text-muted uppercase tracking-widest">Opponent</span>
+                   <span className={`text-[10px] font-black px-1.5 rounded ${challengeType === 'debug' ? 'text-danger bg-danger/10' : 'text-success bg-success/10'}`}>
+                     {opponent.current_rating}
+                   </span>
+                 </div>
                </div>
-               
-               <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] text-text-muted uppercase font-bold opacity-40 leading-none mb-1">Peer ELO</span>
-                    <span className="text-xs font-black text-white font-mono">{opponent ? opponent.current_rating : 'N/A'}</span>
-                  </div>
-                  <div className="h-6 w-px bg-white/10"></div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] text-text-muted uppercase font-bold opacity-40 leading-none mb-1">Submissions</span>
-                    <span className="text-xs font-black text-primary font-mono">{opponent ? opponent.submissions_count : '0'}</span>
-                  </div>
+             ) : (
+               <div className="text-right flex flex-col items-end gap-1">
+                 <div className="flex items-center gap-2">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">
+                     Training Routine
+                   </span>
+                   <div className="w-2 h-2 rounded-full bg-text-muted"></div>
+                 </div>
                </div>
-             </div>
+             )}
              
              <div className="flex items-center gap-3">
                {!isDone ? (
@@ -848,7 +897,7 @@ const Arena = () => {
       )}
 
       {showResults && matchData && user && (
-        <MatchResults data={matchData} user={user} onDashboard={() => navigate('/dashboard')} />
+        <MatchResults data={matchData} user={user} onDashboard={() => navigate('/dashboard')} challengeType={challengeType} />
       )}
     </div>
   );

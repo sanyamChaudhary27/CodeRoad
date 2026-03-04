@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authService, type User as AuthUser } from '../services/authService';
 import { matchmakingService, type MatchQueueStatus } from '../services/matchmakingService';
 import { Activity, Users, ChevronRight, Award, Database, Bug, Palette, Code2, Clock, Trophy } from 'lucide-react';
@@ -7,6 +7,7 @@ import Header from '../components/Header';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [queueStatus, setQueueStatus] = useState<MatchQueueStatus | null>(null);
   const [debugQueueStatus, setDebugQueueStatus] = useState<MatchQueueStatus | null>(null);
@@ -18,6 +19,11 @@ const Dashboard = () => {
   const fetchUserData = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
+      console.log("Dashboard: Fetched user data:", {
+        username: currentUser.username,
+        current_rating: currentUser.current_rating,
+        debug_rating: currentUser.debug_rating
+      });
       setUser(currentUser);
     } catch (err) {
       console.error("Failed to fetch user data", err);
@@ -35,11 +41,10 @@ const Dashboard = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [location.pathname]); // Re-fetch when pathname changes
 
-  // Refresh user data when returning to dashboard
+  // Refresh user data when window regains focus
   useEffect(() => {
-    // Listen for focus events (when user returns to tab/window)
     window.addEventListener('focus', fetchUserData);
     
     return () => {

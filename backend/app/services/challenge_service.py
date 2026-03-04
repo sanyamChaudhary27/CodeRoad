@@ -763,18 +763,22 @@ CRITICAL REQUIREMENTS:
 - All inputs are passed as a single array/list
 - For multiple inputs, they are elements in the array (e.g., arr[0], arr[1])
 - The broken code should use this exact format
+- DO NOT ADD ANY COMMENTS THAT HINT AT BUGS (no "BUG 1", no "<---", no "fix this", no "incorrect")
+- DO NOT ADD DOCSTRINGS THAT DESCRIBE THE BUGS
+- The broken code should look like normal, clean code - bugs should be subtle
+- Only add comments that explain the algorithm, not the bugs
 
 Example format for single input:
 def solve(arr):
     n = arr[0]  # Extract input
-    # buggy code here
+    # normal code comments only
     return result
 
 Example format for multiple inputs:
 def solve(arr):
     nums = arr[:-1]  # First n-1 elements
     target = arr[-1]  # Last element
-    # buggy code here
+    # normal code comments only
     return result
 
 Requirements:
@@ -784,6 +788,7 @@ Requirements:
 - Include the broken code and what it should do
 - Provide test cases to verify the fix
 - Test case inputs should be space-separated values
+- NO BUG HINTS IN CODE OR COMMENTS
 
 {player_history}
 {exclusion_text}
@@ -794,7 +799,7 @@ Return ONLY valid JSON with this exact structure:
     "description": "Clear description of what the code should do. DO NOT reveal the bugs!",
     "difficulty": "{difficulty}",
     "domain": "debugging",
-    "broken_code": "def solve(arr):\\n    # Extract inputs\\n    # Buggy code here\\n    return result",
+    "broken_code": "def solve(arr):\\n    # Extract inputs\\n    # Code here (NO BUG HINTS)\\n    return result",
     "bug_count": 1-3,
     "bug_types": ["syntax", "logic", etc],
     "input_format": "Space-separated values",
@@ -865,6 +870,16 @@ Return ONLY valid JSON with this exact structure:
                         logger.info("Fixing parameter name to 'arr'")
                         broken_code = re.sub(r'def solve\([^)]*\):', 'def solve(arr):', broken_code, count=1)
                         challenge_data['broken_code'] = broken_code
+                    
+                    # Remove bug hints from comments
+                    # Remove inline comments with bug hints like "# <--- BUG 1" or "# BUG:" or "# incorrect"
+                    broken_code = re.sub(r'#\s*<*-*\s*(BUG|bug|FIX|fix|incorrect|wrong|error)\s*\d*:?.*', '', broken_code, flags=re.IGNORECASE)
+                    
+                    # Remove docstrings that mention bugs
+                    broken_code = re.sub(r'"""[^"]*?(BUG|bug|FIX|fix|incorrect|wrong)[^"]*?"""', '""""""', broken_code, flags=re.IGNORECASE)
+                    broken_code = re.sub(r"'''[^']*?(BUG|bug|FIX|fix|incorrect|wrong)[^']*?'''", "''''''", broken_code, flags=re.IGNORECASE)
+                    
+                    challenge_data['broken_code'] = broken_code
                 
                 challenge_data['id'] = str(uuid.uuid4())
                 

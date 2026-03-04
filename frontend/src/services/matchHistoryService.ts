@@ -17,6 +17,7 @@ export interface Match {
   challenge_id: string;
   challenge_title: string | null;
   challenge_description: string | null;
+  challenge_type?: string;
   difficulty_level: string | null;
   time_limit_seconds: number;
   time_remaining: number;

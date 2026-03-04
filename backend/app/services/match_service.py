@@ -412,6 +412,9 @@ class MatchService:
             if not challenge:
                 return {"error": "Challenge not found"}
             
+            # Use the challenge's type instead of the parameter
+            challenge_type = challenge.challenge_type or 'dsa'
+            
             challenge_data = {
                 'id': challenge.id,
                 'title': challenge.title,
@@ -422,7 +425,9 @@ class MatchService:
                 'solution_code': getattr(challenge, 'solution_code', None),
                 'test_cases': challenge.test_cases,
                 'examples': getattr(challenge, 'examples', None),
-                'challenge_type': getattr(challenge, 'challenge_type', 'dsa')
+                'challenge_type': challenge_type,
+                'broken_code': getattr(challenge, 'broken_code', None),
+                'bug_count': getattr(challenge, 'bug_count', None)
             }
         else:
             # Generate a new challenge
@@ -852,14 +857,22 @@ class MatchService:
             p1 = match.player1
             if p1:
                 data["player1_username"] = p1.username
-                data["player1_rating"] = p1.current_rating
+                # Use appropriate rating based on challenge type
+                if match.challenge_type == "debug":
+                    data["player1_rating"] = p1.debug_rating if p1.debug_rating is not None else settings.DEBUG_INITIAL_RATING
+                else:
+                    data["player1_rating"] = p1.current_rating
                 data["player1_submissions"] = match.player1_submissions
             
         if match.player2_id:
             p2 = match.player2
             if p2:
                 data["player2_username"] = p2.username
-                data["player2_rating"] = p2.current_rating
+                # Use appropriate rating based on challenge type
+                if match.challenge_type == "debug":
+                    data["player2_rating"] = p2.debug_rating if p2.debug_rating is not None else settings.DEBUG_INITIAL_RATING
+                else:
+                    data["player2_rating"] = p2.current_rating
                 data["player2_submissions"] = match.player2_submissions
         
         # Fetch challenge details
@@ -875,14 +888,22 @@ class MatchService:
         
         # Add rating updates info for concluded matches
         if match.status == MatchStatus.CONCLUDED:
+            # Use appropriate rating based on challenge type
+            if match.challenge_type == "debug":
+                p1_new_rating = match.player1.debug_rating if match.player1 else settings.DEBUG_INITIAL_RATING
+                p2_new_rating = match.player2.debug_rating if match.player2 else settings.DEBUG_INITIAL_RATING
+            else:
+                p1_new_rating = match.player1.current_rating if match.player1 else 1200
+                p2_new_rating = match.player2.current_rating if match.player2 else 1200
+            
             data["rating_updates"] = {
                 "player1": {
                     "rating_change": match.player1_rating_change,
-                    "new_rating": (match.player1.current_rating) if match.player1 else None
+                    "new_rating": p1_new_rating
                 },
                 "player2": {
                     "rating_change": match.player2_rating_change,
-                    "new_rating": (match.player2.current_rating) if match.player2 else None
+                    "new_rating": p2_new_rating
                 } if match.player2_id else None
             }
             
@@ -904,10 +925,18 @@ class MatchService:
             d = m.to_dict()
             if m.player1:
                 d["player1_username"] = m.player1.username
-                d["player1_rating"] = m.player1.current_rating
+                # Use appropriate rating based on challenge type
+                if m.challenge_type == "debug":
+                    d["player1_rating"] = m.player1.debug_rating if m.player1.debug_rating is not None else settings.DEBUG_INITIAL_RATING
+                else:
+                    d["player1_rating"] = m.player1.current_rating
             if m.player2:
                 d["player2_username"] = m.player2.username
-                d["player2_rating"] = m.player2.current_rating
+                # Use appropriate rating based on challenge type
+                if m.challenge_type == "debug":
+                    d["player2_rating"] = m.player2.debug_rating if m.player2.debug_rating is not None else settings.DEBUG_INITIAL_RATING
+                else:
+                    d["player2_rating"] = m.player2.current_rating
             
             # Fetch challenge details
             challenge = self.db.query(Challenge).filter(Challenge.id == m.challenge_id).first()

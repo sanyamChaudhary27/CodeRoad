@@ -133,7 +133,11 @@ async def get_me(
         "badges_earned": len(player.badges) if player.badges else 0,
         "created_at": player.created_at,
         "last_match_at": player.last_match_at,
-        "profile_picture": player.profile_picture
+        "profile_picture": player.profile_picture,
+        "debug_rating": player.debug_rating,
+        "debug_matches_played": player.debug_matches_played,
+        "debug_wins": player.debug_wins,
+        "debug_losses": player.debug_losses
     }
 
 @router.put("/profile-picture")

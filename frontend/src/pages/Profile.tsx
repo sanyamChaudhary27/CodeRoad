@@ -104,10 +104,10 @@ const Profile = () => {
               <img 
                 src={user.profile_picture} 
                 alt={user.username}
-                className="h-32 w-32 rounded-full object-cover shadow-glow border-4 border-primary/20"
+                className="h-20 w-20 rounded-full object-cover shadow-glow border-2 border-primary/20"
               />
             ) : (
-              <div className="h-32 w-32 rounded-full bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-5xl font-bold shadow-glow border-4 border-primary/20">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-3xl font-bold shadow-glow border-2 border-primary/20">
                 {user.username.charAt(0).toUpperCase()}
               </div>
             )}
@@ -118,9 +118,9 @@ const Profile = () => {
               className="absolute inset-0 rounded-full bg-black/70 flex-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             >
               {uploadingPicture ? (
-                <Activity size={32} className="text-white animate-spin" />
+                <Activity size={20} className="text-white animate-spin" />
               ) : (
-                <Camera size={32} className="text-white" />
+                <Camera size={20} className="text-white" />
               )}
             </label>
             <input
@@ -132,8 +132,8 @@ const Profile = () => {
               disabled={uploadingPicture}
             />
             
-            <div className="absolute -bottom-2 -right-2 h-12 w-12 rounded-full bg-warning flex-center shadow-lg border-4 border-bg-panel">
-              <Trophy size={24} className="text-white" />
+            <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-warning flex-center shadow-lg border-2 border-bg-panel">
+              <Trophy size={16} className="text-white" />
             </div>
           </div>
 

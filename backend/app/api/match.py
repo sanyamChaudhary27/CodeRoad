@@ -113,6 +113,7 @@ async def get_match(
         "status": match_data.get("status"),
         "format": match_data.get("match_format", "1v1"),
         "challenge_type": match_data.get("challenge_type", "dsa"),
+        # Nested objects for schema compatibility
         "player1": {
             "player_id": match_data.get("player1_id"),
             "username": match_data.get("player1_username", "Unknown"),
@@ -127,6 +128,18 @@ async def get_match(
             "submissions_count": match_data.get("player2_submissions", 0),
             "is_done": match_data.get("player2_done", False)
         } if match_data.get("player2_id") else None,
+        # Flat fields for frontend compatibility
+        "player1_id": match_data.get("player1_id"),
+        "player1_username": match_data.get("player1_username"),
+        "player1_rating": match_data.get("player1_rating"),
+        "player1_submissions": match_data.get("player1_submissions", 0),
+        "player1_done": match_data.get("player1_done", False),
+        "player2_id": match_data.get("player2_id"),
+        "player2_username": match_data.get("player2_username"),
+        "player2_rating": match_data.get("player2_rating"),
+        "player2_submissions": match_data.get("player2_submissions", 0),
+        "player2_done": match_data.get("player2_done", False),
+        # Other fields
         "challenge_id": match_data.get("challenge_id"),
         "challenge_title": match_data.get("challenge_title"),
         "challenge_description": match_data.get("challenge_description"),
@@ -140,9 +153,7 @@ async def get_match(
         "player1_score": match_data.get("player1_score"),
         "player2_score": match_data.get("player2_score"),
         "result": match_data.get("result"),
-        "rating_updates": match_data.get("rating_updates"),
-        "player1_id": match_data.get("player1_id"),
-        "player2_id": match_data.get("player2_id")
+        "rating_updates": match_data.get("rating_updates")
     }
 
 @router.get("/player/history", response_model=MatchListResponse)
