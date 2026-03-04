@@ -25,43 +25,66 @@ def migrate_database():
         # Add challenge_type to challenges table
         """
         ALTER TABLE challenges 
-        ADD COLUMN IF NOT EXISTS challenge_type VARCHAR(20) DEFAULT 'dsa' NOT NULL;
+        ADD COLUMN challenge_type VARCHAR(20) DEFAULT 'dsa' NOT NULL;
         """,
         
-        # Add debug-specific columns to challenges table
+        # Add debug-specific columns to challenges table (one at a time for SQLite)
         """
         ALTER TABLE challenges 
-        ADD COLUMN IF NOT EXISTS broken_code TEXT,
-        ADD COLUMN IF NOT EXISTS bug_count INTEGER,
-        ADD COLUMN IF NOT EXISTS bug_types TEXT;
+        ADD COLUMN broken_code TEXT;
         """,
         
-        # Add debug rating columns to players table
+        """
+        ALTER TABLE challenges 
+        ADD COLUMN bug_count INTEGER;
+        """,
+        
+        """
+        ALTER TABLE challenges 
+        ADD COLUMN bug_types TEXT;
+        """,
+        
+        # Add debug rating columns to players table (one at a time for SQLite)
         """
         ALTER TABLE players 
-        ADD COLUMN IF NOT EXISTS debug_rating INTEGER DEFAULT 300 NOT NULL,
-        ADD COLUMN IF NOT EXISTS debug_rating_confidence FLOAT DEFAULT 100.0 NOT NULL,
-        ADD COLUMN IF NOT EXISTS debug_matches_played INTEGER DEFAULT 0 NOT NULL,
-        ADD COLUMN IF NOT EXISTS debug_wins INTEGER DEFAULT 0 NOT NULL,
-        ADD COLUMN IF NOT EXISTS debug_losses INTEGER DEFAULT 0 NOT NULL,
-        ADD COLUMN IF NOT EXISTS debug_draws INTEGER DEFAULT 0 NOT NULL;
-        """,
-        
-        # Add challenge_type to ratings table and remove unique constraint
-        """
-        ALTER TABLE ratings 
-        DROP CONSTRAINT IF EXISTS ratings_player_id_key;
+        ADD COLUMN debug_rating INTEGER DEFAULT 300 NOT NULL;
         """,
         
         """
+        ALTER TABLE players 
+        ADD COLUMN debug_rating_confidence FLOAT DEFAULT 100.0 NOT NULL;
+        """,
+        
+        """
+        ALTER TABLE players 
+        ADD COLUMN debug_matches_played INTEGER DEFAULT 0 NOT NULL;
+        """,
+        
+        """
+        ALTER TABLE players 
+        ADD COLUMN debug_wins INTEGER DEFAULT 0 NOT NULL;
+        """,
+        
+        """
+        ALTER TABLE players 
+        ADD COLUMN debug_losses INTEGER DEFAULT 0 NOT NULL;
+        """,
+        
+        """
+        ALTER TABLE players 
+        ADD COLUMN debug_draws INTEGER DEFAULT 0 NOT NULL;
+        """,
+        
+        # Add challenge_type to ratings table
+        """
         ALTER TABLE ratings 
-        ADD COLUMN IF NOT EXISTS challenge_type VARCHAR(20) DEFAULT 'dsa' NOT NULL;
+        ADD COLUMN challenge_type VARCHAR(20) DEFAULT 'dsa' NOT NULL;
         """,
         
         # Add challenge_type to matches table
         """
         ALTER TABLE matches 
-        ADD COLUMN IF NOT EXISTS challenge_type VARCHAR(20) DEFAULT 'dsa' NOT NULL;
+        ADD COLUMN challenge_type VARCHAR(20) DEFAULT 'dsa' NOT NULL;
         """,
     ]
     
@@ -74,9 +97,14 @@ def migrate_database():
                     conn.commit()
                     logger.info(f"Migration {i} completed successfully")
                 except Exception as e:
-                    logger.error(f"Migration {i} failed: {e}")
-                    # Continue with other migrations
-                    continue
+                    # Check if column already exists
+                    if "duplicate column" in str(e).lower() or "already exists" in str(e).lower():
+                        logger.info(f"Migration {i} skipped - column already exists")
+                        continue
+                    else:
+                        logger.error(f"Migration {i} failed: {e}")
+                        # Continue with other migrations
+                        continue
         
         logger.info("All migrations completed!")
         logger.info("\nDebug Arena database schema updated successfully!")
