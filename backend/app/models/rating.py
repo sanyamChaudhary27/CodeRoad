@@ -11,7 +11,8 @@ class Rating(Base):
     __tablename__ = "ratings"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    player_id = Column(String(36), ForeignKey("players.id"), nullable=False, unique=True, index=True)
+    player_id = Column(String(36), ForeignKey("players.id"), nullable=False, index=True)
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
     
     # Current rating
     current_rating = Column(Integer, default=300, nullable=False)

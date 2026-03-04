@@ -160,6 +160,12 @@ class Challenge(Base):
     description = Column(Text, nullable=False)  # Problem statement
     difficulty = Column(String(20), nullable=False)  # "beginner", "intermediate", "advanced"
     domain = Column(String(50), nullable=False)  # "algorithms", "arrays", "strings", etc.
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
+    
+    # Debug challenge specific fields
+    broken_code = Column(Text, nullable=True)  # The buggy code for debug challenges
+    bug_count = Column(Integer, nullable=True)  # Number of bugs in the code
+    bug_types = Column(Text, nullable=True)  # JSON array of bug types
     
     # Input/output formats
     input_format = Column(Text, nullable=False)

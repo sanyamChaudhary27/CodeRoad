@@ -36,6 +36,7 @@ class Match(Base):
     
     # Match details
     challenge_id = Column(String(36), nullable=False, index=True)
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
     match_format = Column(Enum(MatchFormat), default=MatchFormat.ONE_VS_ONE, nullable=False)
     status = Column(Enum(MatchStatus), default=MatchStatus.WAITING, nullable=False, index=True)
     

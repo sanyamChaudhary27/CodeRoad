@@ -173,31 +173,43 @@ const Dashboard = () => {
         </div>
 
         {/* Debug Arena Card */}
-        <div className="glass-panel p-6 hover:border-red-500/50 transition-all relative overflow-hidden opacity-60">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
+        <div className="glass-panel p-6 hover:border-danger/50 transition-all relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-danger/5 rounded-full blur-2xl"></div>
           
           <div className="relative flex items-center gap-6">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex-center shrink-0">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-danger to-danger/60 flex-center shrink-0">
               <Bug size={32} className="text-white" />
             </div>
             
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-white mb-2">Debug Arena</h3>
-              <p className="text-text-secondary mb-4">Find and fix bugs in code under time pressure</p>
+              <p className="text-text-secondary mb-4">Find and fix bugs in code under time pressure - Test your debugging skills</p>
               
               <div className="flex items-center gap-3">
-                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed">
-                  1v1 Battle
-                </button>
-                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
-                  Solo Practice
+                <button 
+                  onClick={() => navigate('/debug-arena')}
+                  className="btn btn-danger px-6 py-3 flex items-center gap-2"
+                >
+                  Enter Debug Arena
+                  <ChevronRight size={18} />
                 </button>
                 <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-accent">
-                    <Clock size={16} />
-                    <span>Coming Q2 2026</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-text-muted">Time Limits:</span>
+                    <span className="text-danger font-semibold">150s / 300s</span>
                   </div>
-                  {/* ELO Badge */}
+                  {/* Debug ELO Badge */}
+                  <div className="px-4 py-2 rounded-lg bg-danger/20 border border-danger/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                      <Bug size={16} className="text-danger" />
+                      <span className="text-danger font-bold">{user.debug_rating || 300} ELO</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
                   <div className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 backdrop-blur-sm">
                     <div className="flex items-center gap-2">
                       <Trophy size={16} className="text-red-400" />

@@ -16,15 +16,23 @@ class Player(Base):
     email = Column(String(100), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     
-    # Rating information
+    # DSA Rating information
     current_rating = Column(Integer, default=300, nullable=False)
     rating_confidence = Column(Float, default=100.0, nullable=False)  # 0-100%
     
-    # Statistics
+    # DSA Statistics
     matches_played = Column(Integer, default=0, nullable=False)
     wins = Column(Integer, default=0, nullable=False)
     losses = Column(Integer, default=0, nullable=False)
     draws = Column(Integer, default=0, nullable=False)
+    
+    # Debug Arena Rating & Statistics
+    debug_rating = Column(Integer, default=300, nullable=False)
+    debug_rating_confidence = Column(Float, default=100.0, nullable=False)
+    debug_matches_played = Column(Integer, default=0, nullable=False)
+    debug_wins = Column(Integer, default=0, nullable=False)
+    debug_losses = Column(Integer, default=0, nullable=False)
+    debug_draws = Column(Integer, default=0, nullable=False)
     
     # Profile customization
     profile_picture = Column(String(500), nullable=True)  # URL or base64 data
@@ -35,6 +43,12 @@ class Player(Base):
         if self.matches_played == 0:
             return 0.0
         return (self.wins / self.matches_played) * 100
+    
+    @property
+    def debug_win_rate(self) -> float:
+        if self.debug_matches_played == 0:
+            return 0.0
+        return (self.debug_wins / self.debug_matches_played) * 100
     
     @property
     def badges_earned(self) -> int:

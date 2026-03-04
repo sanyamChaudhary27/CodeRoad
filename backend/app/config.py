@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     ELO_K_FACTOR: int = 32
     INITIAL_ELO_RATING: int = 300
     
+    # Debug Arena settings
+    DEBUG_SOLO_TIME_LIMIT: int = 300  # 5 minutes
+    DEBUG_1V1_TIME_LIMIT: int = 150  # 2.5 minutes
+    DEBUG_INITIAL_RATING: int = 300
+    
     # Code execution
     CODE_EXECUTION_TIMEOUT_SECONDS: int = 5
     CODE_MEMORY_LIMIT_MB: int = 256

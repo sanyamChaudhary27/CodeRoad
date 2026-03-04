@@ -169,3 +169,260 @@ EXTENDED_TEMPLATES = [
         ]
     },
 ]
+
+
+# Debug Arena Templates
+DEBUG_TEMPLATES = [
+    # BEGINNER DEBUG CHALLENGES
+    {
+        'title': 'Fix the Sum Function',
+        'description': 'The function should return the sum of two numbers, but it has a bug. Fix it!',
+        'difficulty': 'beginner',
+        'domain': 'debugging',
+        'challenge_type': 'debug',
+        'bug_count': 1,
+        'bug_types': ['syntax'],
+        'broken_code': '''def add_numbers(a, b):
+    return a - b  # Bug: should be + not -
+
+# Test
+print(add_numbers(5, 3))''',
+        'correct_solution': '''def add_numbers(a, b):
+    return a + b
+
+# Test
+print(add_numbers(5, 3))''',
+        'constraints': {'input_size': 'Two integers', 'value_range': '-1000 ≤ x ≤ 1000'},
+        'input_format': 'Two integers a and b',
+        'output_format': 'Sum of a and b',
+        'example_input': '5 3',
+        'example_output': '8',
+        'time_limit_seconds': 1,
+        'test_cases': [
+            {'id': 'tc1', 'input': '5 3', 'expected_output': '8', 'category': 'basic', 'description': 'Positive numbers', 'is_hidden': False},
+            {'id': 'tc2', 'input': '0 0', 'expected_output': '0', 'category': 'edge', 'description': 'Zero', 'is_hidden': False},
+            {'id': 'tc3', 'input': '-5 3', 'expected_output': '-2', 'category': 'basic', 'description': 'Negative number', 'is_hidden': True},
+            {'id': 'tc4', 'input': '100 200', 'expected_output': '300', 'category': 'basic', 'description': 'Large numbers', 'is_hidden': True}
+        ]
+    },
+    {
+        'title': 'Fix the Loop',
+        'description': 'This function should count from 1 to n, but it has an off-by-one error.',
+        'difficulty': 'beginner',
+        'domain': 'debugging',
+        'challenge_type': 'debug',
+        'bug_count': 1,
+        'bug_types': ['logic'],
+        'broken_code': '''def count_to_n(n):
+    result = []
+    for i in range(1, n):  # Bug: should be range(1, n+1)
+        result.append(i)
+    return result
+
+# Test
+print(count_to_n(5))''',
+        'correct_solution': '''def count_to_n(n):
+    result = []
+    for i in range(1, n+1):
+        result.append(i)
+    return result
+
+# Test
+print(count_to_n(5))''',
+        'constraints': {'input_size': '1 ≤ n ≤ 100'},
+        'input_format': 'Integer n',
+        'output_format': 'List of numbers from 1 to n',
+        'example_input': '5',
+        'example_output': '[1, 2, 3, 4, 5]',
+        'time_limit_seconds': 1,
+        'test_cases': [
+            {'id': 'tc1', 'input': '5', 'expected_output': '[1, 2, 3, 4, 5]', 'category': 'basic', 'description': 'Count to 5', 'is_hidden': False},
+            {'id': 'tc2', 'input': '1', 'expected_output': '[1]', 'category': 'edge', 'description': 'Single element', 'is_hidden': False},
+            {'id': 'tc3', 'input': '10', 'expected_output': '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]', 'category': 'basic', 'description': 'Count to 10', 'is_hidden': True}
+        ]
+    },
+    
+    # INTERMEDIATE DEBUG CHALLENGES
+    {
+        'title': 'Fix the Binary Search',
+        'description': 'This binary search implementation has a bug that causes infinite loop or wrong results.',
+        'difficulty': 'intermediate',
+        'domain': 'debugging',
+        'challenge_type': 'debug',
+        'bug_count': 2,
+        'bug_types': ['logic', 'algorithm'],
+        'broken_code': '''def binary_search(arr, target):
+    left, right = 0, len(arr)  # Bug: should be len(arr) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid  # Bug: should be mid + 1
+        else:
+            right = mid - 1
+    
+    return -1
+
+# Test
+print(binary_search([1, 2, 3, 4, 5], 3))''',
+        'correct_solution': '''def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    
+    return -1
+
+# Test
+print(binary_search([1, 2, 3, 4, 5], 3))''',
+        'constraints': {'input_size': '1 ≤ n ≤ 1000', 'value_range': 'Sorted array'},
+        'input_format': 'Sorted array and target value',
+        'output_format': 'Index of target or -1',
+        'example_input': '[1, 2, 3, 4, 5] 3',
+        'example_output': '2',
+        'time_limit_seconds': 2,
+        'test_cases': [
+            {'id': 'tc1', 'input': '[1, 2, 3, 4, 5] 3', 'expected_output': '2', 'category': 'basic', 'description': 'Find middle', 'is_hidden': False},
+            {'id': 'tc2', 'input': '[1, 2, 3, 4, 5] 1', 'expected_output': '0', 'category': 'edge', 'description': 'Find first', 'is_hidden': False},
+            {'id': 'tc3', 'input': '[1, 2, 3, 4, 5] 6', 'expected_output': '-1', 'category': 'edge', 'description': 'Not found', 'is_hidden': True},
+            {'id': 'tc4', 'input': '[1, 2, 3, 4, 5] 5', 'expected_output': '4', 'category': 'edge', 'description': 'Find last', 'is_hidden': True}
+        ]
+    },
+    {
+        'title': 'Fix the Palindrome Checker',
+        'description': 'This function should check if a string is a palindrome, but has multiple bugs.',
+        'difficulty': 'intermediate',
+        'domain': 'debugging',
+        'challenge_type': 'debug',
+        'bug_count': 2,
+        'bug_types': ['logic', 'edge_case'],
+        'broken_code': '''def is_palindrome(s):
+    s = s.lower().replace(" ", "")
+    left, right = 0, len(s)  # Bug: should be len(s) - 1
+    
+    while left <= right:  # Bug: should be left < right
+        if s[left] != s[right]:
+            return False
+        left += 1
+        right -= 1
+    
+    return True
+
+# Test
+print(is_palindrome("A man a plan a canal Panama"))''',
+        'correct_solution': '''def is_palindrome(s):
+    s = s.lower().replace(" ", "")
+    left, right = 0, len(s) - 1
+    
+    while left < right:
+        if s[left] != s[right]:
+            return False
+        left += 1
+        right -= 1
+    
+    return True
+
+# Test
+print(is_palindrome("A man a plan a canal Panama"))''',
+        'constraints': {'input_size': '1 ≤ length ≤ 1000'},
+        'input_format': 'String',
+        'output_format': 'true or false',
+        'example_input': 'racecar',
+        'example_output': 'true',
+        'time_limit_seconds': 2,
+        'test_cases': [
+            {'id': 'tc1', 'input': 'racecar', 'expected_output': 'true', 'category': 'basic', 'description': 'Simple palindrome', 'is_hidden': False},
+            {'id': 'tc2', 'input': 'hello', 'expected_output': 'false', 'category': 'basic', 'description': 'Not palindrome', 'is_hidden': False},
+            {'id': 'tc3', 'input': 'A man a plan a canal Panama', 'expected_output': 'true', 'category': 'advanced', 'description': 'With spaces', 'is_hidden': True},
+            {'id': 'tc4', 'input': 'a', 'expected_output': 'true', 'category': 'edge', 'description': 'Single char', 'is_hidden': True}
+        ]
+    },
+    
+    # ADVANCED DEBUG CHALLENGES
+    {
+        'title': 'Fix the Merge Sort',
+        'description': 'This merge sort implementation has bugs in the merge function.',
+        'difficulty': 'advanced',
+        'domain': 'debugging',
+        'challenge_type': 'debug',
+        'bug_count': 3,
+        'bug_types': ['logic', 'algorithm', 'edge_case'],
+        'broken_code': '''def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    
+    while i < len(left) or j < len(right):  # Bug: should be 'and'
+        if left[i] <= right[j]:  # Bug: no bounds check
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    
+    # Bug: missing remaining elements
+    return result
+
+# Test
+print(merge_sort([64, 34, 25, 12, 22, 11, 90]))''',
+        'correct_solution': '''def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+# Test
+print(merge_sort([64, 34, 25, 12, 22, 11, 90]))''',
+        'constraints': {'input_size': '1 ≤ n ≤ 1000', 'value_range': '-10000 ≤ x ≤ 10000'},
+        'input_format': 'Array of integers',
+        'output_format': 'Sorted array',
+        'example_input': '[64, 34, 25, 12, 22, 11, 90]',
+        'example_output': '[11, 12, 22, 25, 34, 64, 90]',
+        'time_limit_seconds': 3,
+        'test_cases': [
+            {'id': 'tc1', 'input': '[64, 34, 25, 12, 22, 11, 90]', 'expected_output': '[11, 12, 22, 25, 34, 64, 90]', 'category': 'basic', 'description': 'Random array', 'is_hidden': False},
+            {'id': 'tc2', 'input': '[5, 4, 3, 2, 1]', 'expected_output': '[1, 2, 3, 4, 5]', 'category': 'basic', 'description': 'Reverse sorted', 'is_hidden': False},
+            {'id': 'tc3', 'input': '[1]', 'expected_output': '[1]', 'category': 'edge', 'description': 'Single element', 'is_hidden': True},
+            {'id': 'tc4', 'input': '[1, 1, 1, 1]', 'expected_output': '[1, 1, 1, 1]', 'category': 'edge', 'description': 'All same', 'is_hidden': True}
+        ]
+    }
+]

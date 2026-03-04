@@ -589,3 +589,244 @@ def get_challenge_service() -> ChallengeService:
     if _challenge_service_instance is None:
         _challenge_service_instance = ChallengeService()
     return _challenge_service_instance
+
+
+    def generate_debug_challenge(self, db: Session, difficulty: str = "intermediate", player_rating: int = 300, domain: Optional[str] = None, use_ai: bool = True, player_id: Optional[str] = None) -> Dict[str, Any]:
+        """Generate a debug challenge with broken code
+        
+        Similar to generate_challenge but creates challenges with intentional bugs.
+        """
+        # Load recent debug challenges to avoid repetition
+        try:
+            from datetime import timedelta
+            from sqlalchemy import desc
+            cutoff = datetime.utcnow() - timedelta(hours=24)
+            recent = db.query(Challenge).filter(
+                Challenge.created_at >= cutoff,
+                Challenge.difficulty == difficulty,
+                Challenge.challenge_type == 'debug'
+            ).order_by(desc(Challenge.created_at)).limit(15).all()
+            
+            recent_titles = set()
+            for c in recent:
+                recent_titles.add(c.title)
+            
+            if recent:
+                logger.info(f"Loaded {len(recent)} recent debug challenges to avoid repetition")
+        except Exception as e:
+            logger.warning(f"Could not load recent debug challenges: {e}")
+            recent_titles = set()
+        
+        challenge_data = None
+        try:
+            if use_ai and self.ai_available and self.groq_clients:
+                # Try Groq AI for debug challenge
+                try:
+                    logger.info(f"Attempting Groq AI generation for {difficulty} debug challenge")
+                    challenge_data = self._generate_groq_debug_challenge(difficulty, player_rating, domain, db, player_id, recent_titles)
+                    challenge_data['generation_method'] = 'groq_ai'
+                except Exception as e:
+                    logger.warning(f"Groq debug generation failed: {e}")
+            
+            # Fall back to debug templates
+            if not challenge_data:
+                try:
+                    logger.info(f"Using template generation for {difficulty} debug challenge")
+                    challenge_data = self._generate_template_debug_challenge(difficulty, recent_titles)
+                    challenge_data['generation_method'] = 'template'
+                except Exception as e:
+                    logger.warning(f"Debug template generation failed: {e}")
+            
+            if not challenge_data:
+                raise Exception("All debug generation methods failed")
+
+            # PERSIST TO DATABASE
+            new_challenge = Challenge(
+                id=challenge_data['id'],
+                title=challenge_data['title'],
+                description=challenge_data['description'],
+                difficulty=challenge_data['difficulty'],
+                domain=challenge_data['domain'],
+                challenge_type='debug',
+                broken_code=challenge_data.get('broken_code', ''),
+                bug_count=challenge_data.get('bug_count', 1),
+                bug_types=json.dumps(challenge_data.get('bug_types', [])),
+                input_format=challenge_data['input_format'],
+                output_format=challenge_data['output_format'],
+                example_input=challenge_data.get('example_input', ''),
+                example_output=challenge_data.get('example_output', ''),
+                constraints=json.dumps(challenge_data.get('constraints', {})),
+                time_limit_seconds=challenge_data.get('time_limit_seconds', 5),
+                boilerplate_code=challenge_data.get('broken_code', ''),  # For debug, boilerplate IS the broken code
+                test_cases=json.dumps(challenge_data.get('test_cases', [])),
+                coverage_metrics=json.dumps(challenge_data.get('coverage_metrics', {}))
+            )
+            db.add(new_challenge)
+            db.commit()
+            logger.info(f"Persisted debug challenge {challenge_data['id']} to database")
+            
+            return challenge_data
+        except Exception as e:
+            logger.error(f"Debug challenge generation failed: {e}")
+            raise
+
+    def _generate_template_debug_challenge(self, difficulty: str, recent_titles: Set[str]) -> Dict[str, Any]:
+        """Generate debug challenge from templates"""
+        from .extended_templates import DEBUG_TEMPLATES
+        
+        # Filter templates by difficulty
+        matching_templates = [t for t in DEBUG_TEMPLATES if t['difficulty'] == difficulty]
+        
+        if not matching_templates:
+            # Fallback to any difficulty
+            matching_templates = DEBUG_TEMPLATES
+        
+        # Filter out recently used titles
+        available_templates = [t for t in matching_templates if t['title'] not in recent_titles]
+        
+        if not available_templates:
+            # If all have been used, use any
+            available_templates = matching_templates
+        
+        # Select random template
+        template = random.choice(available_templates)
+        
+        # Create challenge data
+        challenge_data = {
+            'id': str(uuid.uuid4()),
+            'title': template['title'],
+            'description': template['description'],
+            'difficulty': template['difficulty'],
+            'domain': template['domain'],
+            'challenge_type': 'debug',
+            'broken_code': template['broken_code'],
+            'bug_count': template['bug_count'],
+            'bug_types': template['bug_types'],
+            'input_format': template['input_format'],
+            'output_format': template['output_format'],
+            'example_input': template.get('example_input', ''),
+            'example_output': template.get('example_output', ''),
+            'constraints': template.get('constraints', {}),
+            'time_limit_seconds': template.get('time_limit_seconds', 5),
+            'test_cases': template['test_cases'],
+            'coverage_metrics': {}
+        }
+        
+        return challenge_data
+
+    def _generate_groq_debug_challenge(self, difficulty: str, player_rating: int, domain: Optional[str], db: Session, player_id: str, recent_titles: Set[str]) -> Dict[str, Any]:
+        """Generate debug challenge using Groq AI"""
+        
+        # Get player history for personalization
+        player_history = ""
+        if db and player_id:
+            try:
+                from ..models import Match
+                from sqlalchemy import desc, or_
+                
+                recent_matches = db.query(Match).filter(
+                    or_(Match.player1_id == player_id, Match.player2_id == player_id),
+                    Match.status == 'concluded',
+                    Match.challenge_type == 'debug'
+                ).order_by(desc(Match.ended_at)).limit(5).all()
+                
+                if recent_matches:
+                    history_challenges = []
+                    for match in recent_matches:
+                        challenge = db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
+                        if challenge:
+                            player_score = match.player1_score if match.player1_id == player_id else match.player2_score
+                            max_score = 4
+                            success_rate = (player_score / max_score * 100) if player_score else 0
+                            
+                            history_challenges.append({
+                                'title': challenge.title,
+                                'difficulty': challenge.difficulty,
+                                'domain': challenge.domain,
+                                'bug_types': json.loads(challenge.bug_types) if challenge.bug_types else [],
+                                'success_rate': success_rate
+                            })
+                    
+                    if history_challenges:
+                        player_history = "\n\nPLAYER'S RECENT DEBUG MATCH HISTORY (Learn from these but generate something NEW):\n"
+                        for i, h in enumerate(history_challenges, 1):
+                            player_history += f"{i}. \"{h['title']}\" ({h['difficulty']}, {h['domain']}, bugs: {h['bug_types']}) - Success: {h['success_rate']:.0f}%\n"
+                        player_history += "\nGENERATE a problem SIMILAR in style/difficulty to these, but with a DIFFERENT concept/algorithm.\n"
+            except Exception as e:
+                logger.warning(f"Could not fetch player history: {e}")
+        
+        # Build exclusion list
+        exclusion_text = ""
+        if recent_titles:
+            exclusion_text = f"\n\nDO NOT generate these recently used challenges:\n" + "\n".join(f"- {title}" for title in list(recent_titles)[:10])
+        
+        # Create prompt for debug challenge
+        domain_text = f" in the domain of {domain}" if domain else ""
+        
+        prompt = f"""Generate a {difficulty} level debugging challenge{domain_text} for competitive programming.
+
+The challenge should contain BROKEN CODE with intentional bugs that the player must fix.
+
+Requirements:
+- Difficulty: {difficulty}
+- Bug count: {1 if difficulty == 'beginner' else 2 if difficulty == 'intermediate' else 3}
+- Bug types can be: syntax, logic, runtime, algorithm, edge_case
+- Include the broken code and what it should do
+- Provide test cases to verify the fix
+
+{player_history}
+{exclusion_text}
+
+Return ONLY valid JSON with this exact structure:
+{{
+    "title": "Fix the [Function Name]",
+    "description": "Clear description of what the code should do and what's wrong",
+    "difficulty": "{difficulty}",
+    "domain": "debugging",
+    "broken_code": "The buggy code as a string",
+    "bug_count": 1-3,
+    "bug_types": ["syntax", "logic", etc],
+    "input_format": "Description of input",
+    "output_format": "Description of output",
+    "example_input": "Sample input",
+    "example_output": "Expected output",
+    "constraints": {{"input_size": "1 ≤ n ≤ 100"}},
+    "time_limit_seconds": 5,
+    "test_cases": [
+        {{"id": "tc1", "input": "...", "expected_output": "...", "category": "basic", "description": "...", "is_hidden": false}},
+        {{"id": "tc2", "input": "...", "expected_output": "...", "category": "edge", "description": "...", "is_hidden": true}}
+    ]
+}}"""
+        
+        # Try each Groq client with rotation
+        for attempt in range(len(self.groq_clients)):
+            try:
+                client = self.groq_clients[self.current_key_index]
+                logger.info(f"Trying Groq key {self.current_key_index + 1}/{len(self.groq_clients)}")
+                
+                response = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=1.0,
+                    max_tokens=2000
+                )
+                
+                content = response.choices[0].message.content.strip()
+                
+                # Extract JSON
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+                
+                challenge_data = json.loads(content)
+                challenge_data['id'] = str(uuid.uuid4())
+                
+                logger.info(f"Successfully generated debug challenge with Groq key {self.current_key_index + 1}")
+                return challenge_data
+                
+            except Exception as e:
+                logger.warning(f"Groq key {self.current_key_index + 1} failed: {e}")
+                self.current_key_index = (self.current_key_index + 1) % len(self.groq_clients)
+        
+        raise Exception("All Groq keys failed for debug challenge generation")
