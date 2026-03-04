@@ -36,17 +36,17 @@ export interface MatchHistoryResponse {
 
 class MatchHistoryService {
   async getMatchHistory(limit: number = 50): Promise<MatchHistoryResponse> {
-    const response = await api.get(`/api/v1/matches/player/history?limit=${limit}`);
+    const response = await api.get(`/matches/player/history?limit=${limit}`);
     return response.data;
   }
 
   async getMatchDetails(matchId: string): Promise<Match> {
-    const response = await api.get(`/api/v1/matches/${matchId}`);
+    const response = await api.get(`/matches/${matchId}`);
     return response.data;
   }
 
   async getChallengeDetails(challengeId: string) {
-    const response = await api.get(`/api/v1/challenges/${challengeId}`);
+    const response = await api.get(`/challenges/${challengeId}`);
     return response.data;
   }
 
