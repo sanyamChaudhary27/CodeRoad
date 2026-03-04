@@ -334,23 +334,49 @@ class MatchService:
     def create_solo_match(
         self,
         player_id: str,
-        difficulty: str = "intermediate"
+        difficulty: str = "intermediate",
+        challenge_id: Optional[str] = None
     ) -> Dict:
         """
         Create a solo practice match for a player.
+        
+        Args:
+            player_id: ID of the player
+            difficulty: Difficulty level for challenge generation
+            challenge_id: Optional existing challenge ID to reuse (for recode feature)
         """
         from .challenge_service import get_challenge_service
         challenge_service = get_challenge_service()
         
-        # Generate a challenge
-        player = self.db.query(Player).filter(Player.id == player_id).first()
-        player_rating = player.current_rating if player else 1200
-        
-        challenge_data = challenge_service.generate_challenge(
-            db=self.db,
-            difficulty=difficulty,
-            player_rating=player_rating
-        )
+        # Use existing challenge or generate a new one
+        if challenge_id:
+            # Fetch existing challenge
+            from ..models import Challenge
+            challenge = self.db.query(Challenge).filter(Challenge.id == challenge_id).first()
+            if not challenge:
+                return {"error": "Challenge not found"}
+            
+            challenge_data = {
+                'id': challenge.id,
+                'title': challenge.title,
+                'description': challenge.description,
+                'difficulty_level': challenge.difficulty_level,
+                'time_limit_seconds': challenge.time_limit_seconds,
+                'boilerplate_code': challenge.boilerplate_code,
+                'solution_code': challenge.solution_code,
+                'test_cases': challenge.test_cases,
+                'examples': challenge.examples
+            }
+        else:
+            # Generate a new challenge
+            player = self.db.query(Player).filter(Player.id == player_id).first()
+            player_rating = player.current_rating if player else 300
+            
+            challenge_data = challenge_service.generate_challenge(
+                db=self.db,
+                difficulty=difficulty,
+                player_rating=player_rating
+            )
         
         # Create WebSocket room ID
         websocket_room = f"match_solo_{uuid.uuid4().hex[:16]}"

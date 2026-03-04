@@ -233,12 +233,17 @@ async def player_done(
 @router.post("/practice", response_model=dict)
 async def practice_match(
     difficulty: str = "intermediate",
+    challenge_id: str = None,
     current_user: dict = Depends(get_current_player),
     db: Session = Depends(get_db)
 ):
-    """Create a solo practice match."""
+    """Create a solo practice match. Optionally specify challenge_id to recode a previous challenge."""
     match_service = MatchService(db)
-    result = match_service.create_solo_match(current_user["id"], difficulty)
+    result = match_service.create_solo_match(
+        current_user["id"], 
+        difficulty,
+        challenge_id=challenge_id
+    )
     
     if "error" in result:
         raise HTTPException(

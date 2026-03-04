@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authService, type User } from '../services/authService';
 import { Trophy, Target, Activity, Award, TrendingUp, Calendar, Zap, Shield, Camera } from 'lucide-react';
 import Header from '../components/Header';
+import MatchHistory from '../components/MatchHistory';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -202,25 +203,7 @@ const Profile = () => {
               Recent Matches
             </h2>
             
-            {user.matches_played && user.matches_played > 0 ? (
-              <div className="text-center py-12 text-text-muted">
-                <Activity size={48} className="mx-auto mb-4 opacity-20" />
-                <p className="text-lg mb-2">Match history coming soon!</p>
-                <p className="text-sm">Your {user.matches_played} match{user.matches_played !== 1 ? 'es' : ''} will appear here</p>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-text-muted border border-dashed border-border-light rounded-xl">
-                <Target size={48} className="mx-auto mb-4 opacity-20" />
-                <p className="text-lg mb-2">No matches played yet</p>
-                <p className="text-sm">Start your first match to build your history!</p>
-                <button 
-                  onClick={() => navigate('/dashboard')}
-                  className="mt-6 btn btn-primary"
-                >
-                  Enter Arena
-                </button>
-              </div>
-            )}
+            <MatchHistory userId={user.id} limit={10} />
           </div>
         </div>
 
