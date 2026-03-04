@@ -1002,3 +1002,25 @@ select {
 /* --- Hover Text Primary --- */
 .hover\:text-primary-hover:hover { color: var(--primary-hover); }
 
+
+
+/* Button Danger - Red theme for Debug Arena */
+.btn-danger {
+  background: linear-gradient(
+    135deg,
+    var(--danger) 0%,
+    #dc2626 100%
+  );
+  color: white;
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
