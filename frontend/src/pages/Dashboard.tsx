@@ -15,11 +15,19 @@ const Dashboard = () => {
   const [isDebugPolling, setIsDebugPolling] = useState(false);
   const [creatingMatch, setCreatingMatch] = useState<'dsa' | 'debug' | null>(null);
 
+  const fetchUserData = async () => {
+    try {
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
+    } catch (err) {
+      console.error("Failed to fetch user data", err);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
+        await fetchUserData();
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
       } finally {
@@ -27,6 +35,16 @@ const Dashboard = () => {
       }
     };
     fetchData();
+  }, []);
+
+  // Refresh user data when returning to dashboard
+  useEffect(() => {
+    // Listen for focus events (when user returns to tab/window)
+    window.addEventListener('focus', fetchUserData);
+    
+    return () => {
+      window.removeEventListener('focus', fetchUserData);
+    };
   }, []);
 
   const joinQueue = async () => {
