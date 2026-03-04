@@ -404,3 +404,91 @@ class RatingService:
         
         # All scores are tied - it's a draw
         return "draw", "draw", None
+
+
+    def update_debug_rating(
+        self,
+        player_id: str,
+        opponent_id: Optional[str],
+        match_id: str,
+        match_result: str,
+        opponent_rating: Optional[int] = None
+    ) -> Dict:
+        """
+        Update player's debug arena rating after a match.
+        
+        Args:
+            player_id: ID of the player to update
+            opponent_id: ID of the opponent (None for solo matches)
+            match_id: ID of the match
+            match_result: Result of the match ("win", "loss", "draw")
+            opponent_rating: Opponent's debug rating at match time
+        
+        Returns:
+            Dict: Rating update information
+        """
+        # Get player
+        player = self.db.query(Player).filter(Player.id == player_id).first()
+        
+        if not player:
+            return {"error": "Player not found"}
+        
+        old_rating = player.debug_rating
+        
+        # For solo matches, no rating change
+        if not opponent_id:
+            return {
+                "player_id": player_id,
+                "old_rating": old_rating,
+                "new_rating": old_rating,
+                "rating_change": 0,
+                "match_result": match_result,
+                "message": "Solo practice - no rating change"
+            }
+        
+        # Calculate rating change for competitive matches
+        rating_change, expected_score, actual_score = self.calculate_rating_change(
+            player_rating=old_rating,
+            opponent_rating=opponent_rating or settings.DEBUG_INITIAL_RATING,
+            match_result=match_result
+        )
+        
+        # Adjust rating change based on confidence
+        confidence_multiplier = player.debug_rating_confidence / 100.0
+        adjusted_rating_change = round(rating_change * confidence_multiplier)
+        
+        # Update rating
+        new_rating = old_rating + adjusted_rating_change
+        
+        # Ensure rating doesn't go below minimum (100 is the floor)
+        new_rating = max(100, new_rating)
+        
+        player.debug_rating = new_rating
+        
+        # Update statistics
+        player.debug_matches_played += 1
+        if match_result == "win":
+            player.debug_wins += 1
+        elif match_result == "loss":
+            player.debug_losses += 1
+        elif match_result == "draw":
+            player.debug_draws += 1
+        
+        player.updated_at = datetime.utcnow()
+        
+        self.db.commit()
+        
+        logger.info(f"Updated debug rating for player {player_id}: {old_rating} -> {new_rating} ({adjusted_rating_change:+d})")
+        
+        return {
+            "player_id": player_id,
+            "old_rating": old_rating,
+            "new_rating": new_rating,
+            "rating_change": adjusted_rating_change,
+            "expected_score": expected_score,
+            "actual_score": actual_score,
+            "match_result": match_result,
+            "debug_matches_played": player.debug_matches_played,
+            "debug_wins": player.debug_wins,
+            "debug_losses": player.debug_losses
+        }

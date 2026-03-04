@@ -339,7 +339,8 @@ class MatchService:
         self,
         player_id: str,
         difficulty: str = "intermediate",
-        challenge_id: Optional[str] = None
+        challenge_id: Optional[str] = None,
+        challenge_type: str = "dsa"
     ) -> Dict:
         """
         Create a solo practice match for a player.
@@ -348,9 +349,16 @@ class MatchService:
             player_id: ID of the player
             difficulty: Difficulty level for challenge generation
             challenge_id: Optional existing challenge ID to reuse (for recode feature)
+            challenge_type: Type of challenge - "dsa" or "debug"
         """
         from .challenge_service import get_challenge_service
         challenge_service = get_challenge_service()
+        
+        # Determine time limit based on challenge type
+        if challenge_type == "debug":
+            time_limit = settings.DEBUG_SOLO_TIME_LIMIT
+        else:
+            time_limit = settings.MATCH_DURATION_MAX_SECONDS
         
         # Use existing challenge or generate a new one
         if challenge_id:
@@ -369,19 +377,28 @@ class MatchService:
                 'boilerplate_code': challenge.boilerplate_code,
                 'solution_code': getattr(challenge, 'solution_code', None),
                 'test_cases': challenge.test_cases,
-                'examples': getattr(challenge, 'examples', None)
+                'examples': getattr(challenge, 'examples', None),
+                'challenge_type': getattr(challenge, 'challenge_type', 'dsa')
             }
         else:
             # Generate a new challenge
             player = self.db.query(Player).filter(Player.id == player_id).first()
             player_rating = player.current_rating if player else 300
             
-            challenge_data = challenge_service.generate_challenge(
-                db=self.db,
-                difficulty=difficulty,
-                player_rating=player_rating,
-                player_id=player_id
-            )
+            if challenge_type == "debug":
+                challenge_data = challenge_service.generate_debug_challenge(
+                    db=self.db,
+                    difficulty=difficulty,
+                    player_rating=player_rating,
+                    player_id=player_id
+                )
+            else:
+                challenge_data = challenge_service.generate_challenge(
+                    db=self.db,
+                    difficulty=difficulty,
+                    player_rating=player_rating,
+                    player_id=player_id
+                )
         
         # Create WebSocket room ID
         websocket_room = f"match_solo_{uuid.uuid4().hex[:16]}"
@@ -391,9 +408,10 @@ class MatchService:
             player1_id=player_id,
             player2_id=None, # Solo
             challenge_id=challenge_data['id'],
+            challenge_type=challenge_type,
             match_format=MatchFormat.ONE_VS_ONE,
             status=MatchStatus.ACTIVE, # Start immediately
-            time_limit_seconds=challenge_data.get('time_limit_seconds', 120),
+            time_limit_seconds=challenge_data.get('time_limit_seconds', time_limit),
             websocket_room=websocket_room,
             created_at=datetime.utcnow(),
             started_at=datetime.utcnow()
