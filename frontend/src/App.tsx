@@ -12,7 +12,7 @@ import Leaderboard from './pages/Leaderboard';
 function App() {
   return (
     <BrowserRouter>
-      <div className="bg-mesh"></div>
+      <div className="bg-animated-grid"></div>
       
       <Routes>
         {/* Public Routes */}

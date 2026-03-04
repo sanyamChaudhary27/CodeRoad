@@ -74,9 +74,9 @@ const Landing = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 mt-20 max-w-3xl mx-auto">
+            <div className="grid grid-cols-3 gap-8 mt-40 max-w-3xl mx-auto">
               <div className="text-center">
-                <div className="text-4xl font-black text-gradient mb-2">1000+</div>
+                <div className="text-4xl font-black text-gradient mb-2">Infinite</div>
                 <div className="text-sm text-text-muted uppercase tracking-wider">Challenges</div>
               </div>
               <div className="text-center">
@@ -93,7 +93,7 @@ const Landing = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-32 px-6">
+      <div className="py-32 px-6 mb-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-black text-white mb-4">
@@ -175,28 +175,30 @@ const Landing = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="py-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="glass-panel p-12 border-primary/30">
-            <h2 className="text-5xl font-black text-white mb-6">
+      <div className="mt-32 pb-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="glass-panel p-8 border-primary/30">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-6 text-center">
               Ready to <span className="text-gradient">Compete</span>?
             </h2>
-            <p className="text-xl text-text-secondary mb-10">
+            <p className="text-base md:text-lg text-text-secondary mb-8 leading-relaxed text-center max-w-2xl mx-auto">
               Join thousands of developers sharpening their skills through competitive programming
             </p>
-            <button
-              onClick={() => navigate('/register')}
-              className="btn btn-primary text-lg px-12 py-4 group"
-            >
-              Create Free Account
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </button>
+            <div className="text-center">
+              <button
+                onClick={() => navigate('/register')}
+                className="btn btn-primary text-lg px-12 py-4 group"
+              >
+                Create Free Account
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-12 px-6">
+      <footer className="border-t border-white/5 py-12 px-6 mt-20">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">

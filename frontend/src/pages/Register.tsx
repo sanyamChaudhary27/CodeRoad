@@ -43,7 +43,7 @@ const Register = () => {
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-bg-dark via-bg-panel to-bg-dark">
       {/* Animated Background Grid */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <div className="absolute inset-0 bg-animated-grid opacity-5"></div>
       
       {/* Floating Orbs */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse"></div>
