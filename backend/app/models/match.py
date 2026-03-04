@@ -135,6 +135,7 @@ class Match(Base):
             "player2_id": self.player2_id,
             "player_ids": self.player_ids,
             "challenge_id": self.challenge_id,
+            "challenge_type": self.challenge_type,
             "match_format": self.match_format.value,
             "status": self.status.value,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -170,6 +171,7 @@ class MatchQueue(Base):
     
     # Match preferences
     preferred_format = Column(Enum(MatchFormat), default=MatchFormat.ONE_VS_ONE, nullable=False)
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
     min_rating = Column(Integer, nullable=True)
     max_rating = Column(Integer, nullable=True)
     
@@ -184,7 +186,7 @@ class MatchQueue(Base):
     player = relationship("Player")
     
     def __repr__(self):
-        return f"<MatchQueue(player={self.player_id}, rating={self.player_rating})>"
+        return f"<MatchQueue(player={self.player_id}, rating={self.player_rating}, type={self.challenge_type})>"
 
 class Tournament(Base):
     """Tournament model for organized competitions."""

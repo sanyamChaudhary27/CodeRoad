@@ -5,11 +5,13 @@ from datetime import datetime
 class QueueJoinRequest(BaseModel):
     """Request to join matchmaking queue."""
     preferred_format: str = Field(default="1v1", description="Match format (1v1, 2v2, etc.)")
+    challenge_type: str = Field(default="dsa", description="Challenge type (dsa or debug)")
     
     class Config:
         json_schema_extra = {
             "example": {
-                "preferred_format": "1v1"
+                "preferred_format": "1v1",
+                "challenge_type": "dsa"
             }
         }
 

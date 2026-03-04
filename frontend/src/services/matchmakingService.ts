@@ -39,9 +39,10 @@ export interface LeaderboardResponse {
 }
 
 export const matchmakingService = {
-  async joinQueue(preferred_format: string = '1v1', min_rating?: number, max_rating?: number) {
+  async joinQueue(preferred_format: string = '1v1', challengeType: string = 'dsa', min_rating?: number, max_rating?: number) {
     const response = await api.post('/matches/queue/join', {
       preferred_format,
+      challenge_type: challengeType,
       ...(min_rating && { min_rating }),
       ...(max_rating && { max_rating })
     });
@@ -58,8 +59,8 @@ export const matchmakingService = {
     return response.data;
   },
 
-  async getGlobalLeaderboard(limit: number = 100, offset: number = 0): Promise<LeaderboardResponse> {
-    const response = await api.get(`/leaderboard/global?limit=${limit}&offset=${offset}`);
+  async getGlobalLeaderboard(limit: number = 100, offset: number = 0, challengeType: string = 'dsa'): Promise<LeaderboardResponse> {
+    const response = await api.get(`/leaderboard/global?limit=${limit}&offset=${offset}&challenge_type=${challengeType}`);
     return response.data;
   },
 

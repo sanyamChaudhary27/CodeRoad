@@ -10,14 +10,16 @@ const Leaderboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [arenaType, setArenaType] = useState<'dsa' | 'debug'>('dsa');
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
         
-        const lbData = await matchmakingService.getGlobalLeaderboard(50, 0);
+        const lbData = await matchmakingService.getGlobalLeaderboard(50, 0, arenaType);
         setLeaderboard(lbData.leaderboard);
       } catch (err) {
         console.error("Failed to fetch leaderboard", err);
@@ -26,7 +28,7 @@ const Leaderboard = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [arenaType]);
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown size={24} className="text-yellow-400" />;
@@ -59,7 +61,7 @@ const Leaderboard = () => {
 
       {/* Header */}
       <div className="glass-panel p-8 mb-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
           <div>
             <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
               <Trophy size={36} className="text-warning" />
@@ -74,10 +76,36 @@ const Leaderboard = () => {
               <div className="flex items-center gap-3">
                 <TrendingUp size={20} className="text-primary" />
                 <span className="text-2xl font-bold text-white">#{leaderboard.findIndex(p => p.username === user.username) + 1 || '—'}</span>
-                <span className="text-primary font-mono font-semibold">{user.current_rating} ELO</span>
+                <span className="text-primary font-mono font-semibold">
+                  {arenaType === 'debug' ? (user.debug_rating || 300) : user.current_rating} ELO
+                </span>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Arena Type Tabs */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setArenaType('dsa')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              arenaType === 'dsa'
+                ? 'bg-primary text-white shadow-glow'
+                : 'bg-bg-panel-light text-text-secondary hover:text-white'
+            }`}
+          >
+            DSA Arena
+          </button>
+          <button
+            onClick={() => setArenaType('debug')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              arenaType === 'debug'
+                ? 'bg-danger text-white shadow-glow'
+                : 'bg-bg-panel-light text-text-secondary hover:text-white'
+            }`}
+          >
+            Debug Arena
+          </button>
         </div>
       </div>
 

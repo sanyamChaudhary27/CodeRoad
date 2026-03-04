@@ -26,16 +26,59 @@ class JudgeService:
     def evaluate_submission(self, db: Session, submission_id: str) -> None:
         """
         Evaluate a submission by running it against test cases.
-        This alters the submission in the database directly.
+        Routes to appropriate judging method based on challenge type.
         """
         logger.info(f"Evaluating submission {submission_id}")
         
-        # 1. Fetch data
+        # Fetch submission and determine challenge type
         submission = db.query(Submission).filter(Submission.id == submission_id).first()
         if not submission:
             logger.error(f"Submission {submission_id} not found.")
             return
-
+        
+        # Get match and challenge to determine type
+        match = db.query(Match).filter(Match.id == submission.match_id).first()
+        if not match:
+            submission.status = SubmissionStatus.RUNTIME_ERROR
+            submission.error_message = "Match not found for this submission"
+            submission.completed_at = datetime.utcnow()
+            db.commit()
+            return
+        
+        challenge = db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
+        if not challenge:
+            submission.status = SubmissionStatus.RUNTIME_ERROR
+            submission.error_message = "Challenge not found"
+            submission.completed_at = datetime.utcnow()
+            db.commit()
+            return
+        
+        # Route to appropriate judging method
+        challenge_type = getattr(challenge, 'challenge_type', 'dsa')
+        if challenge_type == 'debug':
+            self._evaluate_debug_submission(db, submission, challenge)
+        else:
+            self._evaluate_dsa_submission(db, submission, challenge)
+    
+    def _evaluate_debug_submission(self, db: Session, submission: Submission, challenge: Challenge) -> None:
+        """
+        Evaluate a debug challenge submission.
+        Debug challenges use the same driver as DSA but may have different internal logic.
+        """
+        logger.info(f"Evaluating debug submission {submission.id}")
+        
+        # Debug challenges actually use the same evaluation as DSA
+        # The difference is in the challenge content, not the judging
+        # So we just call the DSA evaluation method
+        self._evaluate_dsa_submission(db, submission, challenge)
+    
+    def _evaluate_dsa_submission(self, db: Session, submission: Submission, challenge: Challenge) -> None:
+        """
+        Evaluate a DSA challenge submission.
+        This is the original evaluation logic for solve(arr) format.
+        """
+        logger.info(f"Evaluating DSA submission {submission.id}")
+        
         try:
             # Update status
             submission.status = SubmissionStatus.EXECUTING
@@ -51,17 +94,6 @@ class JudgeService:
                 db.commit()
                 return
 
-            # Fetch match then challenge — avoid lazy-load across thread boundary
-            match = db.query(Match).filter(Match.id == submission.match_id).first()
-            if not match:
-                submission.status = SubmissionStatus.RUNTIME_ERROR
-                submission.error_message = "Match not found for this submission"
-                submission.completed_at = datetime.utcnow()
-                db.commit()
-                return
-
-            challenge = db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
-            
             test_cases = []
             if challenge:
                 try:
@@ -71,7 +103,7 @@ class JudgeService:
                     logger.error(f"Failed to parse test cases: {e}")
             
             if not test_cases:
-                logger.warning(f"No test cases found for challenge {match.challenge_id}")
+                logger.warning(f"No test cases found for challenge {challenge.id}")
                 submission.status = SubmissionStatus.SUCCESS
                 submission.test_cases_passed = 0
                 submission.test_cases_total = 0
@@ -210,11 +242,11 @@ _main()
                 if os.path.exists(temp_file_path):
                     os.remove(temp_file_path)
                     
-            logger.info(f"Submission {submission_id} evaluated: {passed}/{len(test_cases)} passed.")
+            logger.info(f"DSA submission {submission.id} evaluated: {passed}/{len(test_cases)} passed.")
 
         except Exception as e:
             # Catch-all: ensure status is always updated so the frontend never hangs
-            logger.error(f"Unexpected error evaluating submission {submission_id}: {e}", exc_info=True)
+            logger.error(f"Unexpected error evaluating DSA submission {submission.id}: {e}", exc_info=True)
             try:
                 submission.status = SubmissionStatus.RUNTIME_ERROR
                 submission.error_message = f"Internal judge error: {str(e)[:300]}"

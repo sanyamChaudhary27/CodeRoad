@@ -580,6 +580,52 @@ Generate a problem appropriate for rating {player_rating}!"""
             'status': 'ready'
         }
     
+    def generate_debug_challenge(self, db: Session, difficulty: str = "intermediate", player_rating: int = 300, domain: Optional[str] = None, use_ai: bool = True, player_id: Optional[str] = None) -> Dict[str, Any]:
+        """Generate a debug challenge with broken code
+        
+        Similar to generate_challenge but creates challenges with intentional bugs.
+        """
+        # Load recent debug challenges to avoid repetition
+        try:
+            from datetime import timedelta
+            from sqlalchemy import desc
+            cutoff = datetime.utcnow() - timedelta(hours=24)
+            recent = db.query(Challenge).filter(
+                Challenge.created_at >= cutoff,
+                Challenge.difficulty == difficulty,
+                Challenge.challenge_type == 'debug'
+            ).order_by(desc(Challenge.created_at)).limit(15).all()
+            
+            recent_titles = set()
+            for c in recent:
+                recent_titles.add(c.title)
+            
+            if recent:
+                logger.info(f"Loaded {len(recent)} recent debug challenges to avoid repetition")
+        except Exception as e:
+            logger.warning(f"Could not load recent debug challenges: {e}")
+            recent_titles = set()
+        
+        challenge_data = None
+        try:
+            if use_ai and self.ai_available and self.groq_clients:
+                # Try Groq AI for debug challenge
+                try:
+                    logger.info(f"Attempting Groq AI generation for {difficulty} debug challenge")
+                    challenge_data = self._generate_groq_debug_challenge(difficulty, player_rating, domain, db, player_id, recent_titles)
+                    challenge_data['generation_method'] = 'groq_ai'
+                except Exception as e:
+                    logger.warning(f"Groq debug generation failed: {e}")
+            
+            # Fall back to debu
+
+def get_challenge_service() -> ChallengeService:
+    """Get or create singleton instance of ChallengeService"""
+    global _challenge_service_instance
+    if _challenge_service_instance is None:
+        _challenge_service_instance = ChallengeService()
+    return _challenge_service_instance
+
 
     def generate_debug_challenge(self, db: Session, difficulty: str = "intermediate", player_rating: int = 300, domain: Optional[str] = None, use_ai: bool = True, player_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate a debug challenge with broken code

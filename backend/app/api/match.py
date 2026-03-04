@@ -27,7 +27,11 @@ async def join_queue(
     """Join matchmaking queue."""
     
     match_service = MatchService(db)
-    result = match_service.join_match_queue(current_user["id"], request.preferred_format)
+    result = match_service.join_match_queue(
+        current_user["id"], 
+        request.preferred_format,
+        request.challenge_type
+    )
     
     if "error" in result:
         raise HTTPException(
@@ -35,7 +39,7 @@ async def join_queue(
             detail=result["error"]
         )
     
-    logger.info(f"Player {current_user['id']} joined queue")
+    logger.info(f"Player {current_user['id']} joined {request.challenge_type} queue")
     
     return {
         "player_id": current_user["id"],
@@ -108,6 +112,7 @@ async def get_match(
         "match_id": match_data.get("id"),
         "status": match_data.get("status"),
         "format": match_data.get("match_format", "1v1"),
+        "challenge_type": match_data.get("challenge_type", "dsa"),
         "player1": {
             "player_id": match_data.get("player1_id"),
             "username": match_data.get("player1_username", "Unknown"),
@@ -157,6 +162,7 @@ async def get_player_matches(
             "match_id": match_data.get("id"),
             "status": match_data.get("status"),
             "format": match_data.get("format", "1v1"),
+            "challenge_type": match_data.get("challenge_type", "dsa"),
             "player1": {
                 "player_id": match_data.get("player1_id"),
                 "username": match_data.get("player1_username", "Unknown"),

@@ -82,6 +82,7 @@ const Arena = () => {
   const location = useLocation();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [matchId, setMatchId] = useState<string | null>(location.state?.matchId || null);
+  const [challengeType, setChallengeType] = useState<'dsa' | 'debug'>(location.state?.challengeType || 'dsa');
   const [opponent, setOpponent] = useState<PlayerMatchInfo | null>(null);
   const [code, setCode] = useState<string>('def solve():\n    # Write your code here\n    pass');
   const [opponentCode, setOpponentCode] = useState('// Opponent is typing...');
@@ -144,6 +145,11 @@ const Arena = () => {
           try {
             const matchDetails = await matchmakingService.getMatch(localMatchId);
             console.log("S5: Match details loaded", matchDetails);
+            
+            // Detect challenge type from match details
+            if (matchDetails.challenge_type === 'debug') {
+              setChallengeType('debug');
+            }
             
             // API Response uses 'format', not 'match_format'
             const matchFormat = matchDetails.format || matchDetails.match_format || '1v1';
@@ -465,10 +471,17 @@ const Arena = () => {
     }
   };
 
-  // Show skeleton after 1 second if still loading
+  // Show skeleton immediately if generating, or after 1 second if still loading
   const [showSkeleton, setShowSkeleton] = useState(false);
   
   useEffect(() => {
+    // Show skeleton immediately if status is generating
+    if (status === 'generating' && !challenge) {
+      setShowSkeleton(true);
+      return;
+    }
+    
+    // Otherwise show skeleton after 1 second if still loading
     if (!challenge && (status === 'generating' || status === 'loading_skeleton')) {
       const timer = setTimeout(() => setShowSkeleton(true), 1000);
       return () => clearTimeout(timer);
@@ -590,7 +603,9 @@ const Arena = () => {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-text-muted font-mono uppercase tracking-widest">Index</span>
-                  <span className="text-[10px] font-black text-success bg-success/10 px-1.5 rounded">{user?.current_rating}</span>
+                  <span className={`text-[10px] font-black px-1.5 rounded ${challengeType === 'debug' ? 'text-danger bg-danger/10' : 'text-success bg-success/10'}`}>
+                    {challengeType === 'debug' ? (user?.debug_rating || 300) : user?.current_rating}
+                  </span>
                 </div>
                 <div className="w-px h-3 bg-white/10"></div>
                 <div className="flex items-center gap-1.5">

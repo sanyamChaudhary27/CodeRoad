@@ -9,8 +9,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [queueStatus, setQueueStatus] = useState<MatchQueueStatus | null>(null);
+  const [debugQueueStatus, setDebugQueueStatus] = useState<MatchQueueStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
+  const [isDebugPolling, setIsDebugPolling] = useState(false);
+  const [creatingMatch, setCreatingMatch] = useState<'dsa' | 'debug' | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,7 +32,7 @@ const Dashboard = () => {
   const joinQueue = async () => {
     if (isPolling) return;
     try {
-      await matchmakingService.joinQueue();
+      await matchmakingService.joinQueue('1v1', 'dsa');
       setQueueStatus({ in_queue: true, joined_at: new Date().toISOString() });
       setIsPolling(true);
       
@@ -63,9 +66,45 @@ const Dashboard = () => {
     }
   };
 
+  const joinDebugQueue = async () => {
+    if (isDebugPolling) return;
+    try {
+      await matchmakingService.joinQueue('1v1', 'debug');
+      setDebugQueueStatus({ in_queue: true, joined_at: new Date().toISOString() });
+      setIsDebugPolling(true);
+      
+      // Real polling for match
+      const pollInterval = setInterval(async () => {
+        try {
+          const status = await matchmakingService.getQueueStatus();
+          if (status.match_id) {
+            clearInterval(pollInterval);
+            navigate('/arena', { state: { matchId: status.match_id, challengeType: 'debug' } });
+            setIsDebugPolling(false);
+          } else if (!status.in_queue) {
+            clearInterval(pollInterval);
+            setDebugQueueStatus(null);
+            setIsDebugPolling(false);
+          }
+        } catch (e) {
+          console.error("Debug polling error", e);
+        }
+      }, 2000);
+
+      // Timeout safety
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setIsDebugPolling(false);
+      }, 60000);
+
+    } catch (err) {
+      console.error("Failed to join debug queue", err);
+    }
+  };
+
   const startPracticeMatch = async () => {
     try {
-      setLoading(true);
+      setCreatingMatch('dsa');
       const match = await matchmakingService.createPracticeMatch('intermediate');
       navigate('/arena', { state: { matchId: match.id || match.match_id } });
     } catch (err) {
@@ -73,7 +112,7 @@ const Dashboard = () => {
       // Fallback
       navigate('/arena');
     } finally {
-      setLoading(false);
+      setCreatingMatch(null);
     }
   };
 
@@ -149,10 +188,20 @@ const Dashboard = () => {
                 </button>
                 <button 
                   onClick={startPracticeMatch}
+                  disabled={creatingMatch === 'dsa'}
                   className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10"
                 >
-                  <Activity size={18} />
-                  Solo Practice
+                  {creatingMatch === 'dsa' ? (
+                    <>
+                      <Activity size={18} className="animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={18} />
+                      Solo Practice
+                    </>
+                  )}
                 </button>
                 <div className="ml-auto flex items-center gap-4">
                   <div className="flex items-center gap-2 text-sm">
@@ -187,23 +236,35 @@ const Dashboard = () => {
               
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => navigate('/debug-arena', { state: { mode: '1v1' } })}
+                  onClick={joinDebugQueue}
+                  disabled={!!debugQueueStatus?.in_queue}
                   className="btn btn-danger px-6 py-3 flex items-center gap-2"
                 >
-                  1v1 Battle
-                  <ChevronRight size={18} />
+                  {debugQueueStatus?.in_queue ? 'Finding Opponent...' : '1v1 Battle'}
+                  {!debugQueueStatus?.in_queue && <ChevronRight size={18} />}
                 </button>
                 <button 
                   onClick={() => {
-                    // Start debug solo match directly
+                    setCreatingMatch('debug');
                     matchmakingService.createPracticeMatch('intermediate', 'debug')
                       .then(match => navigate('/arena', { state: { matchId: match.id || match.match_id, challengeType: 'debug' } }))
-                      .catch(err => console.error("Failed to start debug match", err));
+                      .catch(err => console.error("Failed to start debug match", err))
+                      .finally(() => setCreatingMatch(null));
                   }}
+                  disabled={creatingMatch === 'debug'}
                   className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10"
                 >
-                  <Activity size={18} />
-                  Solo Practice
+                  {creatingMatch === 'debug' ? (
+                    <>
+                      <Activity size={18} className="animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={18} />
+                      Solo Practice
+                    </>
+                  )}
                 </button>
                 <div className="ml-auto flex items-center gap-4">
                   <div className="flex items-center gap-2 text-sm">

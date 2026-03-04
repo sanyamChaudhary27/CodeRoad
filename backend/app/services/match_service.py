@@ -23,12 +23,20 @@ class MatchService:
         self,
         player_id: str,
         preferred_format: str = "1v1",
+        challenge_type: str = "dsa",
         min_rating: Optional[int] = None,
         max_rating: Optional[int] = None
     ) -> Dict:
         """
         Add player to matchmaking queue.
         Consolidated logic for joining and match cleanup.
+        
+        Args:
+            player_id: Player's unique ID
+            preferred_format: Match format (1v1, battle_royale, etc.)
+            challenge_type: Type of challenge - "dsa" or "debug"
+            min_rating: Minimum opponent rating (optional)
+            max_rating: Maximum opponent rating (optional)
         """
         # 1. ALWAYS cancel any existing WAITING or ACTIVE matches for this player to ensure fresh start
         existing_matches = self.db.query(Match).filter(
@@ -51,22 +59,27 @@ class MatchService:
         player = self.db.query(Player).filter(Player.id == player_id).first()
         if not player:
             return {"error": "Player not found"}
+        
+        # Use appropriate rating based on challenge type
+        player_rating = player.debug_rating if challenge_type == "debug" else player.current_rating
 
         if existing_queue:
             # Update existing queue entry to refresh metadata
             existing_queue.last_ping = datetime.utcnow()
             existing_queue.is_active = True
-            existing_queue.player_rating = player.current_rating
+            existing_queue.player_rating = player_rating
             existing_queue.preferred_format = MatchFormat(preferred_format)
+            existing_queue.challenge_type = challenge_type
             existing_queue.joined_at = datetime.utcnow() # Treat as a fresh join
             self.db.commit()
             
-            logger.info(f"S5: Refreshed queue entry for player {player_id}")
+            logger.info(f"S5: Refreshed queue entry for player {player_id} ({challenge_type})")
             return {
                 "status": "joined_queue",
                 "queue_id": existing_queue.id,
                 "player_id": player_id,
-                "player_rating": player.current_rating,
+                "player_rating": player_rating,
+                "challenge_type": challenge_type,
                 "preferred_format": preferred_format,
                 "joined_at": existing_queue.joined_at.isoformat()
             }
@@ -74,8 +87,9 @@ class MatchService:
         # 4. Create new queue entry if none exists
         queue_entry = MatchQueue(
             player_id=player_id,
-            player_rating=player.current_rating,
+            player_rating=player_rating,
             preferred_format=MatchFormat(preferred_format),
+            challenge_type=challenge_type,
             min_rating=min_rating,
             max_rating=max_rating,
             joined_at=datetime.utcnow(),
@@ -86,13 +100,14 @@ class MatchService:
         self.db.add(queue_entry)
         self.db.commit()
         
-        logger.info(f"S5: New queue entry for player {player_id}")
+        logger.info(f"S5: New queue entry for player {player_id} ({challenge_type})")
         
         return {
             "status": "joined_queue",
             "queue_id": queue_entry.id,
             "player_id": player_id,
-            "player_rating": player.current_rating,
+            "player_rating": player_rating,
+            "challenge_type": challenge_type,
             "preferred_format": preferred_format,
             "joined_at": queue_entry.joined_at.isoformat()
         }
@@ -158,21 +173,32 @@ class MatchService:
         opponent_info = self.find_opponent(player_id)
         if opponent_info:
             opponent_id = opponent_info["opponent_id"]
+            challenge_type = opponent_info.get("challenge_type", "dsa")
             
             # Leader-based creation (alphabetical order check)
             if player_id < opponent_id:
                 from .challenge_service import get_challenge_service
                 challenge_service = get_challenge_service()
-                challenge = challenge_service.generate_challenge(
-                    db=self.db, 
-                    difficulty="intermediate",
-                    player_id=player_id
-                )
+                
+                # Generate appropriate challenge type
+                if challenge_type == "debug":
+                    challenge = challenge_service.generate_debug_challenge(
+                        db=self.db,
+                        difficulty="intermediate",
+                        player_id=player_id
+                    )
+                else:
+                    challenge = challenge_service.generate_challenge(
+                        db=self.db, 
+                        difficulty="intermediate",
+                        player_id=player_id
+                    )
                 
                 match_data = self.create_match(
                     player1_id=player_id,
                     player2_id=opponent_id,
-                    challenge_id=challenge["id"]
+                    challenge_id=challenge["id"],
+                    challenge_type=challenge_type
                 )
                 
                 # Automatically start competitive matches
@@ -219,6 +245,7 @@ class MatchService:
     def find_opponent(self, player_id: str, timeout_seconds: int = 60) -> Optional[Dict]:
         """
         Find an opponent for a player in the queue.
+        Matches based on rating, format, and challenge type.
         """
         # Get player's queue entry
         player_queue = self.db.query(MatchQueue).filter(
@@ -233,6 +260,7 @@ class MatchService:
         
         player_rating = player_queue.player_rating
         preferred_format = player_queue.preferred_format
+        challenge_type = player_queue.challenge_type
         
         # Calculate search range
         min_rating = player_rating - settings.ELO_MATCHING_RANGE
@@ -248,7 +276,8 @@ class MatchService:
                 MatchQueue.last_ping >= ping_threshold,
                 MatchQueue.player_rating >= min_rating,
                 MatchQueue.player_rating <= max_rating,
-                MatchQueue.preferred_format == preferred_format
+                MatchQueue.preferred_format == preferred_format,
+                MatchQueue.challenge_type == challenge_type  # Match same challenge type
             )
         ).all()
         
@@ -266,6 +295,7 @@ class MatchService:
             "opponent_id": best_match.player_id,
             "opponent_rating": best_match.player_rating,
             "rating_difference": abs(best_match.player_rating - player_rating),
+            "challenge_type": challenge_type,
             "preferred_format": preferred_format.value,
             "opponent_queued_at": best_match.joined_at.isoformat()
         }
@@ -276,6 +306,7 @@ class MatchService:
         player2_id: str,
         challenge_id: str,
         match_format: str = "1v1",
+        challenge_type: str = "dsa",
         time_limit_seconds: int = 120
     ) -> Dict:
         """
@@ -286,6 +317,7 @@ class MatchService:
             player2_id: ID of player 2
             challenge_id: ID of the challenge
             match_format: Match format ("1v1", "battle_royale")
+            challenge_type: Type of challenge - "dsa" or "debug"
             time_limit_seconds: Time limit for the match
         
         Returns:
@@ -305,6 +337,7 @@ class MatchService:
             player1_id=player1_id,
             player2_id=player2_id,
             challenge_id=challenge_id,
+            challenge_type=challenge_type,
             match_format=MatchFormat(match_format),
             status=MatchStatus.WAITING,
             time_limit_seconds=time_limit_seconds,
@@ -696,39 +729,71 @@ class MatchService:
         
         # Update player ratings if it's a 1v1 match
         rating_updates = {}
-        logger.info(f"Checking rating update for {match_id}. Format: {match.match_format}, Player2: {match.player2_id}")
+        logger.info(f"Checking rating update for {match_id}. Format: {match.match_format}, Player2: {match.player2_id}, Challenge Type: {match.challenge_type}")
         if (match.match_format == MatchFormat.ONE_VS_ONE or match.match_format == "1v1") and match.player2_id:
             logger.info(f"Updating ratings for match {match_id}")
             
-            player1_update = self.rating_service.update_player_rating(
-                player_id=match.player1_id,
-                opponent_id=match.player2_id,
-                match_id=match_id,
-                match_result=player1_result,
-                opponent_rating=match.player2.current_rating if match.player2 else 1200,
-                cheat_probability=cheat_probability
-            )
-            rating_updates["player1"] = player1_update
-            match.player1_rating_change = player1_update.get("rating_change")
-            
-            # Update player 2
-            player2_update = self.rating_service.update_player_rating(
-                player_id=match.player2_id,
-                opponent_id=match.player1_id,
-                match_id=match_id,
-                match_result=player2_result,
-                opponent_rating=match.player1.current_rating if match.player1 else 1200,
-                cheat_probability=cheat_probability
-            )
-            rating_updates["player2"] = player2_update
-            match.player2_rating_change = player2_update.get("rating_change")
+            # Check challenge type to determine which rating to update
+            if match.challenge_type == "debug":
+                # Update debug ratings
+                player1_update = self.rating_service.update_debug_rating(
+                    player_id=match.player1_id,
+                    opponent_id=match.player2_id,
+                    match_id=match_id,
+                    match_result=player1_result,
+                    opponent_rating=match.player2.debug_rating if match.player2 else settings.DEBUG_INITIAL_RATING
+                )
+                rating_updates["player1"] = player1_update
+                match.player1_rating_change = player1_update.get("rating_change")
+                
+                # Update player 2
+                player2_update = self.rating_service.update_debug_rating(
+                    player_id=match.player2_id,
+                    opponent_id=match.player1_id,
+                    match_id=match_id,
+                    match_result=player2_result,
+                    opponent_rating=match.player1.debug_rating if match.player1 else settings.DEBUG_INITIAL_RATING
+                )
+                rating_updates["player2"] = player2_update
+                match.player2_rating_change = player2_update.get("rating_change")
+            else:
+                # Update DSA ratings
+                player1_update = self.rating_service.update_player_rating(
+                    player_id=match.player1_id,
+                    opponent_id=match.player2_id,
+                    match_id=match_id,
+                    match_result=player1_result,
+                    opponent_rating=match.player2.current_rating if match.player2 else 1200,
+                    cheat_probability=cheat_probability
+                )
+                rating_updates["player1"] = player1_update
+                match.player1_rating_change = player1_update.get("rating_change")
+                
+                # Update player 2
+                player2_update = self.rating_service.update_player_rating(
+                    player_id=match.player2_id,
+                    opponent_id=match.player1_id,
+                    match_id=match_id,
+                    match_result=player2_result,
+                    opponent_rating=match.player1.current_rating if match.player1 else 1200,
+                    cheat_probability=cheat_probability
+                )
+                rating_updates["player2"] = player2_update
+                match.player2_rating_change = player2_update.get("rating_change")
         else:
             # For solo matches, record 0 change to satisfy the results display
             match.player1_rating_change = 0
+            
+            # Get appropriate rating based on challenge type
+            if match.challenge_type == "debug":
+                current_rating = match.player1.debug_rating if match.player1 else settings.DEBUG_INITIAL_RATING
+            else:
+                current_rating = match.player1.current_rating if match.player1 else 1200
+            
             rating_updates["player1"] = {
                 "player_id": match.player1_id,
-                "old_rating": match.player1.current_rating if match.player1 else 1200,
-                "new_rating": match.player1.current_rating if match.player1 else 1200,
+                "old_rating": current_rating,
+                "new_rating": current_rating,
                 "rating_change": 0
             }
 

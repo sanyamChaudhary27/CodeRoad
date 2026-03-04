@@ -17,6 +17,7 @@ router = APIRouter()
 async def get_global_leaderboard(
     limit: int = 100,
     offset: int = 0,
+    challenge_type: str = "dsa",  # "dsa" or "debug"
     db: Session = Depends(get_db)
 ):
     """Get global leaderboard sorted by rating."""
@@ -26,25 +27,43 @@ async def get_global_leaderboard(
     if offset < 0:
         offset = 0
     
-    players = db.query(Player).order_by(Player.current_rating.desc()).limit(limit).offset(offset).all()
+    # Sort by appropriate rating based on challenge type
+    if challenge_type == "debug":
+        players = db.query(Player).order_by(Player.debug_rating.desc()).limit(limit).offset(offset).all()
+    else:
+        players = db.query(Player).order_by(Player.current_rating.desc()).limit(limit).offset(offset).all()
     
     leaderboard = []
     for rank, player in enumerate(players, offset + 1):
-        leaderboard.append({
-            "rank": rank,
-            "player_id": player.id,
-            "username": player.username,
-            "current_rating": player.current_rating,
-            "matches_played": player.matches_played,
-            "wins": player.wins,
-            "win_rate": round(player.win_rate, 2) if player.win_rate else 0.0
-        })
+        if challenge_type == "debug":
+            leaderboard.append({
+                "rank": rank,
+                "player_id": player.id,
+                "username": player.username,
+                "current_rating": player.debug_rating,
+                "matches_played": player.debug_matches_played,
+                "wins": player.debug_wins,
+                "losses": player.debug_losses,
+                "win_rate": round((player.debug_wins / player.debug_matches_played * 100) if player.debug_matches_played > 0 else 0.0, 2)
+            })
+        else:
+            leaderboard.append({
+                "rank": rank,
+                "player_id": player.id,
+                "username": player.username,
+                "current_rating": player.current_rating,
+                "matches_played": player.matches_played,
+                "wins": player.wins,
+                "losses": player.losses,
+                "win_rate": round(player.win_rate, 2) if player.win_rate else 0.0
+            })
     
     return {
         "leaderboard": leaderboard,
         "total": len(leaderboard),
         "limit": limit,
-        "offset": offset
+        "offset": offset,
+        "challenge_type": challenge_type
     }
 
 @router.get("/player/{player_id}")

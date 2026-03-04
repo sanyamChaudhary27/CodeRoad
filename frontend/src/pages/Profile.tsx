@@ -86,6 +86,9 @@ const Profile = () => {
 
   const winRate = (user.matches_played || 0) > 0 ? Math.round(((user.wins || 0) / (user.matches_played || 1)) * 100) : 0;
   const losses = (user.matches_played || 0) - (user.wins || 0);
+  
+  const debugWinRate = (user.debug_matches_played || 0) > 0 ? Math.round(((user.debug_wins || 0) / (user.debug_matches_played || 1)) * 100) : 0;
+  const debugLosses = (user.debug_matches_played || 0) - (user.debug_wins || 0);
 
   return (
     <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
@@ -162,11 +165,11 @@ const Profile = () => {
         {/* Stats Column */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* Performance Stats */}
+          {/* DSA Performance Stats */}
           <div className="glass-panel p-6">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
               <Target size={24} className="text-primary" />
-              Performance Statistics
+              DSA Arena Statistics
             </h2>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -196,6 +199,40 @@ const Profile = () => {
             </div>
           </div>
 
+          {/* Debug Arena Performance Stats */}
+          <div className="glass-panel p-6 border-danger/20">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+              <Shield size={24} className="text-danger" />
+              Debug Arena Statistics
+            </h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-bg-panel-light/50 p-5 rounded-xl border border-border-light text-center">
+                <Activity className="text-danger mb-2 mx-auto" size={24} />
+                <p className="text-3xl font-bold text-white">{user.debug_matches_played || 0}</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Total Matches</p>
+              </div>
+              
+              <div className="bg-bg-panel-light/50 p-5 rounded-xl border border-border-light text-center">
+                <Award className="text-success mb-2 mx-auto" size={24} />
+                <p className="text-3xl font-bold text-white">{user.debug_wins || 0}</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Victories</p>
+              </div>
+              
+              <div className="bg-bg-panel-light/50 p-5 rounded-xl border border-border-light text-center">
+                <Target className="text-danger mb-2 mx-auto" size={24} />
+                <p className="text-3xl font-bold text-white">{debugLosses}</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Defeats</p>
+              </div>
+              
+              <div className="bg-bg-panel-light/50 p-5 rounded-xl border border-border-light text-center">
+                <TrendingUp className="text-accent mb-2 mx-auto" size={24} />
+                <p className="text-3xl font-bold text-white">{debugWinRate}%</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Win Rate</p>
+              </div>
+            </div>
+          </div>
+
           {/* Match History */}
           <div className="glass-panel p-6">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
@@ -217,26 +254,53 @@ const Profile = () => {
         {/* Achievements & Info Column */}
         <div className="space-y-8">
           
-          {/* Rank Card */}
-          <div className="glass-panel p-6">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Trophy size={20} className="text-warning" />
-              Current Rank
-            </h3>
-            
-            <div className="text-center py-6">
-              <div className="text-6xl font-bold text-gradient mb-2">{user.current_rating}</div>
-              <p className="text-text-secondary">ELO Rating</p>
-            </div>
-            
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-bg-panel-light/50 border border-border-light">
-                <span className="text-text-secondary text-sm">Peak Rating</span>
-                <span className="text-white font-semibold">{user.current_rating}</span>
+          {/* Rank Cards */}
+          <div className="space-y-4">
+            {/* DSA Rank Card */}
+            <div className="glass-panel p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Trophy size={20} className="text-primary" />
+                DSA Arena Rank
+              </h3>
+              
+              <div className="text-center py-6">
+                <div className="text-6xl font-bold text-gradient mb-2">{user.current_rating}</div>
+                <p className="text-text-secondary">ELO Rating</p>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-bg-panel-light/50 border border-border-light">
-                <span className="text-text-secondary text-sm">Starting Rating</span>
-                <span className="text-white font-semibold">1200</span>
+              
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-bg-panel-light/50 border border-border-light">
+                  <span className="text-text-secondary text-sm">Peak Rating</span>
+                  <span className="text-white font-semibold">{user.current_rating}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-bg-panel-light/50 border border-border-light">
+                  <span className="text-text-secondary text-sm">Starting Rating</span>
+                  <span className="text-white font-semibold">300</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Debug Rank Card */}
+            <div className="glass-panel p-6 border-danger/20">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Trophy size={20} className="text-danger" />
+                Debug Arena Rank
+              </h3>
+              
+              <div className="text-center py-6">
+                <div className="text-6xl font-bold text-danger mb-2">{user.debug_rating || 300}</div>
+                <p className="text-text-secondary">ELO Rating</p>
+              </div>
+              
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-bg-panel-light/50 border border-border-light">
+                  <span className="text-text-secondary text-sm">Peak Rating</span>
+                  <span className="text-white font-semibold">{user.debug_rating || 300}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-bg-panel-light/50 border border-border-light">
+                  <span className="text-text-secondary text-sm">Starting Rating</span>
+                  <span className="text-white font-semibold">300</span>
+                </div>
               </div>
             </div>
           </div>
