@@ -750,12 +750,55 @@ Generate a problem appropriate for rating {player_rating}!"""
         if recent_titles:
             exclusion_text = f"\n\nDO NOT generate these recently used challenges:\n" + "\n".join(f"- {title}" for title in list(recent_titles)[:10])
         
+        # ELO-smart complexity guidance for debug challenges
+        if player_rating < 350:
+            complexity_guide = """
+COMPLEXITY LEVEL: BEGINNER (Rating < 350)
+Generate SIMPLE debugging problems with OBVIOUS bugs:
+- Single syntax error (missing colon, wrong indentation)
+- Simple logic error (wrong operator, off-by-one)
+- Basic variable name mistakes
+- Simple return value errors
+
+BUG TYPES: Focus on syntax and simple logic errors
+ALGORITHM COMPLEXITY: Use basic loops and simple operations
+EXAMPLES: Array sum with wrong operator, loop with wrong range
+"""
+        elif player_rating < 450:
+            complexity_guide = """
+COMPLEXITY LEVEL: INTERMEDIATE (Rating 350-450)
+Generate moderate debugging problems with SUBTLE bugs:
+- Logic errors in conditions (>, <, >=, <=)
+- Variable update mistakes in loops
+- Edge case handling errors
+- Algorithm implementation bugs
+
+BUG TYPES: Mix of logic, algorithm, and edge_case errors
+ALGORITHM COMPLEXITY: Two pointers, basic sorting, string manipulation
+EXAMPLES: Binary search with wrong mid calculation, palindrome check with wrong logic
+"""
+        else:
+            complexity_guide = """
+COMPLEXITY LEVEL: ADVANCED (Rating 450+)
+Generate challenging debugging problems with HIDDEN bugs:
+- Complex algorithm implementation errors
+- Subtle edge case bugs
+- Multiple interacting bugs
+- Runtime optimization issues
+
+BUG TYPES: Algorithm, edge_case, and complex logic errors
+ALGORITHM COMPLEXITY: DP, graph algorithms, advanced data structures
+EXAMPLES: LIS with wrong DP transition, graph traversal with missing visited check
+"""
+        
         # Create prompt for debug challenge
         domain_text = f" in the domain of {domain}" if domain else ""
         
         prompt = f"""Generate a {difficulty} level debugging challenge{domain_text} for competitive programming.
 
 The challenge should contain BROKEN CODE with intentional bugs that the player must fix.
+
+{complexity_guide}
 
 CRITICAL REQUIREMENTS:
 - The function MUST be named "solve" and take a single parameter "arr"
