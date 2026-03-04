@@ -73,8 +73,8 @@ export const matchmakingService = {
     return response.data;
   },
 
-  async createPracticeMatch(difficulty: string = 'intermediate', challengeId?: string) {
-    const params = new URLSearchParams({ difficulty });
+  async createPracticeMatch(difficulty: string = 'intermediate', challengeType: string = 'dsa', challengeId?: string) {
+    const params = new URLSearchParams({ difficulty, challenge_type: challengeType });
     if (challengeId) {
       params.append('challenge_id', challengeId);
     }

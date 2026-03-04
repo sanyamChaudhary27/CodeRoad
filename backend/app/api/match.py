@@ -233,6 +233,7 @@ async def player_done(
 @router.post("/practice", response_model=dict)
 async def practice_match(
     difficulty: str = "intermediate",
+    challenge_type: str = "dsa",
     challenge_id: str = None,
     current_user: dict = Depends(get_current_player),
     db: Session = Depends(get_db)
@@ -242,7 +243,8 @@ async def practice_match(
     result = match_service.create_solo_match(
         current_user["id"], 
         difficulty,
-        challenge_id=challenge_id
+        challenge_id=challenge_id,
+        challenge_type=challenge_type
     )
     
     if "error" in result:
