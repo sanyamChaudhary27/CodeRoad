@@ -27,6 +27,9 @@ const Dashboard = () => {
       setUser(currentUser);
     } catch (err) {
       console.error("Failed to fetch user data", err);
+      // Fall back to cached user so dashboard isn't blank
+      const cachedUser = authService.getUser();
+      if (cachedUser) setUser(cachedUser);
     }
   };
 
