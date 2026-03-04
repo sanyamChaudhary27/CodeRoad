@@ -757,34 +757,55 @@ Generate a problem appropriate for rating {player_rating}!"""
 
 The challenge should contain BROKEN CODE with intentional bugs that the player must fix.
 
+CRITICAL REQUIREMENTS:
+- The function MUST be named "solve" and take a single parameter "arr"
+- Function signature MUST be: def solve(arr):
+- All inputs are passed as a single array/list
+- For multiple inputs, they are elements in the array (e.g., arr[0], arr[1])
+- The broken code should use this exact format
+
+Example format for single input:
+def solve(arr):
+    n = arr[0]  # Extract input
+    # buggy code here
+    return result
+
+Example format for multiple inputs:
+def solve(arr):
+    nums = arr[:-1]  # First n-1 elements
+    target = arr[-1]  # Last element
+    # buggy code here
+    return result
+
 Requirements:
 - Difficulty: {difficulty}
 - Bug count: {1 if difficulty == 'beginner' else 2 if difficulty == 'intermediate' else 3}
 - Bug types can be: syntax, logic, runtime, algorithm, edge_case
 - Include the broken code and what it should do
 - Provide test cases to verify the fix
+- Test case inputs should be space-separated values
 
 {player_history}
 {exclusion_text}
 
 Return ONLY valid JSON with this exact structure:
 {{
-    "title": "Fix the [Function Name]",
-    "description": "Clear description of what the code should do and what's wrong",
+    "title": "Fix the [Algorithm Name]",
+    "description": "Clear description of what the code should do. DO NOT reveal the bugs!",
     "difficulty": "{difficulty}",
     "domain": "debugging",
-    "broken_code": "The buggy code as a string",
+    "broken_code": "def solve(arr):\\n    # Extract inputs\\n    # Buggy code here\\n    return result",
     "bug_count": 1-3,
     "bug_types": ["syntax", "logic", etc],
-    "input_format": "Description of input",
-    "output_format": "Description of output",
-    "example_input": "Sample input",
-    "example_output": "Expected output",
+    "input_format": "Space-separated values",
+    "output_format": "Single value or space-separated values",
+    "example_input": "1 2 3 4 5",
+    "example_output": "15",
     "constraints": {{"input_size": "1 ≤ n ≤ 100"}},
-    "time_limit_seconds": 5,
+    "time_limit_seconds": 300,
     "test_cases": [
-        {{"id": "tc1", "input": "...", "expected_output": "...", "category": "basic", "description": "...", "is_hidden": false}},
-        {{"id": "tc2", "input": "...", "expected_output": "...", "category": "edge", "description": "...", "is_hidden": true}}
+        {{"id": "tc1", "input": "1 2 3", "expected_output": "6", "category": "basic", "description": "Basic case", "is_hidden": false}},
+        {{"id": "tc2", "input": "5 10", "expected_output": "15", "category": "edge", "description": "Edge case", "is_hidden": true}}
     ]
 }}"""
         
@@ -819,6 +840,32 @@ Return ONLY valid JSON with this exact structure:
                     import re
                     content_cleaned = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', content)
                     challenge_data = json.loads(content_cleaned, strict=False)
+                
+                # Post-process: Ensure function is named 'solve' and takes 'arr' parameter
+                if 'broken_code' in challenge_data:
+                    broken_code = challenge_data['broken_code']
+                    
+                    # Check if function is not named 'solve'
+                    import re
+                    func_match = re.search(r'def\s+(\w+)\s*\([^)]*\):', broken_code)
+                    if func_match:
+                        func_name = func_match.group(1)
+                        if func_name != 'solve':
+                            logger.info(f"Fixing function name from '{func_name}' to 'solve'")
+                            # Replace function name with 'solve'
+                            broken_code = re.sub(r'def\s+\w+\s*\([^)]*\):', 'def solve(arr):', broken_code, count=1)
+                            
+                            # Also replace any calls to the old function name
+                            broken_code = re.sub(rf'\b{func_name}\s*\(', 'solve(', broken_code)
+                            
+                            challenge_data['broken_code'] = broken_code
+                    
+                    # Ensure parameter is 'arr'
+                    if 'def solve(' in broken_code and 'def solve(arr)' not in broken_code:
+                        logger.info("Fixing parameter name to 'arr'")
+                        broken_code = re.sub(r'def solve\([^)]*\):', 'def solve(arr):', broken_code, count=1)
+                        challenge_data['broken_code'] = broken_code
+                
                 challenge_data['id'] = str(uuid.uuid4())
                 
                 logger.info(f"Successfully generated debug challenge with Groq key {self.current_key_index + 1}")
