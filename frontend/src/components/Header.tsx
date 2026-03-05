@@ -20,16 +20,20 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 animate-gradient"></div>
       
-      {/* Left side - Logo Only */}
+      {/* Left side - Logo + Brand */}
       <div className="flex items-center relative z-10">
         <div 
-          className="relative cursor-pointer group/logo"
+          className="relative cursor-pointer group/logo flex items-center gap-3"
           onClick={() => navigate('/dashboard')}
         >
-          {/* Logo container - Rectangular */}
-          <div className="relative h-20 w-64 flex-center group-hover/logo:scale-110 transition-transform">
-            <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain" />
+          {/* Logo container - Perfect square */}
+          <div className="relative h-12 w-12 flex-center group-hover/logo:scale-110 transition-transform">
+            <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain drop-shadow-lg" />
           </div>
+          {/* Brand name */}
+          <span className="text-2xl font-black text-gradient group-hover/logo:text-primary transition-colors">
+            CodeRoad
+          </span>
         </div>
       </div>
       
