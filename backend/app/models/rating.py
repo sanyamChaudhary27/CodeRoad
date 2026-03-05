@@ -11,10 +11,11 @@ class Rating(Base):
     __tablename__ = "ratings"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    player_id = Column(String(36), ForeignKey("players.id"), nullable=False, unique=True, index=True)
+    player_id = Column(String(36), ForeignKey("players.id"), nullable=False, index=True)
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
     
     # Current rating
-    current_rating = Column(Integer, default=1200, nullable=False)
+    current_rating = Column(Integer, default=300, nullable=False)
     rating_confidence = Column(Float, default=100.0, nullable=False)  # 0-100%
     
     # Statistics
@@ -28,7 +29,7 @@ class Rating(Base):
     volatility = Column(Float, default=0.06, nullable=False)  # Glicko volatility
     
     # Peak rating
-    peak_rating = Column(Integer, default=1200, nullable=False)
+    peak_rating = Column(Integer, default=300, nullable=False)
     peak_rating_date = Column(DateTime, nullable=True)
     
     # Rating decay

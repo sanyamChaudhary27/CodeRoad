@@ -2,8 +2,12 @@ from pydantic_settings import BaseSettings
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Load .env from backend directory
+backend_dir = Path(__file__).parent.parent
+env_file = backend_dir / ".env"
+load_dotenv(env_file)
 
 class Settings(BaseSettings):
     """Application settings."""
@@ -32,8 +36,12 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
+        "http://localhost:5173",
+        "http://localhost:5174",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
     ]
     
     # Match settings
@@ -42,7 +50,12 @@ class Settings(BaseSettings):
     MATCH_DURATION_MAX_SECONDS: int = 120
     ELO_MATCHING_RANGE: int = 200
     ELO_K_FACTOR: int = 32
-    INITIAL_ELO_RATING: int = 1200
+    INITIAL_ELO_RATING: int = 300
+    
+    # Debug Arena settings
+    DEBUG_SOLO_TIME_LIMIT: int = 300  # 5 minutes
+    DEBUG_1V1_TIME_LIMIT: int = 150  # 2.5 minutes
+    DEBUG_INITIAL_RATING: int = 300
     
     # Code execution
     CODE_EXECUTION_TIMEOUT_SECONDS: int = 5
@@ -68,6 +81,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 # Create settings instance
 settings = Settings()

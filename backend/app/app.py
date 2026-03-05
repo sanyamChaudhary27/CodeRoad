@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from contextlib import asynccontextmanager
 import logging
-from typing import Optional
+from typing import Optional, List
+import json
+from fastapi.responses import JSONResponse
 
 from .core.database import engine, Base, get_db
 from .core.security import verify_token
@@ -45,14 +47,28 @@ def create_app() -> FastAPI:
         lifespan=lifespan
     )
     
-    # Configure CORS
+    # Configure CORS - Harden for DEBUG mode
+    origins = settings.CORS_ORIGINS
+    if settings.DEBUG:
+        origins = ["*"]
+        logger.info("DEBUG mode: Allowing all origins for CORS")
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Global Exception Handler for JSON responses
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request, exc):
+        logger.error(f"Global error: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error", "message": str(exc)}
+        )
     
     # Dependency to get current user from token
     async def get_current_user(

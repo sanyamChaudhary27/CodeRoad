@@ -36,6 +36,7 @@ class Match(Base):
     
     # Match details
     challenge_id = Column(String(36), nullable=False, index=True)
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
     match_format = Column(Enum(MatchFormat), default=MatchFormat.ONE_VS_ONE, nullable=False)
     status = Column(Enum(MatchStatus), default=MatchStatus.WAITING, nullable=False, index=True)
     
@@ -49,12 +50,20 @@ class Match(Base):
     player1_done = Column(Boolean, default=False, nullable=False)
     player2_done = Column(Boolean, default=False, nullable=False)
     
+    # Submission counters
+    player1_submissions = Column(Integer, default=0, nullable=False)
+    player2_submissions = Column(Integer, default=0, nullable=False)
+    
     # For battle royale
     players_done = Column(Text, nullable=True)  # JSON array of player IDs who are done
     
     # Scoring
     player1_score = Column(Float, default=0.0, nullable=False)
     player2_score = Column(Float, default=0.0, nullable=False)
+    
+    # Rating changes
+    player1_rating_change = Column(Integer, nullable=True)
+    player2_rating_change = Column(Integer, nullable=True)
     
     # AI evaluation metrics
     player1_ai_quality_score = Column(Float, nullable=True)
@@ -95,17 +104,23 @@ class Match(Base):
     @property
     def time_remaining(self) -> int:
         """Calculate time remaining in seconds."""
-        if not self.started_at or self.ended_at:
+        if not self.started_at:
             return self.time_limit_seconds
         
-        elapsed = (func.now() - self.started_at).seconds
-        remaining = max(0, self.time_limit_seconds - elapsed)
+        if self.ended_at or self.status in [MatchStatus.CONCLUDED, MatchStatus.TIMEOUT]:
+            return 0
+        
+        from datetime import datetime
+        elapsed = (datetime.utcnow() - self.started_at).total_seconds()
+        remaining = max(0, self.time_limit_seconds - int(elapsed))
         return remaining
     
     @property
     def all_players_done(self) -> bool:
         """Check if all players have signaled they are done."""
         if self.match_format == MatchFormat.ONE_VS_ONE:
+            if self.player2_id is None:
+                return self.player1_done
             return self.player1_done and self.player2_done
         else:
             # For battle royale, check if all players in player_ids are done
@@ -120,6 +135,7 @@ class Match(Base):
             "player2_id": self.player2_id,
             "player_ids": self.player_ids,
             "challenge_id": self.challenge_id,
+            "challenge_type": self.challenge_type,
             "match_format": self.match_format.value,
             "status": self.status.value,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -131,10 +147,14 @@ class Match(Base):
             "player2_done": self.player2_done,
             "player1_score": self.player1_score,
             "player2_score": self.player2_score,
+            "player1_submissions": self.player1_submissions,
+            "player2_submissions": self.player2_submissions,
             "winner_id": self.winner_id,
             "result": self.result,
             "integrity_status": self.integrity_status,
             "rating_frozen": self.rating_frozen,
+            "player1_rating_change": self.player1_rating_change,
+            "player2_rating_change": self.player2_rating_change,
             "websocket_room": self.websocket_room,
         }
 
@@ -151,6 +171,7 @@ class MatchQueue(Base):
     
     # Match preferences
     preferred_format = Column(Enum(MatchFormat), default=MatchFormat.ONE_VS_ONE, nullable=False)
+    challenge_type = Column(String(20), default="dsa", nullable=False)  # "dsa" or "debug"
     min_rating = Column(Integer, nullable=True)
     max_rating = Column(Integer, nullable=True)
     
@@ -165,7 +186,7 @@ class MatchQueue(Base):
     player = relationship("Player")
     
     def __repr__(self):
-        return f"<MatchQueue(player={self.player_id}, rating={self.player_rating})>"
+        return f"<MatchQueue(player={self.player_id}, rating={self.player_rating}, type={self.challenge_type})>"
 
 class Tournament(Base):
     """Tournament model for organized competitions."""

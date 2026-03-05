@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from ..core.database import get_db
+from ..config import settings
 from ..core.security import (
     get_password_hash,
     verify_password,
@@ -55,7 +56,7 @@ async def register(player_data: PlayerRegister, db: Session = Depends(get_db)):
         username=player_data.username,
         email=player_data.email,
         hashed_password=hashed_password,
-        current_rating=1200,
+        current_rating=settings.INITIAL_ELO_RATING,
         rating_confidence=100.0
     )
     
@@ -71,15 +72,7 @@ async def register(player_data: PlayerRegister, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "player": {
-            "id": new_player.id,
-            "username": new_player.username,
-            "email": new_player.email,
-            "current_rating": new_player.current_rating,
-            "matches_played": new_player.matches_played,
-            "wins": new_player.wins,
-            "losses": new_player.losses
-        }
+        "player": new_player
     }
 
 @router.post("/login", response_model=TokenResponse)
@@ -110,15 +103,7 @@ async def login(credentials: PlayerLogin, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "player": {
-            "id": player.id,
-            "username": player.username,
-            "email": player.email,
-            "current_rating": player.current_rating,
-            "matches_played": player.matches_played,
-            "wins": player.wins,
-            "losses": player.losses
-        }
+        "player": player
     }
 
 @router.get("/me", response_model=PlayerResponse)
@@ -147,5 +132,49 @@ async def get_me(
         "losses": player.losses,
         "badges_earned": len(player.badges) if player.badges else 0,
         "created_at": player.created_at,
-        "last_match_at": player.last_match_at
+        "last_match_at": player.last_match_at,
+        "profile_picture": player.profile_picture,
+        "debug_rating": player.debug_rating,
+        "debug_matches_played": player.debug_matches_played,
+        "debug_wins": player.debug_wins,
+        "debug_losses": player.debug_losses
+    }
+
+@router.put("/profile-picture")
+async def update_profile_picture(
+    data: dict,
+    current_user: dict = Depends(get_current_player),
+    db: Session = Depends(get_db)
+):
+    """Update player profile picture."""
+    
+    player = db.query(Player).filter(Player.id == current_user["id"]).first()
+    
+    if not player:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Player not found"
+        )
+    
+    profile_picture = data.get("profile_picture", "")
+    
+    # Validate profile picture (basic validation for base64 or URL)
+    if not profile_picture:
+        player.profile_picture = None
+    elif len(profile_picture) > 500000:  # 500KB limit for base64
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profile picture too large (max 500KB)"
+        )
+    else:
+        player.profile_picture = profile_picture
+    
+    db.commit()
+    db.refresh(player)
+    
+    logger.info(f"Profile picture updated for player: {player.username}")
+    
+    return {
+        "message": "Profile picture updated successfully",
+        "profile_picture": player.profile_picture
     }

@@ -27,7 +27,11 @@ async def join_queue(
     """Join matchmaking queue."""
     
     match_service = MatchService(db)
-    result = match_service.join_match_queue(current_user["id"], request.preferred_format)
+    result = match_service.join_match_queue(
+        current_user["id"], 
+        request.preferred_format,
+        request.challenge_type
+    )
     
     if "error" in result:
         raise HTTPException(
@@ -35,7 +39,7 @@ async def join_queue(
             detail=result["error"]
         )
     
-    logger.info(f"Player {current_user['id']} joined queue")
+    logger.info(f"Player {current_user['id']} joined {request.challenge_type} queue")
     
     return {
         "player_id": current_user["id"],
@@ -68,6 +72,18 @@ async def leave_queue(
         "message": "Successfully left matchmaking queue"
     }
 
+@router.get("/queue/status", response_model=QueueStatusResponse)
+async def get_queue_status(
+    current_user: dict = Depends(get_current_player),
+    db: Session = Depends(get_db)
+):
+    """Get matchmaking queue status."""
+    
+    match_service = MatchService(db)
+    result = match_service.get_queue_status_with_matchmaking(current_user["id"])
+    
+    return result
+
 @router.get("/{match_id}", response_model=MatchResponse)
 async def get_match(
     match_id: str,
@@ -96,6 +112,8 @@ async def get_match(
         "match_id": match_data.get("id"),
         "status": match_data.get("status"),
         "format": match_data.get("match_format", "1v1"),
+        "challenge_type": match_data.get("challenge_type", "dsa"),
+        # Nested objects for schema compatibility
         "player1": {
             "player_id": match_data.get("player1_id"),
             "username": match_data.get("player1_username", "Unknown"),
@@ -110,17 +128,32 @@ async def get_match(
             "submissions_count": match_data.get("player2_submissions", 0),
             "is_done": match_data.get("player2_done", False)
         } if match_data.get("player2_id") else None,
+        # Flat fields for frontend compatibility
+        "player1_id": match_data.get("player1_id"),
+        "player1_username": match_data.get("player1_username"),
+        "player1_rating": match_data.get("player1_rating"),
+        "player1_submissions": match_data.get("player1_submissions", 0),
+        "player1_done": match_data.get("player1_done", False),
+        "player2_id": match_data.get("player2_id"),
+        "player2_username": match_data.get("player2_username"),
+        "player2_rating": match_data.get("player2_rating"),
+        "player2_submissions": match_data.get("player2_submissions", 0),
+        "player2_done": match_data.get("player2_done", False),
+        # Other fields
         "challenge_id": match_data.get("challenge_id"),
         "challenge_title": match_data.get("challenge_title"),
         "challenge_description": match_data.get("challenge_description"),
         "difficulty_level": match_data.get("difficulty_level"),
         "time_limit_seconds": match_data.get("time_limit_seconds", 120),
+        "time_remaining": match_data.get("time_remaining", 120),
         "created_at": match_data.get("created_at"),
         "started_at": match_data.get("started_at"),
         "concluded_at": match_data.get("ended_at"),
         "winner_id": match_data.get("winner_id"),
         "player1_score": match_data.get("player1_score"),
-        "player2_score": match_data.get("player2_score")
+        "player2_score": match_data.get("player2_score"),
+        "result": match_data.get("result"),
+        "rating_updates": match_data.get("rating_updates")
     }
 
 @router.get("/player/history", response_model=MatchListResponse)
@@ -140,6 +173,7 @@ async def get_player_matches(
             "match_id": match_data.get("id"),
             "status": match_data.get("status"),
             "format": match_data.get("format", "1v1"),
+            "challenge_type": match_data.get("challenge_type", "dsa"),
             "player1": {
                 "player_id": match_data.get("player1_id"),
                 "username": match_data.get("player1_username", "Unknown"),
@@ -159,12 +193,14 @@ async def get_player_matches(
             "challenge_description": match_data.get("challenge_description"),
             "difficulty_level": match_data.get("difficulty_level"),
             "time_limit_seconds": match_data.get("time_limit_seconds", 120),
+            "time_remaining": match_data.get("time_remaining", 120),
             "created_at": match_data.get("created_at"),
             "started_at": match_data.get("started_at"),
             "concluded_at": match_data.get("concluded_at"),
             "winner_id": match_data.get("winner_id"),
             "player1_score": match_data.get("player1_score"),
-            "player2_score": match_data.get("player2_score")
+            "player2_score": match_data.get("player2_score"),
+            "result": match_data.get("result")
         })
     
     return {
@@ -210,3 +246,28 @@ async def player_done(
         "match_status": result.get("match_status"),
         "message": "Your done status has been recorded"
     }
+
+@router.post("/practice", response_model=dict)
+async def practice_match(
+    difficulty: str = "intermediate",
+    challenge_type: str = "dsa",
+    challenge_id: str = None,
+    current_user: dict = Depends(get_current_player),
+    db: Session = Depends(get_db)
+):
+    """Create a solo practice match. Optionally specify challenge_id to recode a previous challenge."""
+    match_service = MatchService(db)
+    result = match_service.create_solo_match(
+        current_user["id"], 
+        difficulty,
+        challenge_id=challenge_id,
+        challenge_type=challenge_type
+    )
+    
+    if "error" in result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result["error"]
+        )
+    
+    return result

@@ -22,6 +22,7 @@ class ChallengeRequest(BaseModel):
     """Request model for challenge generation"""
     difficulty: Optional[str] = "intermediate"
     domain: Optional[str] = None
+    challenge_type: Optional[str] = "dsa"  # "dsa" or "debug"
 
 
 class ChallengeResponse(BaseModel):
@@ -37,6 +38,7 @@ class ChallengeResponse(BaseModel):
     example_input: Optional[str]
     example_output: Optional[str]
     time_limit_seconds: int
+    boilerplate_code: str
     test_cases: list
     coverage_metrics: Optional[dict]
     generated_at: str
@@ -54,6 +56,7 @@ async def generate_challenge(
     - Generates challenge based on player rating and difficulty
     - Creates comprehensive test cases using AI
     - Returns challenge with test cases (some hidden)
+    - Supports both DSA and Debug challenge types
     """
     
     try:
@@ -61,15 +64,27 @@ async def generate_challenge(
         
         # Get player rating for adaptive difficulty
         player_rating = current_user.get("rating", 1200) if isinstance(current_user, dict) else 1200
+        player_id = current_user.get("id") if isinstance(current_user, dict) else None
         
-        # Generate challenge
-        challenge = challenge_service.generate_challenge(
-            difficulty=request.difficulty,
-            player_rating=player_rating,
-            domain=request.domain
-        )
+        # Generate challenge based on type
+        if request.challenge_type == "debug":
+            challenge = challenge_service.generate_debug_challenge(
+                db=db,
+                difficulty=request.difficulty,
+                player_rating=player_rating,
+                domain=request.domain,
+                player_id=player_id
+            )
+        else:
+            challenge = challenge_service.generate_challenge(
+                db=db,
+                difficulty=request.difficulty,
+                player_rating=player_rating,
+                domain=request.domain,
+                player_id=player_id
+            )
         
-        logger.info(f"Generated challenge {challenge['id']} for player {current_user.get('id', 'unknown')}")
+        logger.info(f"Generated {request.challenge_type} challenge {challenge['id']} for player {current_user.get('id', 'unknown')}")
         
         return challenge
         

@@ -117,8 +117,8 @@ class RatingService:
         # Update rating
         new_rating = old_rating + adjusted_rating_change
         
-        # Ensure rating doesn't go below minimum
-        new_rating = max(800, new_rating)
+        # Ensure rating doesn't go below minimum (100 is the floor)
+        new_rating = max(100, new_rating)
         
         # Update peak rating if applicable
         if new_rating > rating.peak_rating:
@@ -341,50 +341,154 @@ class RatingService:
         self,
         player1_score: float,
         player2_score: float,
+        player1_time: Optional[float] = None,
+        player2_time: Optional[float] = None,
         player1_ai_score: Optional[float] = None,
         player2_ai_score: Optional[float] = None,
         player1_complexity_score: Optional[float] = None,
-        player2_complexity_score: Optional[float] = None
-    ) -> Tuple[str, str, str]:
+        player2_complexity_score: Optional[float] = None,
+        player1_memory: Optional[float] = None,
+        player2_memory: Optional[float] = None,
+        player1_ai_prob: Optional[float] = None,
+        player2_ai_prob: Optional[float] = None
+    ) -> Tuple[str, str, Optional[str]]:
         """
-        Calculate match result based on scoring metrics.
+        Calculate match result based on scoring metrics with priority.
         
         Priority order:
-        1. Test case score
-        2. AI quality score
-        3. Complexity score
-        4. Submission time (earlier wins)
-        
-        Args:
-            player1_score: Player 1's test case score (0-100)
-            player2_score: Player 2's test case score (0-100)
-            player1_ai_score: Player 1's AI quality score (0-100)
-            player2_ai_score: Player 2's AI quality score (0-100)
-            player1_complexity_score: Player 1's complexity score (0-100)
-            player2_complexity_score: Player 2's complexity score (0-100)
+        1. Test case score (Accuracy)
+        2. Execution time (Speed; ±3000ms considered equal)
+        3. Complexity score (Efficiency)
+        4. Memory usage (Space; Lower is better)
+        5. AI assistance probability (Integrity; Lower is better)
         
         Returns:
             Tuple[str, str, str]: (player1_result, player2_result, winner_id)
         """
-        # Compare test case scores first
+        # 1. Compare Accuracy (Test case scores)
         if player1_score > player2_score:
             return "win", "loss", "player1"
         elif player2_score > player1_score:
             return "loss", "win", "player2"
         
-        # Test case scores are tied, compare AI quality scores
-        if player1_ai_score is not None and player2_ai_score is not None:
-            if player1_ai_score > player2_ai_score:
-                return "win", "loss", "player1"
-            elif player2_ai_score > player1_ai_score:
-                return "loss", "win", "player2"
+        # 2. Compare Speed (Execution Time) - ±3s tolerance
+        if player1_time is not None and player2_time is not None:
+            # Check if time difference is greater than 3 seconds (3000ms)
+            if abs(player1_time - player2_time) > 3000:
+                if player1_time < player2_time:
+                    return "win", "loss", "player1"
+                else:
+                    return "loss", "win", "player2"
         
-        # AI quality scores are tied or not available, compare complexity scores
+        # 3. Compare Time Complexity (Efficiency score)
         if player1_complexity_score is not None and player2_complexity_score is not None:
             if player1_complexity_score > player2_complexity_score:
                 return "win", "loss", "player1"
             elif player2_complexity_score > player1_complexity_score:
                 return "loss", "win", "player2"
         
+        # 4. Compare Space Complexity (Memory used) - Lower is better
+        if player1_memory is not None and player2_memory is not None:
+            if player1_memory < player2_memory:
+                return "win", "loss", "player1"
+            elif player2_memory < player1_memory:
+                return "loss", "win", "player2"
+
+        # 5. Compare AI Integrity (AI probability) - Lower is better
+        p1_prob = player1_ai_prob if player1_ai_prob is not None else 0.0
+        p2_prob = player2_ai_prob if player2_ai_prob is not None else 0.0
+        if p1_prob < p2_prob:
+            return "win", "loss", "player1"
+        elif p2_prob < p1_prob:
+            return "loss", "win", "player2"
+        
         # All scores are tied - it's a draw
         return "draw", "draw", None
+
+
+    def update_debug_rating(
+        self,
+        player_id: str,
+        opponent_id: Optional[str],
+        match_id: str,
+        match_result: str,
+        opponent_rating: Optional[int] = None
+    ) -> Dict:
+        """
+        Update player's debug arena rating after a match.
+        
+        Args:
+            player_id: ID of the player to update
+            opponent_id: ID of the opponent (None for solo matches)
+            match_id: ID of the match
+            match_result: Result of the match ("win", "loss", "draw")
+            opponent_rating: Opponent's debug rating at match time
+        
+        Returns:
+            Dict: Rating update information
+        """
+        # Get player
+        player = self.db.query(Player).filter(Player.id == player_id).first()
+        
+        if not player:
+            return {"error": "Player not found"}
+        
+        old_rating = player.debug_rating
+        
+        # For solo matches, no rating change
+        if not opponent_id:
+            return {
+                "player_id": player_id,
+                "old_rating": old_rating,
+                "new_rating": old_rating,
+                "rating_change": 0,
+                "match_result": match_result,
+                "message": "Solo practice - no rating change"
+            }
+        
+        # Calculate rating change for competitive matches
+        rating_change, expected_score, actual_score = self.calculate_rating_change(
+            player_rating=old_rating,
+            opponent_rating=opponent_rating or settings.DEBUG_INITIAL_RATING,
+            match_result=match_result
+        )
+        
+        # Adjust rating change based on confidence
+        confidence_multiplier = player.debug_rating_confidence / 100.0
+        adjusted_rating_change = round(rating_change * confidence_multiplier)
+        
+        # Update rating
+        new_rating = old_rating + adjusted_rating_change
+        
+        # Ensure rating doesn't go below minimum (100 is the floor)
+        new_rating = max(100, new_rating)
+        
+        player.debug_rating = new_rating
+        
+        # Update statistics
+        player.debug_matches_played += 1
+        if match_result == "win":
+            player.debug_wins += 1
+        elif match_result == "loss":
+            player.debug_losses += 1
+        elif match_result == "draw":
+            player.debug_draws += 1
+        
+        player.updated_at = datetime.utcnow()
+        
+        self.db.commit()
+        
+        logger.info(f"Updated debug rating for player {player_id}: {old_rating} -> {new_rating} ({adjusted_rating_change:+d})")
+        
+        return {
+            "player_id": player_id,
+            "old_rating": old_rating,
+            "new_rating": new_rating,
+            "rating_change": adjusted_rating_change,
+            "expected_score": expected_score,
+            "actual_score": actual_score,
+            "match_result": match_result,
+            "debug_matches_played": player.debug_matches_played,
+            "debug_wins": player.debug_wins,
+            "debug_losses": player.debug_losses
+        }

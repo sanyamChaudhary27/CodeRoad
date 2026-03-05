@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 import logging
-from datetime import datetime
 
 from ..core.database import get_db
 from ..core.security import get_current_player
-from ..models import Submission, Match, Player
+from ..models import Submission, Match, MatchStatus, SubmissionStatus
 from ..schemas.submission_schema import (
     CodeSubmissionRequest,
     SubmissionResponse,
@@ -23,7 +22,6 @@ integrity_service = IntegrityService()
 
 def process_submission_background(submission_id: str):
     """Background task to judge code and run integrity checks."""
-    # We create a new local session for background threads
     from ..core.database import SessionLocal
     db = SessionLocal()
     try:
@@ -32,7 +30,28 @@ def process_submission_background(submission_id: str):
     finally:
         db.close()
 
-@router.post("/", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
+def _submission_to_dict(s: Submission) -> dict:
+    """Convert a Submission model to a response dict safely."""
+    return {
+        "submission_id": s.id,
+        "match_id": s.match_id,
+        "player_id": s.player_id,
+        "code": s.code,
+        "language": s.language.value if hasattr(s.language, 'value') else s.language,
+        "status": s.status.value if hasattr(s.status, 'value') else s.status,
+        "test_cases_passed": s.test_cases_passed,
+        "total_test_cases": s.test_cases_total,
+        "execution_time_ms": s.execution_time_ms,
+        "memory_used_mb": s.memory_used_mb,
+        "ai_quality_score": s.ai_quality_score,
+        "complexity_score": s.complexity_score,
+        "ai_assisted_probability": s.cheat_probability,
+        "score": 0,  # Placeholder for Elo impact, to be implemented after match resolution
+        "created_at": s.submitted_at,
+        "completed_at": s.completed_at,
+    }
+
+@router.post("", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
 async def submit_code(
     request: CodeSubmissionRequest,
     background_tasks: BackgroundTasks,
@@ -41,71 +60,49 @@ async def submit_code(
 ):
     """Submit code for a match."""
     
-    # Verify match exists and player is in it
     match = db.query(Match).filter(Match.id == request.match_id).first()
     if not match:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Match not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
     
-    # Verify player is in the match
     if match.player1_id != current_user["id"] and match.player2_id != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not part of this match"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not part of this match")
     
-    # Verify match is active
-    if match.status != "active":
+    if match.status != MatchStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Match is not active (status: {match.status})"
+            detail=f"Match is not active (status: {match.status.value})"
         )
     
-    # Calculate submission number (how many times this player has submitted in this match)
     existing_submissions = db.query(Submission).filter(
         Submission.match_id == request.match_id,
         Submission.player_id == current_user["id"]
     ).count()
 
-    # Create submission
     submission = Submission(
         match_id=request.match_id,
         player_id=current_user["id"],
         code=request.code,
         language=request.language,
-        status="pending",
+        status=SubmissionStatus.PENDING,
         submission_number=existing_submissions + 1,
         test_cases_passed=0,
         test_cases_total=0
     )
     
+    # Increment match-level submission counter
+    if match.player1_id == current_user["id"]:
+        match.player1_submissions += 1
+    elif match.player2_id == current_user["id"]:
+        match.player2_submissions += 1
+    
     db.add(submission)
     db.commit()
     db.refresh(submission)
     
-    # Schedule background evaluation
     background_tasks.add_task(process_submission_background, submission.id)
-    
     logger.info(f"Submission created: {submission.id} for player {current_user['id']}")
     
-    return {
-        "submission_id": submission.id,
-        "match_id": submission.match_id,
-        "player_id": submission.player_id,
-        "code": submission.code,
-        "language": submission.language,
-        "status": submission.status,
-        "test_cases_passed": submission.test_cases_passed,
-        "total_test_cases": submission.total_test_cases,
-        "execution_time_ms": submission.execution_time_ms,
-        "memory_used_mb": submission.memory_used_mb,
-        "ai_quality_score": submission.ai_quality_score,
-        "complexity_score": submission.complexity_score,
-        "created_at": submission.created_at,
-        "completed_at": submission.completed_at
-    }
+    return _submission_to_dict(submission)
 
 @router.get("/{submission_id}", response_model=SubmissionDetailResponse)
 async def get_submission(
@@ -117,39 +114,17 @@ async def get_submission(
     
     submission = db.query(Submission).filter(Submission.id == submission_id).first()
     if not submission:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Submission not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
     
-    # Verify user has access to this submission
     if submission.player_id != current_user["id"]:
-        # Check if user is opponent in the match
         match = db.query(Match).filter(Match.id == submission.match_id).first()
         if not match or (match.player1_id != current_user["id"] and match.player2_id != current_user["id"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this submission"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this submission")
     
-    return {
-        "submission_id": submission.id,
-        "match_id": submission.match_id,
-        "player_id": submission.player_id,
-        "code": submission.code,
-        "language": submission.language,
-        "status": submission.status,
-        "test_cases_passed": submission.test_cases_passed,
-        "total_test_cases": submission.total_test_cases,
-        "execution_time_ms": submission.execution_time_ms,
-        "memory_used_mb": submission.memory_used_mb,
-        "ai_quality_score": submission.ai_quality_score,
-        "complexity_score": submission.complexity_score,
-        "created_at": submission.created_at,
-        "completed_at": submission.completed_at,
-        "test_case_results": [],
-        "error_details": submission.error_details
-    }
+    result = _submission_to_dict(submission)
+    result["test_case_results"] = []
+    result["error_details"] = submission.error_message
+    return result
 
 @router.get("/match/{match_id}", response_model=SubmissionListResponse)
 async def get_match_submissions(
@@ -159,41 +134,16 @@ async def get_match_submissions(
 ):
     """Get all submissions for a match."""
     
-    # Verify match exists and user is in it
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Match not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
     
     if match.player1_id != current_user["id"] and match.player2_id != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not part of this match"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not part of this match")
     
     submissions = db.query(Submission).filter(Submission.match_id == match_id).all()
     
     return {
-        "submissions": [
-            {
-                "submission_id": s.id,
-                "match_id": s.match_id,
-                "player_id": s.player_id,
-                "code": s.code,
-                "language": s.language,
-                "status": s.status,
-                "test_cases_passed": s.test_cases_passed,
-                "total_test_cases": s.total_test_cases,
-                "execution_time_ms": s.execution_time_ms,
-                "memory_used_mb": s.memory_used_mb,
-                "ai_quality_score": s.ai_quality_score,
-                "complexity_score": s.complexity_score,
-                "created_at": s.created_at,
-                "completed_at": s.completed_at
-            }
-            for s in submissions
-        ],
+        "submissions": [_submission_to_dict(s) for s in submissions],
         "total_count": len(submissions)
     }

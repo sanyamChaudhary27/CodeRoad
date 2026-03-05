@@ -1,346 +1,343 @@
-# Code Road - Real-time Competitive Coding Platform
+# CodeRoad - Competitive Programming Arena
 
-A real-time competitive coding platform with AI-generated challenges, multiplayer battles, and skill-based ranking.
+<div align="center">
 
-## Features
+**Real-time 1v1 coding battles with AI-generated challenges**
 
-- **Real-time Multiplayer Matches** - 1v1 competitive coding battles
-- **AI-Generated Challenges** - Unique problems generated using Claude AI
-- **Comprehensive Test Cases** - AI-powered test case generation with coverage metrics
-- **ELO Rating System** - Skill-based ranking and matchmaking
-- **Leaderboards** - Global rankings and player statistics
-- **WebSocket Support** - Real-time match updates and notifications
-- **Code Sandbox** - Isolated code execution environment
-- **Integrity Verification** - AI-assisted cheating detection
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6.svg)](https://www.typescriptlang.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
 
-## Tech Stack
+[Features](#features) • [Quick Start](#quick-start) • [Architecture](#architecture) • [API Docs](#api-documentation) • [Deployment](#deployment)
 
-### Backend
-- **Framework**: FastAPI
-- **Database**: PostgreSQL / SQLite
-- **Cache**: Redis
-- **Authentication**: JWT
-- **Code Execution**: Docker (isolated sandbox)
-- **AI**: Claude 3.5 Sonnet (Anthropic)
+</div>
 
-### Frontend
-- React / Vue.js (to be implemented)
+---
 
-### ML
-- Problem Statement Generator
-- Test Case Generator
-- Integrity Verification Service
+## 🎯 Overview
 
-## Project Structure
+CodeRoad is a competitive programming platform where developers battle in real-time 1v1 coding duels. Solve AI-generated challenges, climb the ELO leaderboard, and prove your skills against opponents matched to your level.
 
-```
-code-road/
-├── backend/
-│   ├── app/
-│   │   ├── api/              # API endpoints
-│   │   │   ├── auth.py       # Authentication
-│   │   │   ├── match.py      # Match management
-│   │   │   ├── submission.py # Code submissions
-│   │   │   ├── challenge.py  # Challenge generation
-│   │   │   ├── leaderboard.py # Rankings
-│   │   │   └── websocket.py  # Real-time updates
-│   │   ├── models/           # Database models
-│   │   ├── services/         # Business logic
-│   │   │   ├── challenge_service_fixed.py  # Robust challenge service
-│   │   │   ├── match_service.py
-│   │   │   ├── judge_service.py
-│   │   │   ├── rating_service.py
-│   │   │   └── websocket_manager.py
-│   │   ├── core/             # Core utilities
-│   │   │   ├── database.py
-│   │   │   ├── security.py
-│   │   │   └── utils.py
-│   │   ├── sandbox/          # Code execution
-│   │   ├── schemas/          # Pydantic models
-│   │   ├── app.py            # FastAPI app
-│   │   └── config.py         # Configuration
-│   ├── requirements.txt
-│   └── README.md
-├── ml/
-│   ├── challenge_generation/
-│   │   ├── test_case_generator.py
-│   │   ├── problem_statement_generator.py
-│   │   └── test_*.py
-│   ├── integrity/
-│   └── training_data/
-├── frontend/                 # React/Vue frontend
-├── specs/
-│   ├── design.md            # System design
-│   └── requirements.md      # Requirements
-├── docker-compose.yml
-├── FRONTEND_API_GUIDE.md    # API documentation
-└── README.md
-```
+### Key Features
 
-## Quick Start
+- **🤖 AI-Generated Challenges**: Unique problems tailored to your skill level using Groq LLaMA 3.3
+- **⚔️ Real-Time 1v1 Battles**: Compete against opponents in your ELO range
+- **🐛 Debug Arena**: Find and fix bugs faster than your opponent
+- **📊 ELO Rating System**: Sophisticated ranking with separate ratings for DSA and Debug arenas
+- **🎯 Smart Matchmaking**: Fair matches within ±200 ELO range
+- **🔒 Integrity Verification**: XGBoost-based cheating detection
+- **📈 Performance Analytics**: Track your progress across 8 coding domains
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
-- PostgreSQL or SQLite
-- Redis (optional)
-- Docker (for code sandbox)
+
+- **Python 3.9+**
+- **Node.js 18+**
+- **Groq API Key** ([Get one here](https://console.groq.com/))
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/code-road.git
-cd code-road
+git clone https://github.com/sanyamChaudhary27/CodeRoad.git
+cd CodeRoad
 ```
 
-2. **Set up backend**
+2. **Backend Setup**
 ```bash
 cd backend
+
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Configure environment
+# Edit backend/.env and add your Groq API keys
+
+# Start backend server
+uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. **Configure environment**
+3. **Frontend Setup**
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-4. **Initialize database**
-```bash
-python -c "from app.core.database import init_db; init_db()"
-```
-
-5. **Start backend**
-```bash
-uvicorn app.app:app --reload --port 8000
-```
-
-6. **Access API**
+4. **Access the application**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
-- Health Check: http://localhost:8000/health
 
-## API Endpoints
+---
 
-### Authentication
-- `POST /api/v1/auth/register` - Register new player
-- `POST /api/v1/auth/login` - Login player
-- `POST /api/v1/auth/refresh` - Refresh token
+## 🏗️ Architecture
 
-### Challenges
-- `POST /api/v1/challenges/generate` - Generate new challenge
-- `GET /api/v1/challenges/{id}` - Get challenge details
-- `GET /api/v1/challenges/` - List challenges
+### System Overview
 
-### Matches
-- `POST /api/v1/matches/` - Create match
-- `GET /api/v1/matches/{id}` - Get match details
-- `POST /api/v1/matches/{id}/submit` - Submit code
-- `POST /api/v1/matches/{id}/done` - Signal completion
+```
+┌─────────────────┐
+│   React Frontend │
+│   (TypeScript)   │
+└────────┬─────────┘
+         │ REST API
+         ▼
+┌─────────────────┐
+│  FastAPI Backend │
+│    (Python)      │
+└────────┬─────────┘
+         │
+    ┌────┴────┬──────────┬──────────┐
+    ▼         ▼          ▼          ▼
+┌────────┐ ┌──────┐ ┌────────┐ ┌────────┐
+│Database│ │ Groq │ │XGBoost │ │WebSocket│
+│(SQLite)│ │  AI  │ │Integrity│ │ Manager │
+└────────┘ └──────┘ └────────┘ └────────┘
+```
 
-### Submissions
-- `POST /api/v1/submissions/` - Submit code
-- `GET /api/v1/submissions/{id}` - Get submission details
+### Tech Stack
 
-### Leaderboard
-- `GET /api/v1/leaderboard/` - Get global leaderboard
-- `GET /api/v1/leaderboard/player/{id}` - Get player stats
+**Frontend:**
+- React 18 with TypeScript
+- Vite for build tooling
+- TailwindCSS for styling
+- Lucide React for icons
+- React Router for navigation
 
-### WebSocket
-- `WS /ws/match/{match_id}` - Real-time match updates
+**Backend:**
+- FastAPI (Python web framework)
+- SQLAlchemy (ORM)
+- Pydantic (data validation)
+- Groq AI (challenge generation)
+- XGBoost (integrity detection)
+- WebSockets (real-time updates)
 
-## Configuration
+**Database:**
+- SQLite (development)
+- PostgreSQL (production ready)
+
+---
+
+## 📚 Features Deep Dive
+
+### 1. DSA Arena
+
+Solve algorithmic problems from scratch across 8 domains:
+- Arrays & Hashing
+- Strings
+- Trees & Graphs
+- Dynamic Programming
+- Sorting & Searching
+- Math & Number Theory
+- Linked Lists
+- Bit Manipulation
+
+**Challenge Generation:**
+- AI-powered unique problems
+- ELO-smart difficulty scaling
+- Personalized based on history
+- 4-8 test cases per problem
+- 150-400 word descriptions
+
+### 2. Debug Arena
+
+Find and fix bugs in broken code:
+- 1-3 intentional bugs per challenge
+- Bug types: syntax, logic, algorithm, edge cases
+- Realistic code without obvious hints
+- Faster fixes = higher scores
+
+### 3. Matchmaking System
+
+**Smart Pairing:**
+- ELO-based matching (±200 range)
+- 60-second queue timeout
+- Separate ratings for DSA and Debug
+- Practice mode for solo play
+
+**Rating System:**
+- Starting ELO: 300 (Debug), 1200 (DSA)
+- K-factor: 32
+- Win/loss adjustments based on opponent rating
+- Separate leaderboards per arena
+
+### 4. Integrity System
+
+**XGBoost-based Detection:**
+- Stylometric analysis
+- Code complexity metrics
+- Submission timing patterns
+- LLM-generated code detection
+
+---
+
+## 🔧 Configuration
 
 ### Environment Variables
 
+**Backend (backend/.env)**
 ```bash
 # Database
-DATABASE_URL=postgresql://user:password@localhost/coderoad
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
+DATABASE_URL=sqlite:///./coderoad.db
 
 # Security
 SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
 
-# AI (Optional)
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+# Groq API (Multiple keys for redundancy)
+GROQ_API_KEY=gsk_...
+GROQ_API_KEY_2=gsk_...
+GROQ_API_KEY_3=gsk_...
 
 # Server
 HOST=0.0.0.0
 PORT=8000
-DEBUG=True
+DEBUG=False
 ```
-
-## Challenge Service
-
-The challenge service is **production-ready** with:
-- ✅ Works with or without ML
-- ✅ Automatic fallback mechanism
-- ✅ 9 pre-built challenges
-- ✅ Optional AI generation
-- ✅ Comprehensive error handling
-
-### Usage
-
-```python
-from app.services.challenge_service_fixed import get_challenge_service
-
-service = get_challenge_service()
-
-# Generate challenge (uses templates if ML unavailable)
-challenge = service.generate_challenge(
-    difficulty="intermediate",
-    player_rating=1200
-)
-```
-
-## Testing
-
-### Run Backend Tests
-```bash
-cd backend
-python test_challenge_service_robust.py
-```
-
-### Test API Endpoints
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Generate challenge
-curl -X POST http://localhost:8000/api/v1/challenges/generate \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"difficulty": "intermediate"}'
-```
-
-## Documentation
-
-- **[FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md)** - Complete API documentation
-- **[specs/design.md](specs/design.md)** - System design and architecture
-- **[specs/requirements.md](specs/requirements.md)** - Feature requirements
-- **[backend/README.md](backend/README.md)** - Backend setup guide
-
-## Development
-
-### Code Style
-- Follow PEP 8
-- Use type hints
-- Write docstrings
-
-### Git Workflow
-```bash
-# Create feature branch
-git checkout -b feature/your-feature
-
-# Make changes and commit
-git add .
-git commit -m "Add your feature"
-
-# Push and create pull request
-git push origin feature/your-feature
-```
-
-## Deployment
-
-### Docker Deployment
-```bash
-docker-compose up -d
-```
-
-### Production Checklist
-- [ ] Set `DEBUG=False`
-- [ ] Use strong `SECRET_KEY`
-- [ ] Configure PostgreSQL
-- [ ] Set up Redis
-- [ ] Configure CORS origins
-- [ ] Set up SSL/TLS
-- [ ] Configure logging
-- [ ] Set up monitoring
-
-## Performance
-
-- Challenge generation: <5 seconds
-- API response time: <200ms
-- WebSocket latency: <100ms
-- Database queries: <50ms
-
-## Cost Estimate
-
-### Development
-- Templates only: $0/day
-- With AI: $3/day (100 challenges)
-
-### Production (1000 matches/day)
-- Templates only: $0/day
-- All AI: $30/day
-- Mixed (50/50): $15/day
-- With caching: $6/day
-
-## Troubleshooting
-
-### Service Won't Start
-```bash
-# Check Python version
-python --version  # Should be 3.8+
-
-# Check dependencies
-pip install -r requirements.txt
-
-# Check database connection
-python -c "from app.core.database import engine; print(engine)"
-```
-
-### API Returns 401
-- Check JWT token is valid
-- Verify token hasn't expired
-- Check Authorization header format: `Bearer YOUR_TOKEN`
-
-### Challenges Not Generating
-- Check logs: `tail -f backend/logs/app.log`
-- Verify service status: `curl http://localhost:8000/health`
-- Check API key (if using AI): `echo $ANTHROPIC_API_KEY`
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Write tests
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions:
-- Check [FRONTEND_API_GUIDE.md](FRONTEND_API_GUIDE.md) for API details
-- Review [specs/design.md](specs/design.md) for architecture
-- Check logs for error messages
-
-## Roadmap
-
-- [ ] Frontend implementation (React)
-- [ ] Tournament system
-- [ ] Advanced analytics
-- [ ] Mobile app
-- [ ] Community features
-- [ ] Streaming integration
-
-## Team
-
-- Backend: FastAPI, PostgreSQL, Redis
-- ML: Claude AI, Problem/Test Case Generation
-- Frontend: React (to be implemented)
 
 ---
 
-**Status**: Production-Ready ✅  
-**Version**: 1.0.0  
-**Last Updated**: March 1, 2026
+## 📖 API Documentation
+
+### Authentication
+
+**Register**
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "username": "player1",
+  "email": "player1@example.com",
+  "password": "securepass123"
+}
+```
+
+**Login**
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "player1",
+  "password": "securepass123"
+}
+```
+
+### Matchmaking
+
+**Find Match**
+```http
+POST /api/match/find
+Authorization: Bearer <token>
+
+{
+  "difficulty": "intermediate",
+  "challenge_type": "dsa"
+}
+```
+
+**Submit Solution**
+```http
+POST /api/submission/submit
+Authorization: Bearer <token>
+
+{
+  "match_id": "...",
+  "code": "def solve(arr):\n    return sum(arr)"
+}
+```
+
+**Full API documentation:** http://localhost:8000/docs
+
+---
+
+## 🚢 Deployment
+
+### Docker Deployment
+
+```bash
+# Build and run
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+### AWS Deployment
+
+See [AWS_DEPLOYMENT_GUIDE.md](AWS_DEPLOYMENT_GUIDE.md) for detailed instructions.
+
+---
+
+## 📊 Problem Generation
+
+### AI Challenge Generation
+
+**Quality Controls:**
+- Description: 150-400 words
+- Title: 3-8 words
+- Test cases: 4-8 per problem
+- ELO-smart difficulty scaling
+- Personalization based on player history
+
+**Fallback Hierarchy:**
+1. Groq AI (multi-key rotation)
+2. Template-based generation
+3. Minimal hardcoded challenge
+
+See [PROBLEM_GENERATION_IMPROVEMENTS.md](PROBLEM_GENERATION_IMPROVEMENTS.md) for details.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 📞 Support
+
+- **Issues:** [GitHub Issues](https://github.com/sanyamChaudhary27/CodeRoad/issues)
+- **Documentation:** See `/docs` folder
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Multi-language support (JavaScript, Java, C++)
+- [ ] Team battles (2v2, 3v3)
+- [ ] Tournament system
+- [ ] Mobile app
+- [ ] Achievement system
+
+---
+
+<div align="center">
+
+**Built with ❤️ for competitive programmers**
+
+</div>

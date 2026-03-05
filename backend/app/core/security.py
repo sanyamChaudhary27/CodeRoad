@@ -223,13 +223,8 @@ def validate_api_key(api_key: str) -> Optional[Dict[str, Any]]:
 # Password strength validation
 def validate_password_strength(password: str) -> tuple[bool, str]:
     """
-    Validate password strength.
-    
-    Args:
-        password: The password to validate
-    
-    Returns:
-        tuple[bool, str]: (is_valid, error_message)
+    Validate password strength for prototype.
+    Requires minimum 8 characters.
     """
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
@@ -237,24 +232,7 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     if len(password) > 128:
         return False, "Password must be at most 128 characters long"
     
-    # Check for at least one uppercase letter
-    if not any(c.isupper() for c in password):
-        return False, "Password must contain at least one uppercase letter"
-    
-    # Check for at least one lowercase letter
-    if not any(c.islower() for c in password):
-        return False, "Password must contain at least one lowercase letter"
-    
-    # Check for at least one digit
-    if not any(c.isdigit() for c in password):
-        return False, "Password must contain at least one digit"
-    
-    # Check for at least one special character
-    special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
-    if not any(c in special_chars for c in password):
-        return False, "Password must contain at least one special character"
-    
-    return True, "Password is strong"
+    return True, "Password is valid for prototype"
 
 
 

@@ -5,11 +5,13 @@ from datetime import datetime
 class QueueJoinRequest(BaseModel):
     """Request to join matchmaking queue."""
     preferred_format: str = Field(default="1v1", description="Match format (1v1, 2v2, etc.)")
+    challenge_type: str = Field(default="dsa", description="Challenge type (dsa or debug)")
     
     class Config:
         json_schema_extra = {
             "example": {
-                "preferred_format": "1v1"
+                "preferred_format": "1v1",
+                "challenge_type": "dsa"
             }
         }
 
@@ -20,6 +22,7 @@ class QueueStatusResponse(BaseModel):
     queue_position: Optional[int] = None
     wait_time_seconds: Optional[int] = None
     estimated_opponent_rating: Optional[int] = None
+    match_id: Optional[str] = None
 
 class PlayerMatchInfo(BaseModel):
     """Information about a player in a match."""
@@ -31,6 +34,16 @@ class PlayerMatchInfo(BaseModel):
     
     class Config:
         from_attributes = True
+
+class RatingUpdateDetail(BaseModel):
+    """Details of a single player's rating update."""
+    rating_change: Optional[int] = None
+    new_rating: Optional[int] = None
+
+class RatingUpdates(BaseModel):
+    """Rating updates for both players in a match."""
+    player1: RatingUpdateDetail
+    player2: Optional[RatingUpdateDetail] = None
 
 class MatchResponse(BaseModel):
     """Response model for match details."""
@@ -50,6 +63,21 @@ class MatchResponse(BaseModel):
     winner_id: Optional[str] = None
     player1_score: Optional[float] = None
     player2_score: Optional[float] = None
+    player1_id: Optional[str] = None
+    player2_id: Optional[str] = None
+    result: Optional[str] = None
+    rating_updates: Optional[RatingUpdates] = None
+    # Flat fields for frontend compatibility
+    player1_username: Optional[str] = None
+    player1_rating: Optional[int] = None
+    player1_submissions: Optional[int] = None
+    player1_done: Optional[bool] = None
+    player2_username: Optional[str] = None
+    player2_rating: Optional[int] = None
+    player2_submissions: Optional[int] = None
+    player2_done: Optional[bool] = None
+    challenge_type: Optional[str] = None
+    time_remaining: Optional[int] = None
     
     class Config:
         from_attributes = True
@@ -84,6 +112,7 @@ class MatchConclusionResponse(BaseModel):
     player2_id: str
     player2_score: float
     player2_rating_change: int
+    result: Optional[str] = None
     concluded_at: datetime
     
     class Config:
