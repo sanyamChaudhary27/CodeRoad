@@ -1,20 +1,61 @@
-<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle with gradient -->
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
   <defs>
-    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    <!-- Gradient for icon stroke -->
+    <linearGradient id="iconStrokeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#A855F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
     </linearGradient>
+    
+    <!-- Gradient for lightning bolt -->
+    <linearGradient id="boltGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#C084FC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow filters -->
+    <filter id="iconGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feFlood flood-color="#A855F7" flood-opacity="0.6"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="boltGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur"/>
+      <feFlood flood-color="#EC4899" flood-opacity="0.8"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Background -->
-  <rect width="48" height="48" rx="12" fill="url(#logoGradient)"/>
+  <!-- Icon Container (Rounded Square with Gradient Stroke) -->
+  <rect 
+    x="5" 
+    y="5" 
+    width="190" 
+    height="190" 
+    rx="42" 
+    ry="42" 
+    fill="none" 
+    stroke="url(#iconStrokeGradient)" 
+    stroke-width="8"
+    filter="url(#iconGlow)"
+  />
   
-  <!-- Code brackets -->
-  <path d="M14 18L10 24L14 30" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M34 18L38 24L34 30" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  
-  <!-- Forward slash -->
-  <path d="M28 16L20 32" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Lightning Bolt - Diagonal style like reference image -->
+  <g transform="translate(55, 35)">
+    <path 
+      d="M 50 0 L 30 60 L 50 60 L 20 120 L 70 50 L 50 50 Z" 
+      fill="url(#boltGradient)"
+      filter="url(#boltGlow)"
+    />
+  </g>
 </svg>

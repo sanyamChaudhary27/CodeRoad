@@ -16,46 +16,55 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
   };
 
   return (
-    <header className="flex-between mb-12 glass-panel p-4 px-6">
-      <div className="flex items-center gap-4">
-        <img 
-          src="/logo.svg" 
-          alt="Code Road Logo" 
-          className="h-12 w-12 cursor-pointer hover:scale-105 transition-transform"
+    <header className="flex-between mb-8 glass-panel px-6 py-3 relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 animate-gradient"></div>
+      
+      {/* Left side - Logo Only */}
+      <div className="flex items-center relative z-10">
+        <div 
+          className="relative cursor-pointer group/logo"
           onClick={() => navigate('/dashboard')}
-        />
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight cursor-pointer" onClick={() => navigate('/dashboard')}>Code Road</h1>
-          <p className="text-xs text-primary/80 uppercase tracking-wider font-mono">Competitive Coding Arena</p>
+        >
+          {/* Logo container - Rectangular */}
+          <div className="relative h-20 w-64 flex-center group-hover/logo:scale-110 transition-transform">
+            <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain" />
+          </div>
         </div>
       </div>
       
-      <div className="flex items-center gap-4">
+      {/* Right side - Actions */}
+      <div className="flex items-center gap-4 relative z-10">
         {showLeaderboard && (
           <button 
             onClick={() => navigate('/leaderboard')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-warning/10 border border-warning/20 hover:bg-warning/20 transition-all text-warning font-medium"
+            className="flex items-center gap-3 px-10 py-4 rounded-xl bg-gradient-to-r from-warning/20 to-warning/10 border border-warning/40 hover:border-warning/60 hover:from-warning/30 hover:to-warning/20 transition-all text-warning font-bold shadow-lg hover:shadow-warning/20 hover:scale-105 group min-w-[200px] justify-center"
           >
-            <Trophy size={18} />
-            <span className="hidden sm:inline">Leaderboard</span>
+            <Trophy size={20} className="group-hover:rotate-12 transition-transform" />
+            <span>Leaderboard</span>
           </button>
         )}
         
         <button 
           onClick={() => navigate('/profile')}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
+          className="flex items-center gap-4 px-6 py-4 rounded-xl hover:bg-white/10 transition-all border border-white/10 hover:border-primary/40 group"
         >
-          <div className="text-right hidden sm:block">
-            <p className="text-white font-medium text-sm">{user.username}</p>
+          <div className="text-right">
+            <p className="text-white font-bold text-sm group-hover:text-primary transition-colors">{user.username}</p>
+            <p className="text-xs text-text-muted">View Profile</p>
           </div>
           {user.profile_picture ? (
             <img 
               src={user.profile_picture} 
               alt={user.username}
-              className="h-10 w-10 rounded-full object-cover shadow-md border-2 border-primary/30"
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px' }}
+              className="rounded-full object-cover shadow-lg border-2 border-primary/50 group-hover:border-primary transition-all shrink-0 group-hover:scale-110"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-md border-2 border-primary/30">
+            <div 
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+              className="rounded-full bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-lg border-2 border-primary/50 group-hover:border-primary transition-all shrink-0 group-hover:scale-110"
+            >
               {user.username.charAt(0).toUpperCase()}
             </div>
           )}
@@ -63,10 +72,10 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
         
         <button 
           onClick={handleLogout} 
-          className="text-text-muted hover:text-danger transition-colors p-2 rounded-lg hover:bg-white/5"
+          className="text-text-muted hover:text-danger transition-all p-4 rounded-xl hover:bg-danger/10 border border-transparent hover:border-danger/40 group"
           title="Logout"
         >
-          <LogOut size={20} />
+          <LogOut size={22} className="group-hover:scale-110 transition-transform" />
         </button>
       </div>
     </header>

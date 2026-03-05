@@ -157,60 +157,327 @@ const Dashboard = () => {
       
       <Header user={user} />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-          <Award className="text-warning mb-2" size={24} />
-          <p className="text-3xl font-bold text-white">{user.wins || 0}</p>
-          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Victories</p>
-        </div>
-        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-          <Activity className="text-accent mb-2" size={24} />
-          <p className="text-3xl font-bold text-white">{(user.matches_played || 0) > 0 ? Math.round(((user.wins || 0) / (user.matches_played || 1)) * 100) : 0}%</p>
-          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Win Rate</p>
-        </div>
-        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-          <Users className="text-primary mb-2" size={24} />
-          <p className="text-3xl font-bold text-white">{user.matches_played || 0}</p>
-          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Matches</p>
-        </div>
-        <div className="glass-panel p-5 flex flex-col items-center justify-center text-center">
-          <Trophy className="text-success mb-2" size={24} />
-          <p className="text-3xl font-bold text-white">{user.current_rating}</p>
-          <p className="text-xs text-text-muted uppercase tracking-wider mt-1">Elo</p>
-        </div>
-      </div>
-
-      {/* Arena Selection Title */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Choose Your Arena</h2>
-        <p className="text-text-secondary text-lg">Select a challenge type and compete in 1v1 battles or practice solo</p>
-      </div>
-
-      {/* Arena Cards - Full Width */}
-      <div className="space-y-4 mb-12">
+      {/* Hero Stats Section */}
+      <div className="glass-panel p-8 mb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-danger/10 rounded-full blur-3xl"></div>
         
-        {/* DSA Arena Card */}
-        <div className="glass-panel p-6 hover:border-primary/50 transition-all relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
-          
-          <div className="relative flex items-center gap-6">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex-center shrink-0">
-              <Code2 size={32} className="text-white" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">Welcome back, {user.username}!</h2>
+              <p className="text-text-secondary">Ready to dominate the arena?</p>
             </div>
-            
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">DSA Arena</h3>
-              <p className="text-text-secondary mb-4">Data Structures & Algorithms challenges - Test your problem-solving skills</p>
-              
+            <div className="flex gap-3">
+              <div className="px-4 py-4 rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm w-[130px] flex-shrink-0">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex-center shrink-0">
+                    <Code2 size={16} className="text-white" />
+                  </div>
+                  <p className="text-xs text-text-muted whitespace-nowrap">DSA ELO</p>
+                  <p className="text-lg font-bold text-primary">{user.current_rating}</p>
+                </div>
+              </div>
+              <div className="px-4 py-4 rounded-xl bg-danger/20 border border-danger/30 backdrop-blur-sm w-[130px] flex-shrink-0">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-danger to-danger/60 flex-center shrink-0">
+                    <Bug size={16} className="text-white" />
+                  </div>
+                  <p className="text-xs text-text-muted whitespace-nowrap">Debug ELO</p>
+                  <p className="text-lg font-bold text-danger">{user.debug_rating || 300}</p>
+                </div>
+              </div>
+              <div className="px-4 py-4 rounded-xl bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-sm opacity-60 w-[130px] flex-shrink-0">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex-center shrink-0">
+                    <Database size={16} className="text-white" />
+                  </div>
+                  <p className="text-xs text-text-muted whitespace-nowrap">DBMS ELO</p>
+                  <p className="text-lg font-bold text-yellow-500">----</p>
+                </div>
+              </div>
+              <div className="px-4 py-4 rounded-xl bg-green-500/20 border border-green-500/30 backdrop-blur-sm opacity-60 w-[130px] flex-shrink-0">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex-center shrink-0">
+                    <Palette size={16} className="text-white" />
+                  </div>
+                  <p className="text-xs text-text-muted whitespace-nowrap">UI ELO</p>
+                  <p className="text-lg font-bold text-green-500">----</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats Bar */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
               <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-lg bg-primary/20 flex-center">
+                  <Users className="text-primary" size={24} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{(user.matches_played || 0) + (user.debug_matches_played || 0)}</p>
+                  <p className="text-xs text-text-muted">Total Battles</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-lg bg-success/20 flex-center">
+                  <Award className="text-success" size={24} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{(user.wins || 0) + (user.debug_wins || 0)}</p>
+                  <p className="text-xs text-text-muted">Victories</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-lg bg-warning/20 flex-center">
+                  <Activity className="text-warning" size={24} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {((user.matches_played || 0) + (user.debug_matches_played || 0)) > 0 
+                      ? Math.round((((user.wins || 0) + (user.debug_wins || 0)) / ((user.matches_played || 0) + (user.debug_matches_played || 0))) * 100) 
+                      : 0}%
+                  </p>
+                  <p className="text-xs text-text-muted">Win Rate</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-lg bg-accent/20 flex-center">
+                  <Trophy className="text-accent" size={24} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{Math.max(user.current_rating, user.debug_rating || 300)}</p>
+                  <p className="text-xs text-text-muted">Peak Rating</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        {/* Left Column - Arena Stats */}
+        <div className="lg:col-span-1 space-y-4">
+          
+          {/* DSA Arena Stats */}
+          <div className="glass-panel p-6 relative overflow-hidden">
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 flex-center">
+                  <Code2 size={28} className="text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">DSA Arena</h3>
+                  <p className="text-xs text-text-muted">Data Structures & Algorithms</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-text-muted text-sm">Rating</span>
+                  <span className="text-2xl font-bold text-primary">{user.current_rating}</span>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all"
+                    style={{ width: `${Math.min((user.current_rating / 2000) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-white">{user.matches_played || 0}</p>
+                    <p className="text-xs text-text-muted">Matches</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-success">{user.wins || 0}</p>
+                    <p className="text-xs text-text-muted">Wins</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-danger">{user.losses || 0}</p>
+                    <p className="text-xs text-text-muted">Losses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Debug Arena Stats */}
+          <div className="glass-panel p-6 relative overflow-hidden">
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 flex-center">
+                  <Bug size={28} className="text-danger" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Debug Arena</h3>
+                  <p className="text-xs text-text-muted">Bug Hunting & Fixing</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-text-muted text-sm">Rating</span>
+                  <span className="text-2xl font-bold text-danger">{user.debug_rating || 300}</span>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-danger to-danger/60 rounded-full transition-all"
+                    style={{ width: `${Math.min(((user.debug_rating || 300) / 2000) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-white">{user.debug_matches_played || 0}</p>
+                    <p className="text-xs text-text-muted">Matches</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-success">{user.debug_wins || 0}</p>
+                    <p className="text-xs text-text-muted">Wins</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-danger">{user.debug_losses || 0}</p>
+                    <p className="text-xs text-text-muted">Losses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* DBMS Arena Stats */}
+          <div className="glass-panel p-6 relative overflow-hidden opacity-60">
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 flex-center">
+                  <Database size={28} className="text-yellow-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">DBMS Arena</h3>
+                  <p className="text-xs text-text-muted">SQL & Database Optimization</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-text-muted text-sm">Rating</span>
+                  <span className="text-2xl font-bold text-yellow-500">----</span>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full transition-all" style={{ width: '0%' }}></div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-white">0</p>
+                    <p className="text-xs text-text-muted">Matches</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-success">0</p>
+                    <p className="text-xs text-text-muted">Wins</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-danger">0</p>
+                    <p className="text-xs text-text-muted">Losses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* UI Arena Stats */}
+          <div className="glass-panel p-6 relative overflow-hidden opacity-60">
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 flex-center">
+                  <Palette size={28} className="text-green-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">UI Arena</h3>
+                  <p className="text-xs text-text-muted">Frontend Design Challenges</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-text-muted text-sm">Rating</span>
+                  <span className="text-2xl font-bold text-green-500">----</span>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all" style={{ width: '0%' }}></div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-white">0</p>
+                    <p className="text-xs text-text-muted">Matches</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-success">0</p>
+                    <p className="text-xs text-text-muted">Wins</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-danger">0</p>
+                    <p className="text-xs text-text-muted">Losses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column - Arena Selection */}
+        <div className="lg:col-span-2 space-y-4">
+        
+          {/* DSA Arena Card */}
+          <div className="glass-panel p-10 hover:border-primary/50 transition-all relative overflow-hidden group h-[240px]">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+            
+            <div className="relative flex flex-col h-full">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Code2 size={32} className="text-primary" />
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-bold text-white">DSA Arena</h3>
+                    <div className="px-3 py-1 rounded-lg bg-primary/20 border border-primary/30">
+                      <span className="text-primary text-sm font-semibold">{user.current_rating} ELO</span>
+                    </div>
+                  </div>
+                  <p className="text-text-secondary mb-6">Master data structures and algorithms through competitive coding challenges</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 mt-auto">
                 <button 
                   onClick={joinQueue}
                   disabled={!!queueStatus?.in_queue}
-                  className="btn btn-primary px-6 py-3 flex items-center gap-2"
+                  className="btn btn-primary px-6 py-3 flex items-center gap-2 flex-1"
                 >
-                  {queueStatus?.in_queue ? 'Finding Opponent...' : '1v1 Battle'}
-                  {!queueStatus?.in_queue && <ChevronRight size={18} />}
+                  {queueStatus?.in_queue ? (
+                    <>
+                      <Activity size={18} className="animate-spin" />
+                      Finding Opponent...
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      1v1 Battle
+                      <ChevronRight size={18} />
+                    </>
+                  )}
                 </button>
                 <button 
                   onClick={startPracticeMatch}
@@ -220,7 +487,7 @@ const Dashboard = () => {
                   {creatingMatch === 'dsa' ? (
                     <>
                       <Activity size={18} className="animate-spin" />
-                      Generating...
+                      Creating...
                     </>
                   ) : (
                     <>
@@ -229,45 +496,49 @@ const Dashboard = () => {
                     </>
                   )}
                 </button>
-                <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-text-muted">Difficulty:</span>
-                    <span className="text-success font-semibold">Dynamic</span>
-                  </div>
-                  {/* ELO Badge */}
-                  <div className="px-4 py-2 rounded-lg bg-primary/20 border border-primary/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-primary" />
-                      <span className="text-primary font-bold">{user.current_rating} ELO</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Debug Arena Card */}
-        <div className="glass-panel p-6 hover:border-danger/50 transition-all relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-danger/5 rounded-full blur-2xl"></div>
-          
-          <div className="relative flex items-center gap-6">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-danger to-danger/60 flex-center shrink-0">
-              <Bug size={32} className="text-white" />
-            </div>
+          {/* Debug Arena Card */}
+          <div className="glass-panel p-10 hover:border-danger/50 transition-all relative overflow-hidden group h-[240px]">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-danger/5 rounded-full blur-3xl group-hover:bg-danger/10 transition-all"></div>
             
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">Debug Arena</h3>
-              <p className="text-text-secondary mb-4">Find and fix bugs in code under time pressure - Test your debugging skills</p>
+            <div className="relative flex flex-col h-full">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Bug size={32} className="text-danger" />
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-bold text-white">Debug Arena</h3>
+                    <div className="px-3 py-1 rounded-lg bg-danger/20 border border-danger/30">
+                      <span className="text-danger text-sm font-semibold">{user.debug_rating || 300} ELO</span>
+                    </div>
+                  </div>
+                  <p className="text-text-secondary mb-6">Hunt down bugs and fix broken code under intense time pressure</p>
+                </div>
+              </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-auto">
                 <button 
                   onClick={joinDebugQueue}
                   disabled={!!debugQueueStatus?.in_queue}
-                  className="btn btn-danger px-6 py-3 flex items-center gap-2"
+                  className="btn btn-danger px-6 py-3 flex items-center gap-2 flex-1"
                 >
-                  {debugQueueStatus?.in_queue ? 'Finding Opponent...' : '1v1 Battle'}
-                  {!debugQueueStatus?.in_queue && <ChevronRight size={18} />}
+                  {debugQueueStatus?.in_queue ? (
+                    <>
+                      <Activity size={18} className="animate-spin" />
+                      Finding Opponent...
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      1v1 Battle
+                      <ChevronRight size={18} />
+                    </>
+                  )}
                 </button>
                 <button 
                   onClick={() => {
@@ -283,7 +554,7 @@ const Dashboard = () => {
                   {creatingMatch === 'debug' ? (
                     <>
                       <Activity size={18} className="animate-spin" />
-                      Generating...
+                      Creating...
                     </>
                   ) : (
                     <>
@@ -292,98 +563,90 @@ const Dashboard = () => {
                     </>
                   )}
                 </button>
-                <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-text-muted">Difficulty:</span>
-                    <span className="text-danger font-semibold">Dynamic</span>
-                  </div>
-                  {/* Debug ELO Badge */}
-                  <div className="px-4 py-2 rounded-lg bg-danger/20 border border-danger/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-danger" />
-                      <span className="text-danger font-bold">{user.debug_rating || 300} ELO</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* DBMS Arena Card */}
-        <div className="glass-panel p-6 hover:border-blue-500/50 transition-all relative overflow-hidden opacity-60">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-          
-          <div className="relative flex items-center gap-6">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex-center shrink-0">
-              <Database size={32} className="text-white" />
-            </div>
+          {/* DBMS Arena Card */}
+          <div className="glass-panel p-10 hover:border-yellow-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/5 rounded-full blur-3xl"></div>
             
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">DBMS Arena</h3>
-              <p className="text-text-secondary mb-4">SQL queries and database optimization challenges</p>
-              
-              <div className="flex items-center gap-3">
-                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed">
-                  1v1 Battle
-                </button>
-                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
-                  Solo Practice
-                </button>
-                <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-warning">
-                    <Clock size={16} />
-                    <span>Coming Q2 2026</span>
-                  </div>
-                  {/* ELO Badge */}
-                  <div className="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-blue-400" />
-                      <span className="text-blue-400 font-bold">1200 ELO</span>
+            <div className="relative flex flex-col h-full">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Database size={32} className="text-yellow-500" />
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-bold text-white">DBMS Arena</h3>
+                    <div className="px-3 py-1 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
+                      <span className="text-yellow-500 text-sm font-semibold">---- ELO</span>
                     </div>
                   </div>
+                  <p className="text-text-secondary mb-6">Master SQL queries and database optimization challenges</p>
+                </div>
+              </div>
+              
+              <div className="mt-auto">
+                <div className="flex items-center gap-3 mb-3">
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 flex-1 opacity-50 cursor-not-allowed">
+                    <Users size={18} />
+                    1v1 Battle
+                  </button>
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10 opacity-50 cursor-not-allowed">
+                    <Activity size={18} />
+                    Solo Practice
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-yellow-500">
+                  <Clock size={16} />
+                  <span>Coming Q2 2026</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* UI Arena Card */}
-        <div className="glass-panel p-6 hover:border-purple-500/50 transition-all relative overflow-hidden opacity-60">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-          
-          <div className="relative flex items-center gap-6">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex-center shrink-0">
-              <Palette size={32} className="text-white" />
-            </div>
+          {/* UI Arena Card */}
+          <div className="glass-panel p-10 hover:border-green-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-green-500/5 rounded-full blur-3xl"></div>
             
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">UI Arena</h3>
-              <p className="text-text-secondary mb-4">Build pixel-perfect interfaces from designs in competitive sprints</p>
-              
-              <div className="flex items-center gap-3">
-                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed">
-                  1v1 Battle
-                </button>
-                <button disabled className="btn btn-secondary px-6 py-3 opacity-50 cursor-not-allowed border border-white/10">
-                  Solo Practice
-                </button>
-                <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-warning">
-                    <Clock size={16} />
-                    <span>Coming Q3 2026</span>
-                  </div>
-                  {/* ELO Badge */}
-                  <div className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-purple-400" />
-                      <span className="text-purple-400 font-bold">1200 ELO</span>
+            <div className="relative flex flex-col h-full">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Palette size={32} className="text-green-500" />
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-bold text-white">UI Arena</h3>
+                    <div className="px-3 py-1 rounded-lg bg-green-500/20 border border-green-500/30">
+                      <span className="text-green-500 text-sm font-semibold">---- ELO</span>
                     </div>
                   </div>
+                  <p className="text-text-secondary mb-6">Build pixel-perfect interfaces from designs in competitive sprints</p>
+                </div>
+              </div>
+              
+              <div className="mt-auto">
+                <div className="flex items-center gap-3 mb-3">
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 flex-1 opacity-50 cursor-not-allowed">
+                    <Users size={18} />
+                    1v1 Battle
+                  </button>
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10 opacity-50 cursor-not-allowed">
+                    <Activity size={18} />
+                    Solo Practice
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-green-500">
+                  <Clock size={16} />
+                  <span>Coming Q3 2026</span>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
 
       </div>
