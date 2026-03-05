@@ -502,7 +502,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
 
           {/* Debug Arena Card */}
           <div className="glass-panel p-10 hover:border-danger/50 transition-all relative overflow-hidden group h-[240px]">
@@ -573,7 +572,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
 
           {/* DBMS Arena Card */}
           <div className="glass-panel p-10 hover:border-yellow-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">

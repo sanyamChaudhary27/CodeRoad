@@ -228,7 +228,7 @@ const Landing = () => {
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Features Section */}
       <section className="features-section">
@@ -286,6 +286,7 @@ const Landing = () => {
           <h2 className="section-title">Choose Your Battleground</h2>
           <p className="section-subtitle">Two arenas. Two rating systems. Double the competition.</p>
         </div>
+      </section>
 
       {/* CTA Section - Enhanced */}
       <div className="mt-12 pb-16 px-6">
@@ -316,7 +317,7 @@ const Landing = () => {
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* CTA Section */}
       <section className="cta-section">
