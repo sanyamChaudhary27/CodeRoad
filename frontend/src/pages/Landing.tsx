@@ -1,6 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { Code, Trophy, Zap, Users, Target, Bug, Sparkles, ArrowRight } from 'lucide-react';
+import './Landing.css';
 
 const Landing = () => {
   const navigate = useNavigate();
