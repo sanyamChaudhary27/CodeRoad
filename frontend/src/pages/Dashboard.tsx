@@ -464,10 +464,20 @@ const Dashboard = () => {
                 <button 
                   onClick={joinQueue}
                   disabled={!!queueStatus?.in_queue}
-                  className="btn btn-primary px-6 py-3 flex items-center gap-2"
+                  className="btn btn-primary px-6 py-3 flex items-center gap-2 flex-1"
                 >
-                  {queueStatus?.in_queue ? 'Finding Opponent...' : '1v1 Battle'}
-                  {!queueStatus?.in_queue && <ChevronRight size={18} />}
+                  {queueStatus?.in_queue ? (
+                    <>
+                      <Activity size={18} className="animate-spin" />
+                      Finding Opponent...
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      1v1 Battle
+                      <ChevronRight size={18} />
+                    </>
+                  )}
                 </button>
                 <button 
                   onClick={startPracticeMatch}
@@ -477,7 +487,7 @@ const Dashboard = () => {
                   {creatingMatch === 'dsa' ? (
                     <>
                       <Activity size={18} className="animate-spin" />
-                      Generating...
+                      Creating...
                     </>
                   ) : (
                     <>
@@ -486,19 +496,6 @@ const Dashboard = () => {
                     </>
                   )}
                 </button>
-                <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-text-muted">Difficulty:</span>
-                    <span className="text-success font-semibold">Dynamic</span>
-                  </div>
-                  {/* ELO Badge */}
-                  <div className="px-4 py-2 rounded-lg bg-primary/20 border border-primary/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-primary" />
-                      <span className="text-primary font-bold">{user.current_rating} ELO</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -528,10 +525,20 @@ const Dashboard = () => {
                 <button 
                   onClick={joinDebugQueue}
                   disabled={!!debugQueueStatus?.in_queue}
-                  className="btn btn-danger px-6 py-3 flex items-center gap-2"
+                  className="btn btn-danger px-6 py-3 flex items-center gap-2 flex-1"
                 >
-                  {debugQueueStatus?.in_queue ? 'Finding Opponent...' : '1v1 Battle'}
-                  {!debugQueueStatus?.in_queue && <ChevronRight size={18} />}
+                  {debugQueueStatus?.in_queue ? (
+                    <>
+                      <Activity size={18} className="animate-spin" />
+                      Finding Opponent...
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      1v1 Battle
+                      <ChevronRight size={18} />
+                    </>
+                  )}
                 </button>
                 <button 
                   onClick={() => {
@@ -547,7 +554,7 @@ const Dashboard = () => {
                   {creatingMatch === 'debug' ? (
                     <>
                       <Activity size={18} className="animate-spin" />
-                      Generating...
+                      Creating...
                     </>
                   ) : (
                     <>
@@ -556,19 +563,6 @@ const Dashboard = () => {
                     </>
                   )}
                 </button>
-                <div className="ml-auto flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-text-muted">Difficulty:</span>
-                    <span className="text-danger font-semibold">Dynamic</span>
-                  </div>
-                  {/* Debug ELO Badge */}
-                  <div className="px-4 py-2 rounded-lg bg-danger/20 border border-danger/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-2">
-                      <Trophy size={16} className="text-danger" />
-                      <span className="text-danger font-bold">{user.debug_rating || 300} ELO</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -652,6 +646,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
         </div>
 
       </div>
