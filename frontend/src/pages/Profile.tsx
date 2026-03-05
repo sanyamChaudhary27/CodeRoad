@@ -117,10 +117,14 @@ const Profile = () => {
               <img 
                 src={user.profile_picture} 
                 alt={user.username}
-                className="h-24 w-24 rounded-2xl object-cover shadow-glow-md border-2 border-primary/30 transition-transform group-hover:scale-105"
+                style={{ width: '96px', height: '96px', minWidth: '96px', minHeight: '96px', maxWidth: '96px', maxHeight: '96px' }}
+                className="rounded-2xl object-cover shadow-lg border-2 border-primary/30 transition-transform group-hover:scale-105"
               />
             ) : (
-              <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-4xl font-bold shadow-glow-md border-2 border-primary/30 transition-transform group-hover:scale-105">
+              <div 
+                style={{ width: '96px', height: '96px', minWidth: '96px', minHeight: '96px' }}
+                className="rounded-2xl bg-gradient-to-br from-primary via-accent to-success flex-center text-white text-4xl font-bold shadow-lg border-2 border-primary/30 transition-transform group-hover:scale-105"
+              >
                 {user.username.charAt(0).toUpperCase()}
               </div>
             )}
@@ -128,7 +132,7 @@ const Profile = () => {
             {/* Upload Button Overlay */}
             <label 
               htmlFor="profile-picture-upload"
-              className="absolute inset-0 rounded-2xl bg-black/80 flex-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-sm"
+              className="absolute inset-0 rounded-2xl bg-black/60 flex-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
             >
               {uploadingPicture ? (
                 <Activity size={24} className="text-white animate-spin" />
@@ -144,10 +148,6 @@ const Profile = () => {
               className="hidden"
               disabled={uploadingPicture}
             />
-            
-            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-xl bg-gradient-to-br from-warning to-warning/80 flex-center shadow-glow-sm border-2 border-bg-panel">
-              <Trophy size={20} className="text-white" />
-            </div>
           </div>
 
           {/* User Info - Enhanced */}
@@ -157,15 +157,15 @@ const Profile = () => {
             
             <div className="flex flex-wrap gap-3">
               <div className="px-5 py-3 rounded-xl bg-primary/10 border border-primary/30 flex items-center gap-2 hover:bg-primary/20 transition-all hover:scale-105">
-                <TrendingUp size={18} className="text-primary" />
-                <span className="text-primary font-bold text-lg">{user.current_rating} ELO</span>
+                <Activity size={18} className="text-primary" />
+                <span className="text-primary font-bold text-lg">{user.matches_played || 0} Total Matches</span>
               </div>
               <div className="px-5 py-3 rounded-xl bg-success/10 border border-success/30 flex items-center gap-2 hover:bg-success/20 transition-all hover:scale-105">
                 <Award size={18} className="text-success" />
-                <span className="text-success font-bold text-lg">{user.wins || 0} Wins</span>
+                <span className="text-success font-bold text-lg">{user.wins || 0} Total Wins</span>
               </div>
               <div className="px-5 py-3 rounded-xl bg-accent/10 border border-accent/30 flex items-center gap-2 hover:bg-accent/20 transition-all hover:scale-105">
-                <Activity size={18} className="text-accent" />
+                <TrendingUp size={18} className="text-accent" />
                 <span className="text-accent font-bold text-lg">{winRate}% Win Rate</span>
               </div>
             </div>

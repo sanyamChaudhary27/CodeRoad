@@ -169,7 +169,7 @@ const Dashboard = () => {
               <p className="text-text-secondary">Ready to dominate the arena?</p>
             </div>
             <div className="flex gap-3">
-              <div className="px-6 py-4 rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm w-[110px] flex-shrink-0">
+              <div className="px-4 py-4 rounded-xl bg-primary/20 border border-primary/30 backdrop-blur-sm w-[130px] flex-shrink-0">
                 <div className="flex flex-col items-center gap-1">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex-center shrink-0">
                     <Code2 size={16} className="text-white" />
@@ -178,7 +178,7 @@ const Dashboard = () => {
                   <p className="text-lg font-bold text-primary">{user.current_rating}</p>
                 </div>
               </div>
-              <div className="px-6 py-4 rounded-xl bg-danger/20 border border-danger/30 backdrop-blur-sm w-[110px] flex-shrink-0">
+              <div className="px-4 py-4 rounded-xl bg-danger/20 border border-danger/30 backdrop-blur-sm w-[130px] flex-shrink-0">
                 <div className="flex flex-col items-center gap-1">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-danger to-danger/60 flex-center shrink-0">
                     <Bug size={16} className="text-white" />
@@ -187,7 +187,7 @@ const Dashboard = () => {
                   <p className="text-lg font-bold text-danger">{user.debug_rating || 300}</p>
                 </div>
               </div>
-              <div className="px-6 py-4 rounded-xl bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-sm opacity-60 w-[110px] flex-shrink-0">
+              <div className="px-4 py-4 rounded-xl bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-sm opacity-60 w-[130px] flex-shrink-0">
                 <div className="flex flex-col items-center gap-1">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex-center shrink-0">
                     <Database size={16} className="text-white" />
@@ -196,7 +196,7 @@ const Dashboard = () => {
                   <p className="text-lg font-bold text-yellow-500">----</p>
                 </div>
               </div>
-              <div className="px-6 py-4 rounded-xl bg-green-500/20 border border-green-500/30 backdrop-blur-sm opacity-60 w-[110px] flex-shrink-0">
+              <div className="px-4 py-4 rounded-xl bg-green-500/20 border border-green-500/30 backdrop-blur-sm opacity-60 w-[130px] flex-shrink-0">
                 <div className="flex flex-col items-center gap-1">
                   <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex-center shrink-0">
                     <Palette size={16} className="text-white" />
@@ -272,8 +272,8 @@ const Dashboard = () => {
           <div className="glass-panel p-6 relative overflow-hidden">
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex-center">
-                  <Code2 size={24} className="text-white" />
+                <div className="h-12 w-12 flex-center">
+                  <Code2 size={28} className="text-primary" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">DSA Arena</h3>
@@ -315,8 +315,8 @@ const Dashboard = () => {
           <div className="glass-panel p-6 relative overflow-hidden">
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-danger to-danger/60 flex-center">
-                  <Bug size={24} className="text-white" />
+                <div className="h-12 w-12 flex-center">
+                  <Bug size={28} className="text-danger" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Debug Arena</h3>
@@ -358,8 +358,8 @@ const Dashboard = () => {
           <div className="glass-panel p-6 relative overflow-hidden opacity-60">
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex-center">
-                  <Database size={24} className="text-white" />
+                <div className="h-12 w-12 flex-center">
+                  <Database size={28} className="text-yellow-500" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">DBMS Arena</h3>
@@ -398,8 +398,8 @@ const Dashboard = () => {
           <div className="glass-panel p-6 relative overflow-hidden opacity-60">
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex-center">
-                  <Palette size={24} className="text-white" />
+                <div className="h-12 w-12 flex-center">
+                  <Palette size={28} className="text-green-500" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">UI Arena</h3>
@@ -440,13 +440,13 @@ const Dashboard = () => {
         <div className="lg:col-span-2 space-y-4">
         
           {/* DSA Arena Card */}
-          <div className="glass-panel p-6 hover:border-primary/50 transition-all relative overflow-hidden group">
+          <div className="glass-panel p-10 hover:border-primary/50 transition-all relative overflow-hidden group h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
             
-            <div className="relative">
+            <div className="relative flex flex-col h-full">
               <div className="flex items-start gap-4 mb-6">
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/60 flex-center shrink-0">
-                  <Code2 size={28} className="text-white" />
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Code2 size={32} className="text-primary" />
                 </div>
                 
                 <div className="flex-1">
@@ -460,7 +460,7 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-auto">
                 <button 
                   onClick={joinQueue}
                   disabled={!!queueStatus?.in_queue}
@@ -501,13 +501,13 @@ const Dashboard = () => {
           </div>
 
           {/* Debug Arena Card */}
-          <div className="glass-panel p-6 hover:border-danger/50 transition-all relative overflow-hidden group">
+          <div className="glass-panel p-10 hover:border-danger/50 transition-all relative overflow-hidden group h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-danger/5 rounded-full blur-3xl group-hover:bg-danger/10 transition-all"></div>
             
-            <div className="relative">
+            <div className="relative flex flex-col h-full">
               <div className="flex items-start gap-4 mb-6">
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-danger to-danger/60 flex-center shrink-0">
-                  <Bug size={28} className="text-white" />
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Bug size={32} className="text-danger" />
                 </div>
                 
                 <div className="flex-1">
@@ -521,7 +521,7 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-auto">
                 <button 
                   onClick={joinDebugQueue}
                   disabled={!!debugQueueStatus?.in_queue}
@@ -568,13 +568,13 @@ const Dashboard = () => {
           </div>
 
           {/* DBMS Arena Card */}
-          <div className="glass-panel p-6 hover:border-yellow-500/50 transition-all relative overflow-hidden opacity-60">
+          <div className="glass-panel p-10 hover:border-yellow-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/5 rounded-full blur-3xl"></div>
             
-            <div className="relative">
+            <div className="relative flex flex-col h-full">
               <div className="flex items-start gap-4 mb-6">
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex-center shrink-0">
-                  <Database size={28} className="text-white" />
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Database size={32} className="text-yellow-500" />
                 </div>
                 
                 <div className="flex-1">
@@ -588,31 +588,33 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 mb-3">
-                <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 flex-1 opacity-50 cursor-not-allowed">
-                  <Users size={18} />
-                  1v1 Battle
-                </button>
-                <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10 opacity-50 cursor-not-allowed">
-                  <Activity size={18} />
-                  Solo Practice
-                </button>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-yellow-500">
-                <Clock size={16} />
-                <span>Coming Q2 2026</span>
+              <div className="mt-auto">
+                <div className="flex items-center gap-3 mb-3">
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 flex-1 opacity-50 cursor-not-allowed">
+                    <Users size={18} />
+                    1v1 Battle
+                  </button>
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10 opacity-50 cursor-not-allowed">
+                    <Activity size={18} />
+                    Solo Practice
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-yellow-500">
+                  <Clock size={16} />
+                  <span>Coming Q2 2026</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* UI Arena Card */}
-          <div className="glass-panel p-6 hover:border-green-500/50 transition-all relative overflow-hidden opacity-60">
+          <div className="glass-panel p-10 hover:border-green-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-green-500/5 rounded-full blur-3xl"></div>
             
-            <div className="relative">
+            <div className="relative flex flex-col h-full">
               <div className="flex items-start gap-4 mb-6">
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex-center shrink-0">
-                  <Palette size={28} className="text-white" />
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Palette size={32} className="text-green-500" />
                 </div>
                 
                 <div className="flex-1">
@@ -626,19 +628,21 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 mb-3">
-                <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 flex-1 opacity-50 cursor-not-allowed">
-                  <Users size={18} />
-                  1v1 Battle
-                </button>
-                <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10 opacity-50 cursor-not-allowed">
-                  <Activity size={18} />
-                  Solo Practice
-                </button>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-green-500">
-                <Clock size={16} />
-                <span>Coming Q3 2026</span>
+              <div className="mt-auto">
+                <div className="flex items-center gap-3 mb-3">
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 flex-1 opacity-50 cursor-not-allowed">
+                    <Users size={18} />
+                    1v1 Battle
+                  </button>
+                  <button disabled className="btn btn-secondary px-6 py-3 flex items-center gap-2 border border-white/10 opacity-50 cursor-not-allowed">
+                    <Activity size={18} />
+                    Solo Practice
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-green-500">
+                  <Clock size={16} />
+                  <span>Coming Q3 2026</span>
+                </div>
               </div>
             </div>
           </div>

@@ -220,14 +220,14 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleViewMatch(match)}
-                    className="btn-icon group-hover:bg-primary/20 group-hover:text-primary"
+                    className="btn-icon text-white group-hover:bg-primary/20 group-hover:text-primary"
                     title="View Details"
                   >
                     <Eye size={18} />
                   </button>
                   <button
                     onClick={() => handleRecodeMatch(match)}
-                    className="btn-icon group-hover:bg-accent/20 group-hover:text-accent"
+                    className="btn-icon text-white group-hover:bg-accent/20 group-hover:text-accent"
                     title="Recode Challenge"
                   >
                     <RotateCcw size={18} />
