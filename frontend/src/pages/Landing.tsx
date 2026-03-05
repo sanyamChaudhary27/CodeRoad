@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Landing.css';
+import { Code, Trophy, Zap, Users, Target, Bug, Sparkles, ArrowRight } from 'lucide-react';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -85,71 +85,119 @@ const Landing = () => {
   ];
 
   return (
-    <div className={`landing-page ${isVisible ? 'visible' : ''}`}>
-      {/* Background Effects */}
-      <div className="landing-bg">
-        <div className="grid-overlay"></div>
-        <div className="glow-orb glow-orb-1"></div>
-        <div className="glow-orb glow-orb-2"></div>
-        <div className="glow-orb glow-orb-3"></div>
-        <div className="floating-code">
-          <span className="code-line">{'const battle = await matchmaker.find();'}</span>
-          <span className="code-line">{'if (player.elo > opponent.elo) {'}</span>
-          <span className="code-line">{'  return solve(challenge);'}</span>
-          <span className="code-line">{'}'}</span>
+    <div className="min-h-screen bg-gradient-to-br from-bg-dark via-bg-panel to-bg-dark overflow-hidden">
+      {/* Hero Section - Enhanced */}
+      <div className="relative min-h-screen flex flex-col">
+        {/* Navigation - Enhanced */}
+        <nav className="glass-panel border-b border-white/5 backdrop-blur-xl sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="h-14 w-20 flex-center group-hover:scale-110 transition-transform">
+                <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain" />
+              </div>
+              <span className="text-xl font-black text-gradient">CodeRoad</span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/login')}
+                className="text-text-secondary hover:text-white transition-colors font-semibold px-5 py-2 text-sm"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="btn btn-primary px-6 py-2 text-sm font-semibold"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Content - Enhanced */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12">
+          <div className="max-w-6xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-6 animate-fade-in hover:scale-105 transition-transform cursor-pointer">
+              <Sparkles size={14} className="text-primary animate-pulse" />
+              <span className="text-xs font-bold text-primary">AI-Powered Competitive Programming</span>
+            </div>
+            
+            <h1 className="text-5xl md:text-6xl font-black mb-5 animate-fade-in leading-tight">
+              <span className="text-white">Master</span>
+              <br />
+              <span className="text-gradient">Algorithms</span>
+              <br />
+              <span className="text-white">Through</span>{' '}
+              <span className="text-gradient">Battle</span>
+            </h1>
+            
+            <p className="text-base md:text-lg text-text-secondary mb-8 max-w-3xl mx-auto animate-fade-in leading-relaxed">
+              Compete in real-time 1v1 coding battles. Solve AI-generated challenges. 
+              Climb the leaderboard. Become a coding champion.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in mb-12">
+              <button
+                onClick={() => navigate('/register')}
+                className="btn btn-primary text-base px-7 py-3 group shadow-glow-lg hover:shadow-glow-xl transition-all"
+              >
+                Start Your Journey
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="btn btn-secondary text-base px-7 py-3 hover:bg-white/10"
+              >
+                Sign In
+              </button>
+            </div>
+
+            {/* Stats - Enhanced */}
+            <div className="grid grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+              <div className="text-center group cursor-pointer hover:scale-110 transition-transform">
+                <div className="text-3xl font-black text-gradient mb-2 group-hover:animate-pulse">Infinite</div>
+                <div className="text-xs text-text-muted uppercase tracking-widest">Challenges</div>
+              </div>
+              <div className="text-center group cursor-pointer hover:scale-110 transition-transform">
+                <div className="text-3xl font-black text-gradient mb-2 group-hover:animate-pulse">Real-Time</div>
+                <div className="text-xs text-text-muted uppercase tracking-widest">Battles</div>
+              </div>
+              <div className="text-center group cursor-pointer hover:scale-110 transition-transform">
+                <div className="text-3xl font-black text-gradient mb-2 group-hover:animate-pulse">AI-Powered</div>
+                <div className="text-xs text-text-muted uppercase tracking-widest">Generation</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="hero-brand">⚡ CodeRoad</div>
-          <div className="hero-badge">
-            <span className="badge-dot"></span>
-            <span>RANKED COMPETITIVE CODING</span>
+      {/* Features Section - Enhanced */}
+      <div className="py-16 px-6 mb-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black text-white mb-3">
+              Why <span className="text-gradient">CodeRoad</span>?
+            </h2>
+            <p className="text-lg text-text-secondary">
+              The ultimate platform for competitive programmers
+            </p>
           </div>
-          <h1 className="hero-title">
-            <span className="title-line">Code.</span>
-            <span className="title-line">Compete.</span>
-            <span className="title-line title-accent">Conquer.</span>
-          </h1>
-          <p className="hero-subtitle">
-            Battle opponents in real-time 1v1 coding duels. <br/>
-            Our AI generates unique challenges matched to your skill level - solve them faster, climb the
-            ELO leaderboard & earn your place among the best.
-          </p>
-          <div className="hero-actions">
-            <button className="btn-primary" onClick={() => navigate('/register')}>
-              <span className="btn-text">Start Battling</span>
-              <span className="btn-icon">→</span>
-            </button>
-            <button className="btn-secondary" onClick={() => navigate('/login')}>
-              Sign In
-            </button>
-          </div>
-          <div className="hero-stats">
-            <div className="stat-item">
-              <span className="stat-number">{counters.players.toLocaleString()}+</span>
-              <span className="stat-label">Players</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-number">{counters.matches.toLocaleString()}+</span>
-              <span className="stat-label">Battles Fought</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-number">{counters.challenges.toLocaleString()}+</span>
-              <span className="stat-label">Unique Challenges</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="hero-visual">
-          <div className="battle-card">
-            <div className="battle-card-header">
-              <span className="live-badge">● LIVE</span>
-              <span className="match-type">RANKED 1v1</span>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 - Enhanced */}
+            <div className="glass-panel p-10 hover:scale-105 transition-all cursor-pointer group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
+              
+              <div className="relative">
+                <div className="h-20 w-20 rounded-2xl bg-primary/20 border-2 border-primary/40 flex-center mb-8 group-hover:scale-110 transition-transform shadow-glow-sm">
+                  <Users size={36} className="text-primary" />
+                </div>
+                <h3 className="text-2xl font-black text-white mb-4">1v1 Battles</h3>
+                <p className="text-text-secondary leading-relaxed">
+                  Compete against real opponents in real-time coding duels. Test your skills under pressure.
+                </p>
+              </div>
             </div>
             <div className="battle-card-players">
               <div className="player-side player-left">
@@ -239,35 +287,29 @@ const Landing = () => {
           <p className="section-subtitle">Two arenas. Two rating systems. Double the competition.</p>
         </div>
 
-        <div className="arenas-grid">
-          <div className="arena-card arena-dsa">
-            <div className="arena-glow"></div>
-            <div className="arena-icon">⚔️</div>
-            <h3 className="arena-title">DSA Arena</h3>
-            <p className="arena-description">
-              Solve algorithmic problems from scratch. Data structures, dynamic programming,
-              graphs, sorting — the classic competitive programming experience.
-            </p>
-            <div className="arena-meta">
-              <span className="arena-rating">Starting ELO: 1200</span>
-              <span className="arena-domains">8 Domains</span>
-            </div>
-            <button className="btn-arena" onClick={() => navigate('/register')}>
-              Enter Arena →
-            </button>
-          </div>
-
-          <div className="arena-card arena-debug">
-            <div className="arena-glow"></div>
-            <div className="arena-icon">🐛</div>
-            <h3 className="arena-title">Debug Arena</h3>
-            <p className="arena-description">
-              Find and fix bugs in broken code. Race against your opponent to identify
-              issues and submit the correct fix. Speed and precision matter.
-            </p>
-            <div className="arena-meta">
-              <span className="arena-rating">Starting ELO: 300</span>
-              <span className="arena-domains">Bug Hunting</span>
+      {/* CTA Section - Enhanced */}
+      <div className="mt-12 pb-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="glass-panel p-8 border-primary/40 relative overflow-hidden group hover:border-primary/60 transition-all">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl group-hover:scale-150 transition-transform"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl group-hover:scale-150 transition-transform"></div>
+            
+            <div className="relative">
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 text-center">
+                Ready to <span className="text-gradient">Compete</span>?
+              </h2>
+              <p className="text-base md:text-lg text-text-secondary mb-6 leading-relaxed text-center max-w-3xl mx-auto">
+                Join thousands of developers sharpening their skills through competitive programming
+              </p>
+              <div className="text-center">
+                <button
+                  onClick={() => navigate('/register')}
+                  className="btn btn-primary text-base px-10 py-4 group shadow-glow-xl hover:shadow-glow-2xl transition-all"
+                >
+                  Create Free Account
+                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
             <button className="btn-arena" onClick={() => navigate('/register')}>
               Enter Arena →
@@ -291,16 +333,28 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <span className="footer-logo">⚡ CodeRoad</span>
-            <p className="footer-tagline">Where code meets competition.</p>
-          </div>
-          <div className="footer-links">
-            <span>© 2026 CodeRoad</span>
-            <span className="footer-sep">•</span>
-            <span>Built with 🔥 for competitive coders</span>
+      <footer className="border-t border-white/5 py-8 px-6 mt-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-14 flex-center">
+                <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain" />
+              </div>
+              <span className="text-lg font-black text-gradient">CodeRoad</span>
+            </div>
+            
+            <div className="text-text-muted text-sm">
+              © 2026 CodeRoad. Built for competitive programmers.
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <a href="#" className="text-text-muted hover:text-primary transition-colors">
+                <Code size={18} />
+              </a>
+              <a href="#" className="text-text-muted hover:text-primary transition-colors">
+                <Trophy size={18} />
+              </a>
+            </div>
           </div>
         </div>
       </footer>

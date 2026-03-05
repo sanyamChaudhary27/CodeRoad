@@ -1050,10 +1050,10 @@ select {
 
 .bg-animated-grid {
   position: fixed;
-  top: -300px;
-  left: -300px;
-  width: calc(100vw + 600px);
-  height: calc(100vh + 600px);
+  top: -50%;
+  left: -50%;
+  width: 200vw;
+  height: 200vh;
   z-index: -1;
   background-color: var(--bg-dark);
   background-image: 

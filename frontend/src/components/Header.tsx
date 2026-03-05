@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Trophy, Code } from 'lucide-react';
+import { LogOut, Trophy } from 'lucide-react';
 import { authService, type User } from '../services/authService';
 
 interface HeaderProps {
@@ -16,55 +16,55 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
   };
 
   return (
-    <header className="flex-between mb-8 glass-panel p-4 px-6 relative overflow-hidden group">
-      {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    <header className="flex-between mb-8 glass-panel px-6 py-3 relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 animate-gradient"></div>
       
-      <div className="flex items-center gap-4 relative z-10">
+      {/* Left side - Logo Only */}
+      <div className="flex items-center relative z-10">
         <div 
-          className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary via-accent to-success flex-center cursor-pointer hover:scale-110 transition-transform shadow-lg"
+          className="relative cursor-pointer group/logo"
           onClick={() => navigate('/dashboard')}
         >
-          <Code size={24} className="text-white" />
-        </div>
-        <div>
-          <h1 
-            className="text-2xl font-black text-gradient tracking-tight cursor-pointer hover:scale-105 transition-transform inline-block" 
-            onClick={() => navigate('/dashboard')}
-          >
-            CodeRoad
-          </h1>
-          <p className="text-xs text-text-muted uppercase tracking-[0.2em] font-semibold">Competitive Arena</p>
+          {/* Logo container - Rectangular */}
+          <div className="relative h-20 w-64 flex-center group-hover/logo:scale-110 transition-transform">
+            <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain" />
+          </div>
         </div>
       </div>
       
-      <div className="flex items-center gap-3 relative z-10">
+      {/* Right side - Actions */}
+      <div className="flex items-center gap-4 relative z-10">
         {showLeaderboard && (
           <button 
             onClick={() => navigate('/leaderboard')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-warning/10 border border-warning/30 hover:bg-warning/20 hover:border-warning/40 transition-all text-warning font-semibold shadow-sm hover:shadow-glow hover:scale-105"
+            className="flex items-center gap-3 px-10 py-4 rounded-xl bg-gradient-to-r from-warning/20 to-warning/10 border border-warning/40 hover:border-warning/60 hover:from-warning/30 hover:to-warning/20 transition-all text-warning font-bold shadow-lg hover:shadow-warning/20 hover:scale-105 group min-w-[200px] justify-center"
           >
-            <Trophy size={18} />
-            <span className="hidden sm:inline">Leaderboard</span>
+            <Trophy size={20} className="group-hover:rotate-12 transition-transform" />
+            <span>Leaderboard</span>
           </button>
         )}
         
         <button 
           onClick={() => navigate('/profile')}
-          className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-all border border-transparent hover:border-primary/20"
+          className="flex items-center gap-4 px-6 py-4 rounded-xl hover:bg-white/10 transition-all border border-white/10 hover:border-primary/40 group"
         >
-          <div className="text-right hidden sm:block">
-            <p className="text-white font-semibold text-sm">{user.username}</p>
+          <div className="text-right">
+            <p className="text-white font-bold text-sm group-hover:text-primary transition-colors">{user.username}</p>
             <p className="text-xs text-text-muted">View Profile</p>
           </div>
           {user.profile_picture ? (
             <img 
               src={user.profile_picture} 
               alt={user.username}
-              className="h-11 w-11 rounded-full object-cover shadow-lg border-2 border-primary/40 hover:border-primary/60 transition-all"
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px' }}
+              className="rounded-full object-cover shadow-lg border-2 border-primary/50 group-hover:border-primary transition-all shrink-0 group-hover:scale-110"
             />
           ) : (
-            <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-lg border-2 border-primary/40 hover:border-primary/60 transition-all">
+            <div 
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+              className="rounded-full bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-lg border-2 border-primary/50 group-hover:border-primary transition-all shrink-0 group-hover:scale-110"
+            >
               {user.username.charAt(0).toUpperCase()}
             </div>
           )}
@@ -72,10 +72,10 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
         
         <button 
           onClick={handleLogout} 
-          className="text-text-muted hover:text-danger transition-all p-2.5 rounded-xl hover:bg-danger/10 border border-transparent hover:border-danger/30 group"
+          className="text-text-muted hover:text-danger transition-all p-4 rounded-xl hover:bg-danger/10 border border-transparent hover:border-danger/40 group"
           title="Logout"
         >
-          <LogOut size={20} className="group-hover:scale-110 transition-transform" />
+          <LogOut size={22} className="group-hover:scale-110 transition-transform" />
         </button>
       </div>
     </header>
