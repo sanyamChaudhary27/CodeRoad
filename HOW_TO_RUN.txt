@@ -5,7 +5,7 @@ HOW TO RUN CODE ROAD
 
    cd d:\CodeRoad\backend
    .\venv\Scripts\activate
-   python -m uvicorn app.app:app --host 127.0.0.1 --port 8000 --reload
+   python.exe -m uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
 
 2. Start the frontend (Terminal 2):
 
