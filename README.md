@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6.svg)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
 
-[Features](#features) • [Quick Start](#quick-start) • [Architecture](#architecture) • [API Docs](#api-documentation) • [Deployment](#deployment)
+[Features](#features) • [Quick Start](#quick-start) • [Architecture](tab=readme-ov-file#%EF%B8%8F-architecture) • [API Docs](#api-documentation) • [Deployment](#deployment)
 
 </div>
 
