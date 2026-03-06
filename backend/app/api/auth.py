@@ -16,7 +16,8 @@ from ..schemas.player_schema import (
     PlayerRegister,
     PlayerLogin,
     PlayerResponse,
-    TokenResponse
+    TokenResponse,
+    ProfilePictureUpdate
 )
 
 logger = logging.getLogger(__name__)
@@ -142,7 +143,7 @@ async def get_me(
 
 @router.put("/profile-picture")
 async def update_profile_picture(
-    data: dict,
+    data: ProfilePictureUpdate,
     current_user: dict = Depends(get_current_player),
     db: Session = Depends(get_db)
 ):
@@ -156,7 +157,7 @@ async def update_profile_picture(
             detail="Player not found"
         )
     
-    profile_picture = data.get("profile_picture", "")
+    profile_picture = data.profile_picture
     
     # Validate profile picture (basic validation for base64 or URL)
     if not profile_picture:

@@ -44,12 +44,12 @@
 
 ---
 
-### 2. Backend Services - Duplicate/Backup Files
+### 2. Backend Services - Duplicate/Backup Files (No, having backup is never bad)
 **DELETE:**
 
-- `backend/app/services/challenge_service_backup.py` - Backup file, no longer needed
-- `backend/app/services/challenge_service_fixed_temp.py` - Temporary fix file
-- `backend/app/services/challenge_service_fixed.py` - Duplicate/old version
+- `backend/app/services/challenge_service_backup.py` - Backup file, no longer needed - don't delete
+- `backend/app/services/challenge_service_fixed_temp.py` - Temporary fix file - delete
+- `backend/app/services/challenge_service_fixed.py` - Duplicate/old version - delete
 
 **REASON:** Multiple versions of the same service. Only `challenge_service.py` should remain as the active version.
 
@@ -110,7 +110,7 @@ __pycache__/
 
 ---
 
-### 7. Virtual Environment (if committed)
+### 7. Virtual Environment (if committed) (do not delete myenv)
 **DELETE:**
 
 - `myenv/` (entire directory)

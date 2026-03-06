@@ -16,7 +16,7 @@ const Landing = () => {
     const duration = 2000;
     const steps = 60;
     const interval = duration / steps;
-    const targets = { players: 1200, matches: 8500, challenges: 350 };
+    const targets = { players: 50, matches: 120, challenges: 999 };
     let step = 0;
 
     const timer = setInterval(() => {
@@ -139,8 +139,8 @@ const Landing = () => {
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
-              <span className="stat-number">{counters.challenges.toLocaleString()}+</span>
-              <span className="stat-label">Unique Challenges</span>
+              <span className="stat-number">∞</span>
+              <span className="stat-label">AI-Generated Challenges</span>
             </div>
           </div>
         </div>
@@ -301,6 +301,15 @@ const Landing = () => {
             <span>© 2026 CodeRoad</span>
             <span className="footer-sep">•</span>
             <span>Built with 🔥 for competitive coders</span>
+          </div>
+        </div>
+        <div className="footer-contributors" style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Contributors</p>
+          <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="https://github.com/sanyamChaudhary27" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.875rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}>Sanyam Chaudhary</a>
+            <a href="https://github.com/pennedbyvg" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.875rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}>Vedratna Bura</a>
+            <a href="https://github.com/GajananDhangude" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.875rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}>Gajanan Dhangude</a>
+            <a href="https://github.com/RAVIKUMAR-CEO" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '0.875rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}>RK Reddy</a>
           </div>
         </div>
       </footer>

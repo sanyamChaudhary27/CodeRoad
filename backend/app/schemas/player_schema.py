@@ -112,3 +112,27 @@ class PlayerLeaderboardEntry(BaseModel):
     
     class Config:
         from_attributes = True
+
+class ProfilePictureUpdate(BaseModel):
+    """Request model for profile picture update."""
+    profile_picture: Optional[str] = Field(None, description="Base64 encoded image or URL")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "profile_picture": "data:image/png;base64,iVBORw0KGgoAAAANS..."
+            }
+        }
+
+
+    class ProfilePictureUpdate(BaseModel):
+        """Request model for profile picture update."""
+        profile_picture: Optional[str] = Field(None, description="Base64 encoded image or URL")
+
+        class Config:
+            json_schema_extra = {
+                "example": {
+                    "profile_picture": "data:image/png;base64,iVBORw0KGgoAAAANS..."
+                }
+            }
+
