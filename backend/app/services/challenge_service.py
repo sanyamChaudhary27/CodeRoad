@@ -29,6 +29,9 @@ class ChallengeService:
         self.current_key_index = 0
         self._recently_used_titles: Set[str] = set()
         
+        logger.info("=== Initializing ChallengeService ===")
+        logger.info(f"GROQ_AVAILABLE (library installed): {GROQ_AVAILABLE}")
+        
         # Load all Groq API keys
         if GROQ_AVAILABLE:
             groq_keys = []
@@ -38,24 +41,32 @@ class ChallengeService:
                 api_key = os.getenv(key_name)
                 if api_key:
                     groq_keys.append(api_key)
+                    logger.info(f"Found {key_name}: {api_key[:20]}...")
+            
+            logger.info(f"Total Groq keys found: {len(groq_keys)}")
             
             # Initialize clients for each key
             for i, api_key in enumerate(groq_keys):
                 try:
+                    # Simple initialization without extra parameters
                     client = Groq(api_key=api_key)
                     self.groq_clients.append(client)
-                    logger.info(f"Groq client {i+1} initialized")
+                    logger.info(f"✓ Groq client {i+1} initialized successfully")
                 except Exception as e:
-                    logger.warning(f"Failed to initialize Groq client {i+1}: {e}")
+                    logger.error(f"✗ Failed to initialize Groq client {i+1}: {e}")
             
             if self.groq_clients:
                 self.ai_available = True
-                logger.info(f"Groq AI initialized with {len(self.groq_clients)} API keys")
+                logger.info(f"✓ Groq AI initialized with {len(self.groq_clients)} API keys")
             else:
-                logger.warning("No Groq API keys available")
+                logger.warning("✗ No Groq API keys available")
+        else:
+            logger.warning("✗ Groq library not installed")
         
         if not self.ai_available:
-            logger.warning("No AI providers available, using templates only")
+            logger.warning("⚠ No AI providers available, using templates only")
+        
+        logger.info(f"Final state: ai_available={self.ai_available}, groq_clients={len(self.groq_clients)}")
         
         self.templates = self._load_templates()
         
@@ -138,6 +149,10 @@ class ChallengeService:
             logger.warning(f"Could not load recent challenges: {e}")
         
         challenge_data = None
+        
+        # Debug logging
+        logger.info(f"DEBUG: use_ai={use_ai}, ai_available={self.ai_available}, groq_clients_count={len(self.groq_clients) if self.groq_clients else 0}")
+        
         try:
             if use_ai and self.ai_available and self.groq_clients:
                 # Try Groq with key rotation
@@ -145,8 +160,11 @@ class ChallengeService:
                     logger.info(f"Attempting Groq AI generation for {difficulty} challenge (rating: {player_rating})")
                     challenge_data = self._generate_groq_challenge(difficulty, player_rating, domain, db, player_id)
                     challenge_data['generation_method'] = 'groq_ai'
+                    logger.info(f"✓ Successfully generated challenge with Groq AI")
                 except Exception as e:
-                    logger.warning(f"Groq generation failed: {e}")
+                    logger.error(f"✗ Groq generation failed: {e}", exc_info=True)
+            else:
+                logger.warning(f"Skipping AI generation: use_ai={use_ai}, ai_available={self.ai_available}, groq_clients={len(self.groq_clients) if self.groq_clients else 0}")
             
             # Fall back to templates if AI fails or disabled
             if not challenge_data:
@@ -608,15 +626,22 @@ Generate a problem appropriate for rating {player_rating}!"""
             recent_titles = set()
         
         challenge_data = None
+        
+        # Debug logging
+        logger.info(f"DEBUG: use_ai={use_ai}, ai_available={self.ai_available}, groq_clients_count={len(self.groq_clients) if self.groq_clients else 0}")
+        
         try:
             if use_ai and self.ai_available and self.groq_clients:
                 # Try Groq AI for debug challenge
                 try:
-                    logger.info(f"Attempting Groq AI generation for {difficulty} debug challenge")
+                    logger.info(f"Attempting Groq AI generation for {difficulty} debug challenge (player_rating={player_rating})")
                     challenge_data = self._generate_groq_debug_challenge(difficulty, player_rating, domain, db, player_id, recent_titles)
                     challenge_data['generation_method'] = 'groq_ai'
+                    logger.info(f"✓ Successfully generated debug challenge with Groq AI")
                 except Exception as e:
-                    logger.warning(f"Groq debug generation failed: {e}")
+                    logger.error(f"✗ Groq debug generation failed: {e}", exc_info=True)
+            else:
+                logger.warning(f"Skipping AI generation: use_ai={use_ai}, ai_available={self.ai_available}, groq_clients={len(self.groq_clients) if self.groq_clients else 0}")
             
             # Fall back to debug templates
             if not challenge_data:
