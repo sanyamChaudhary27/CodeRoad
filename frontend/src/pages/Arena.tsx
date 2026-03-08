@@ -354,12 +354,9 @@ const Arena = () => {
   useEffect(() => {
     if (!matchId) return;
 
-    // WebSocket URL - always connect to backend directly on port 8000
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = window.location.hostname === 'localhost' 
-      ? 'localhost:8000' 
-      : `${window.location.hostname}:8000`; // Connect to backend port directly
-    const socketUrl = `${wsProtocol}//${wsHost}/ws/${matchId}`;
+    // Use environment variable for WebSocket URL
+    const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
+    const socketUrl = `${wsBaseUrl}/${matchId}`;
     
     console.log('Connecting to WebSocket:', socketUrl);
     const socket = new WebSocket(socketUrl);
