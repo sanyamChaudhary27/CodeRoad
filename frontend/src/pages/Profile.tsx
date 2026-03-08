@@ -84,11 +84,22 @@ const Profile = () => {
     );
   }
 
-  const winRate = (user.matches_played || 0) > 0 ? Math.round(((user.wins || 0) / (user.matches_played || 1)) * 100) : 0;
-  const losses = (user.matches_played || 0) - (user.wins || 0);
+  // DSA Arena stats
+  const dsaMatches = user.matches_played || 0;
+  const dsaWins = user.wins || 0;
+  const dsaLosses = dsaMatches - dsaWins;
+  const winRate = dsaMatches > 0 ? Math.round((dsaWins / dsaMatches) * 100) : 0;
   
-  const debugWinRate = (user.debug_matches_played || 0) > 0 ? Math.round(((user.debug_wins || 0) / (user.debug_matches_played || 1)) * 100) : 0;
-  const debugLosses = (user.debug_matches_played || 0) - (user.debug_wins || 0);
+  // Debug Arena stats
+  const debugMatches = user.debug_matches_played || 0;
+  const debugWins = user.debug_wins || 0;
+  const debugLosses = debugMatches - debugWins;
+  const debugWinRate = debugMatches > 0 ? Math.round((debugWins / debugMatches) * 100) : 0;
+  
+  // Combined stats (for header badges)
+  const totalMatches = dsaMatches + debugMatches;
+  const totalWins = dsaWins + debugWins;
+  const totalWinRate = totalMatches > 0 ? Math.round((totalWins / totalMatches) * 100) : 0;
 
   return (
     <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
@@ -158,15 +169,15 @@ const Profile = () => {
             <div className="flex flex-wrap gap-3">
               <div className="px-5 py-3 rounded-xl bg-primary/10 border border-primary/30 flex items-center gap-2 hover:bg-primary/20 transition-all hover:scale-105">
                 <Activity size={18} className="text-primary" />
-                <span className="text-primary font-bold text-lg">{user.matches_played || 0} Total Matches</span>
+                <span className="text-primary font-bold text-lg">{totalMatches} Total Matches</span>
               </div>
               <div className="px-5 py-3 rounded-xl bg-success/10 border border-success/30 flex items-center gap-2 hover:bg-success/20 transition-all hover:scale-105">
                 <Award size={18} className="text-success" />
-                <span className="text-success font-bold text-lg">{user.wins || 0} Total Wins</span>
+                <span className="text-success font-bold text-lg">{totalWins} Total Wins</span>
               </div>
               <div className="px-5 py-3 rounded-xl bg-accent/10 border border-accent/30 flex items-center gap-2 hover:bg-accent/20 transition-all hover:scale-105">
                 <TrendingUp size={18} className="text-accent" />
-                <span className="text-accent font-bold text-lg">{winRate}% Win Rate</span>
+                <span className="text-accent font-bold text-lg">{totalWinRate}% Win Rate</span>
               </div>
             </div>
           </div>
@@ -193,19 +204,19 @@ const Profile = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light text-center hover:border-primary/30 transition-all hover:scale-105 cursor-pointer">
                   <Activity className="text-primary mb-3 mx-auto" size={28} />
-                  <p className="text-4xl font-black text-white mb-1">{user.matches_played || 0}</p>
+                  <p className="text-4xl font-black text-white mb-1">{dsaMatches}</p>
                   <p className="text-xs text-text-muted uppercase tracking-wider">Total Matches</p>
                 </div>
                 
                 <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light text-center hover:border-success/30 transition-all hover:scale-105 cursor-pointer">
                   <Award className="text-success mb-3 mx-auto" size={28} />
-                  <p className="text-4xl font-black text-white mb-1">{user.wins || 0}</p>
+                  <p className="text-4xl font-black text-white mb-1">{dsaWins}</p>
                   <p className="text-xs text-text-muted uppercase tracking-wider">Victories</p>
                 </div>
                 
                 <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light text-center hover:border-danger/30 transition-all hover:scale-105 cursor-pointer">
                   <Target className="text-danger mb-3 mx-auto" size={28} />
-                  <p className="text-4xl font-black text-white mb-1">{losses}</p>
+                  <p className="text-4xl font-black text-white mb-1">{dsaLosses}</p>
                   <p className="text-xs text-text-muted uppercase tracking-wider">Defeats</p>
                 </div>
                 
@@ -233,13 +244,13 @@ const Profile = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light text-center hover:border-danger/30 transition-all hover:scale-105 cursor-pointer">
                   <Activity className="text-danger mb-3 mx-auto" size={28} />
-                  <p className="text-4xl font-black text-white mb-1">{user.debug_matches_played || 0}</p>
+                  <p className="text-4xl font-black text-white mb-1">{debugMatches}</p>
                   <p className="text-xs text-text-muted uppercase tracking-wider">Total Matches</p>
                 </div>
                 
                 <div className="bg-bg-panel-light/50 p-6 rounded-xl border border-border-light text-center hover:border-success/30 transition-all hover:scale-105 cursor-pointer">
                   <Award className="text-success mb-3 mx-auto" size={28} />
-                  <p className="text-4xl font-black text-white mb-1">{user.debug_wins || 0}</p>
+                  <p className="text-4xl font-black text-white mb-1">{debugWins}</p>
                   <p className="text-xs text-text-muted uppercase tracking-wider">Victories</p>
                 </div>
                 
@@ -361,7 +372,7 @@ const Profile = () => {
               </h3>
               
               <div className="space-y-3">
-                {user.wins && user.wins > 0 && (
+                {totalWins > 0 && (
                   <div className="p-5 rounded-xl bg-gradient-to-r from-success/10 to-transparent border border-success/30 hover:border-success/50 transition-all hover:scale-105 cursor-pointer">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-success/20 flex-center">
@@ -375,7 +386,7 @@ const Profile = () => {
                   </div>
                 )}
                 
-                {user.matches_played && user.matches_played >= 10 && (
+                {totalMatches >= 10 && (
                   <div className="p-5 rounded-xl bg-gradient-to-r from-primary/10 to-transparent border border-primary/30 hover:border-primary/50 transition-all hover:scale-105 cursor-pointer">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-primary/20 flex-center">
@@ -389,7 +400,7 @@ const Profile = () => {
                   </div>
                 )}
                 
-                {(!user.wins || user.wins === 0) && (!user.matches_played || user.matches_played < 10) && (
+                {totalWins === 0 && totalMatches < 10 && (
                   <div className="text-center py-12 text-text-muted">
                     <Shield size={56} className="mx-auto mb-4 opacity-20" />
                     <p className="text-sm">Complete matches to unlock achievements!</p>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRoad - Features</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 20px;
+            margin-bottom: 50px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .feature-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 5px solid #667eea;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .feature-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .feature-desc {
+            color: #666;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .feature-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .section-title {
+            font-size: 32px;
+            color: #667eea;
+            margin: 40px 0 20px 0;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 CodeRoad Features</h1>
+        <p class="subtitle">AI-Powered Competitive Coding Platform</p>
+
+        <div class="section-title">🎮 Core Features</div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚔️</div>
+                <div class="feature-title">Real-Time 1v1 Battles</div>
+                <div class="feature-desc">
+                    Face opponents in live coding duels. Both players solve the same AI-generated challenge simultaneously. First to pass all test cases wins!
+                </div>
+                <span class="feature-badge">COMPETITIVE</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">AI Challenge Generation</div>
+                <div class="feature-desc">
+                    Every problem is unique. Groq AI generates fresh challenges adapted to your skill level. Never face the same problem twice!
+                </div>
+                <span class="feature-badge">AI-POWERED</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">ELO Rating System</div>
+                <div class="feature-desc">
+                    Dynamic skill-based matchmaking. Win to gain ELO, lose to learn. Climb from 300 to 2000+ rating across multiple arenas.
+                </div>
+                <span class="feature-badge">RANKED</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">Smart Matchmaking</div>
+                <div class="feature-desc">
+                    Get matched with opponents within ±200 ELO. Fair matches ensure competitive balance and optimal learning experience.
+                </div>
+                <span class="feature-badge">BALANCED</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <div class="feature-title">Global Leaderboards</div>
+                <div class="feature-desc">
+                    Compete for top rankings in DSA, Debug, DBMS, and UI arenas. Track your progress and compare with the best coders worldwide.
+                </div>
+                <span class="feature-badge">COMPETITIVE</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⏱️</div>
+                <div class="feature-title">Timed Challenges</div>
+                <div class="feature-desc">
+                    30-120 second time limits add pressure. Submit multiple times to improve your solution. Speed and accuracy both matter!
+                </div>
+                <span class="feature-badge">INTENSE</span>
+            </div>
+        </div>
+
+        <div class="section-title">🎨 Arena Types</div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">💻</div>
+                <div class="feature-title">DSA Arena</div>
+                <div class="feature-desc">
+                    Solve algorithmic problems from scratch. Arrays, graphs, dynamic programming, sorting - classic competitive programming across 8 domains.
+                </div>
+                <span class="feature-badge">ALGORITHMS</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🐛</div>
+                <div class="feature-title">Debug Arena</div>
+                <div class="feature-desc">
+                    Find and fix bugs in broken code. Race against opponents to identify issues and submit correct fixes. Speed and precision win!
+                </div>
+                <span class="feature-badge">DEBUGGING</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🗄️</div>
+                <div class="feature-title">DBMS Arena (Coming Soon)</div>
+                <div class="feature-desc">
+                    SQL query optimization battles. Write efficient queries, optimize database operations, and master relational databases.
+                </div>
+                <span class="feature-badge">DATABASES</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <div class="feature-title">UI Arena (Coming Soon)</div>
+                <div class="feature-desc">
+                    Frontend development challenges. Build responsive components, match designs pixel-perfect, and master CSS/React.
+                </div>
+                <span class="feature-badge">FRONTEND</span>
+            </div>
+        </div>
+
+        <div class="section-title">🛡️ AI-Powered Features</div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎲</div>
+                <div class="feature-title">Infinite Problem Variety</div>
+                <div class="feature-desc">
+                    AI generates unique challenges every match. No memorization, no pattern recognition - pure problem-solving skills determine winners.
+                </div>
+                <span class="feature-badge">AI</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <div class="feature-title">Adaptive Difficulty</div>
+                <div class="feature-desc">
+                    Challenges scale with your ELO rating. Beginners get simpler problems, experts face complex algorithms. Always at optimal difficulty!
+                </div>
+                <span class="feature-badge">PERSONALIZED</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Cheat Detection</div>
+                <div class="feature-desc">
+                    XGBoost ML model analyzes code stylometry and submission patterns. Detects AI-assisted solutions and maintains competitive integrity.
+                </div>
+                <span class="feature-badge">SECURITY</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <div class="feature-title">Smart Test Cases</div>
+                <div class="feature-desc">
+                    AI generates comprehensive test cases including edge cases, boundary conditions, and performance tests automatically.
+                </div>
+                <span class="feature-badge">QUALITY</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <div class="feature-title">Domain Diversity</div>
+                <div class="feature-desc">
+                    AI ensures balanced exposure across 8 coding domains: arrays, strings, graphs, trees, DP, sorting, searching, and math.
+                </div>
+                <span class="feature-badge">COMPREHENSIVE</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Instant Generation</div>
+                <div class="feature-desc">
+                    Challenges generated in <2 seconds. No waiting, no delays. Jump into matches instantly with fresh problems every time.
+                </div>
+                <span class="feature-badge">FAST</span>
+            </div>
+        </div>
+
+        <div class="section-title">👤 User Experience</div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">Modern Dashboard</div>
+                <div class="feature-desc">
+                    Beautiful, intuitive interface showing your stats, ELO ratings, match history, and quick access to all arenas.
+                </div>
+                <span class="feature-badge">UI/UX</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📜</div>
+                <div class="feature-title">Match History</div>
+                <div class="feature-desc">
+                    Review all past matches, see your code submissions, analyze what went wrong, and learn from mistakes.
+                </div>
+                <span class="feature-badge">ANALYTICS</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">Practice Mode</div>
+                <div class="feature-desc">
+                    Solo practice matches to warm up, test strategies, or learn new concepts without affecting your ELO rating.
+                </div>
+                <span class="feature-badge">TRAINING</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <div class="feature-title">User Profiles</div>
+                <div class="feature-desc">
+                    Customizable profiles with stats, badges, match history, and achievements. Show off your coding prowess!
+                </div>
+                <span class="feature-badge">SOCIAL</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <div class="feature-title">Secure Authentication</div>
+                <div class="feature-desc">
+                    JWT-based authentication with password hashing. Your account and data are protected with industry-standard security.
+                </div>
+                <span class="feature-badge">SECURE</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚙️</div>
+                <div class="feature-title">Real-Time Execution</div>
+                <div class="feature-desc">
+                    Code runs in isolated sandboxes with instant feedback. See test results immediately after submission.
+                </div>
+                <span class="feature-badge">INSTANT</span>
+            </div>
+        </div>
+
+        <div class="section-title">🚀 Technical Features</div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <div class="feature-title">AWS Cloud Infrastructure</div>
+                <div class="feature-desc">
+                    Deployed on AWS with EC2, S3, CloudFront, and VPC. Scalable, reliable, and globally distributed for low latency.
+                </div>
+                <span class="feature-badge">CLOUD</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-title">Auto-Scaling</div>
+                <div class="feature-desc">
+                    Infrastructure scales automatically with user load. Handle 10 or 10,000 users without manual intervention.
+                </div>
+                <span class="feature-badge">SCALABLE</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">Global CDN</div>
+                <div class="feature-desc">
+                    CloudFront CDN ensures fast load times worldwide. 95% cache hit rate for optimal performance everywhere.
+                </div>
+                <span class="feature-badge">FAST</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title">SSL/HTTPS</div>
+                <div class="feature-desc">
+                    End-to-end encryption with Let's Encrypt SSL certificates. All data transmitted securely over HTTPS.
+                </div>
+                <span class="feature-badge">ENCRYPTED</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💾</div>
+                <div class="feature-title">PostgreSQL Database</div>
+                <div class="feature-desc">
+                    Robust relational database with ACID compliance. Stores users, matches, submissions, and ratings reliably.
+                </div>
+                <span class="feature-badge">RELIABLE</span>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Real-Time Analytics</div>
+                <div class="feature-desc">
+                    Track performance metrics, user engagement, and system health in real-time with comprehensive logging.
+                </div>
+                <span class="feature-badge">MONITORING</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

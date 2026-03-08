@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRoad - Wireframes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 48px;
+            margin-bottom: 50px;
+        }
+        .wireframe-section {
+            margin-bottom: 60px;
+        }
+        .section-title {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            padding-left: 20px;
+        }
+        .wireframe {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 3px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+        .wireframe-header {
+            background: #667eea;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            margin: -30px -30px 20px -30px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .wireframe-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .wireframe-box {
+            background: white;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .wireframe-box.header { background: #667eea; color: white; min-height: 60px; }
+        .wireframe-box.sidebar { background: #f0f0f0; }
+        .wireframe-box.content { min-height: 200px; }
+        .wireframe-box.card { background: #fafafa; border-style: solid; }
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+        .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .grid-sidebar { grid-template-columns: 250px 1fr; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 CodeRoad Wireframes</h1>
+
+        <!-- Landing Page -->
+        <div class="wireframe-section">
+            <div class="section-title">1. Landing Page</div>
+            <div class="wireframe">
+                <div class="wireframe-header">Landing Page (coderoad.online)</div>
+                <div class="wireframe-grid">
+                    <div class="wireframe-box header">
+                        ⚡ CodeRoad Logo | Features | Arenas | Leaderboard | [Login] [Sign Up]
+                    </div>
+                    <div class="wireframe-box content">
+                        <div>
+                            <h2 style="color: #667eea; margin-bottom: 10px;">Code. Compete. Conquer.</h2>
+                            <p>Battle opponents in real-time 1v1 coding duels</p>
+                            <div style="margin-top: 20px;">
+                                <button style="background: #667eea; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">Start Battling →</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wireframe-grid grid-3">
+                        <div class="wireframe-box card">📊 50+ Players</div>
+                        <div class="wireframe-box card">⚔️ 120+ Battles</div>
+                        <div class="wireframe-box card">∞ AI Challenges</div>
+                    </div>
+                    <div class="wireframe-grid grid-4">
+                        <div class="wireframe-box card">⚔️ 1v1 Battles<br/>Real-time coding duels</div>
+                        <div class="wireframe-box card">🤖 AI Generated<br/>Unique problems</div>
+                        <div class="wireframe-box card">📊 ELO System<br/>Skill-based ranking</div>
+                        <div class="wireframe-box card">🛡️ Cheat Detection<br/>Fair competition</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="wireframe-section">
+            <div class="section-title">2. Dashboard</div>
+            <div class="wireframe">
+                <div class="wireframe-header">Dashboard - User Overview</div>
+                <div class="wireframe-grid">
+                    <div class="wireframe-box header">
+                        ⚡ CodeRoad | Dashboard | Arenas | Leaderboard | Profile | [Logout]
+                    </div>
+                    <div class="wireframe-box content">
+                        <div style="text-align: left; width: 100%;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">Welcome back, Player!</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #2196f3;">315</div>
+                                    <div style="font-size: 12px; color: #666;">DSA ELO</div>
+                                </div>
+                                <div style="background: #ffebee; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #f44336;">300</div>
+                                    <div style="font-size: 12px; color: #666;">Debug ELO</div>
+                                </div>
+                                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #ff9800;">----</div>
+                                    <div style="font-size: 12px; color: #666;">DBMS ELO</div>
+                                </div>
+                                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #4caf50;">----</div>
+                                    <div style="font-size: 12px; color: #666;">UI ELO</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wireframe-grid grid-3">
+                        <div class="wireframe-box card">
+                            <div>
+                                <h4 style="color: #2196f3;">DSA Arena</h4>
+                                <p style="font-size: 12px; margin: 10px 0;">Matches: 5 | Wins: 3</p>
+                                <button style="background: #2196f3; color: white; padding: 8px 16px; border: none; border-radius: 5px;">Enter Arena</button>
+                            </div>
+                        </div>
+                        <div class="wireframe-box card">
+                            <div>
+                                <h4 style="color: #f44336;">Debug Arena</h4>
+                                <p style="font-size: 12px; margin: 10px 0;">Matches: 2 | Wins: 1</p>
+                                <button style="background: #f44336; color: white; padding: 8px 16px; border: none; border-radius: 5px;">Enter Arena</button>
+                            </div>
+                        </div>
+                        <div class="wireframe-box card">
+                            <div>
+                                <h4 style="color: #ff9800;">DBMS Arena</h4>
+                                <p style="font-size: 12px; margin: 10px 0;">Coming Soon</p>
+                                <button style="background: #ccc; color: #666; padding: 8px 16px; border: none; border-radius: 5px;" disabled>Locked</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arena Page -->
+        <div class="wireframe-section">
+            <div class="section-title">3. Arena - Active Match</div>
+            <div class="wireframe">
+                <div class="wireframe-header">DSA Arena - Live Match</div>
+                <div class="wireframe-grid">
+                    <div class="wireframe-box header">
+                        ⚡ CodeRoad | Match ID: abc123 | Time: 01:45 | [Exit Match]
+                    </div>
+                    <div class="wireframe-grid grid-2">
+                        <div class="wireframe-box sidebar">
+                            <div style="text-align: left; width: 100%;">
+                                <h4 style="margin-bottom: 10px;">Problem: Two Sum</h4>
+                                <p style="font-size: 12px; margin-bottom: 10px;">Given an array of integers, return indices of two numbers that add up to target.</p>
+                                <div style="background: white; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                    <strong>Example:</strong><br/>
+                                    Input: [2,7,11,15], 9<br/>
+                                    Output: [0,1]
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wireframe-box content">
+                            <div style="text-align: left; width: 100%;">
+                                <div style="background: #2d2d2d; color: #fff; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+                                    def solve(arr, target):<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;# Write your code here<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;return []
+                                </div>
+                                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                                    <button style="background: #4caf50; color: white; padding: 10px 20px; border: none; border-radius: 5px;">▶ Run Code</button>
+                                    <button style="background: #2196f3; color: white; padding: 10px 20px; border: none; border-radius: 5px;">✓ Submit</button>
+                                </div>
+                                <div style="margin-top: 15px; background: #f5f5f5; padding: 10px; border-radius: 5px;">
+                                    <strong>Test Results:</strong> 0/3 passed
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="wireframe-section">
+            <div class="section-title">4. Leaderboard</div>
+            <div class="wireframe">
+                <div class="wireframe-header">Global Leaderboard</div>
+                <div class="wireframe-grid">
+                    <div class="wireframe-box header">
+                        ⚡ CodeRoad | Leaderboard | [DSA] [Debug] [DBMS] [UI]
+                    </div>
+                    <div class="wireframe-grid grid-sidebar">
+                        <div class="wireframe-box sidebar">
+                            <div style="text-align: left; width: 100%;">
+                                <h4 style="margin-bottom: 15px;">🏆 Top 3</h4>
+                                <div style="background: #ffd700; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+                                    🥇 Player1 - 1850
+                                </div>
+                                <div style="background: #c0c0c0; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+                                    🥈 Player2 - 1720
+                                </div>
+                                <div style="background: #cd7f32; padding: 10px; border-radius: 5px;">
+                                    🥉 Player3 - 1650
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wireframe-box content">
+                            <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #ddd;">
+                                        <th style="padding: 10px;">Rank</th>
+                                        <th>Player</th>
+                                        <th>ELO</th>
+                                        <th>Matches</th>
+                                        <th>Win Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 10px;">1</td>
+                                        <td>Player1</td>
+                                        <td>1850</td>
+                                        <td>45</td>
+                                        <td>78%</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 10px;">2</td>
+                                        <td>Player2</td>
+                                        <td>1720</td>
+                                        <td>38</td>
+                                        <td>71%</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px;">...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                        <td>...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div class="wireframe-section">
+            <div class="section-title">5. User Profile</div>
+            <div class="wireframe">
+                <div class="wireframe-header">Profile - Player Stats</div>
+                <div class="wireframe-grid">
+                    <div class="wireframe-box header">
+                        ⚡ CodeRoad | Profile | [Edit Profile]
+                    </div>
+                    <div class="wireframe-box content">
+                        <div style="display: flex; gap: 30px; align-items: flex-start;">
+                            <div style="width: 96px; height: 96px; border-radius: 50%; background: #667eea; display: flex; align-items: center; justify-content: center; color: white; font-size: 36px;">
+                                👤
+                            </div>
+                            <div style="flex: 1; text-align: left;">
+                                <h2 style="color: #667eea; margin-bottom: 5px;">PlayerName</h2>
+                                <p style="color: #666; margin-bottom: 15px;">[email]</p>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold;">7</div>
+                                        <div style="font-size: 12px; color: #666;">Total Matches</div>
+                                    </div>
+                                    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold;">4</div>
+                                        <div style="font-size: 12px; color: #666;">Total Wins</div>
+                                    </div>
+                                    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold;">57%</div>
+                                        <div style="font-size: 12px; color: #666;">Win Rate</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wireframe-box content">
+                        <h3 style="text-align: left; margin-bottom: 15px;">Match History</h3>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            DSA Match vs Player2 - Won (+15 ELO) - 2 min ago
+                        </div>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            Debug Match vs Player3 - Lost (-12 ELO) - 1 hour ago
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

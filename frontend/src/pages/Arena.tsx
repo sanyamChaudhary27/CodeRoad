@@ -354,7 +354,14 @@ const Arena = () => {
   useEffect(() => {
     if (!matchId) return;
 
-    const socketUrl = `ws://localhost:8000/ws/${matchId}`;
+    // WebSocket URL - always connect to backend directly on port 8000
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.hostname === 'localhost' 
+      ? 'localhost:8000' 
+      : `${window.location.hostname}:8000`; // Connect to backend port directly
+    const socketUrl = `${wsProtocol}//${wsHost}/ws/${matchId}`;
+    
+    console.log('Connecting to WebSocket:', socketUrl);
     const socket = new WebSocket(socketUrl);
 
     socket.onopen = () => {
@@ -365,12 +372,17 @@ const Arena = () => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
         if (data.type === 'CODE_SYNC') {
           setOpponentCode(data.code);
         }
       } catch (err) {
         console.warn('Failed to parse WS message:', event.data);
       }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
     };
 
     socket.onclose = () => {
@@ -388,6 +400,7 @@ const Arena = () => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
     const timeoutId = setTimeout(() => {
+      console.log('→ Broadcasting code update, length:', code.length);
       ws.send(JSON.stringify({
         type: 'CODE_SYNC',
         code: code

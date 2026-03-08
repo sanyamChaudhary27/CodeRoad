@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRoad - Process Flow Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 48px;
+            margin-bottom: 50px;
+        }
+        .flow-section {
+            margin-bottom: 60px;
+        }
+        .section-title {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+            padding-left: 20px;
+        }
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .flow-box {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .flow-box.aws {
+            background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%);
+        }
+        .flow-box.ai {
+            background: linear-gradient(135deg, #00D9FF 0%, #0099FF 100%);
+        }
+        .flow-box.user {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .flow-box.db {
+            background: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
+        }
+        .flow-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .flow-desc {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        .flow-arrow {
+            font-size: 36px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .flow-arrow-down {
+            text-align: center;
+            font-size: 36px;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        .legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+        .legend-box.user { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .legend-box.aws { background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%); }
+        .legend-box.ai { background: linear-gradient(135deg, #00D9FF 0%, #0099FF 100%); }
+        .legend-box.backend { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .legend-box.db { background: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 CodeRoad Process Flow</h1>
+
+        <!-- User Registration Flow -->
+        <div class="flow-section">
+            <div class="section-title">1️⃣ User Registration & Authentication</div>
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="flow-box user">
+                        <div class="flow-title">👤 User</div>
+                        <div class="flow-desc">Enters username, email, password on registration page</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">
+                        <div class="flow-title">☁️ CloudFront CDN</div>
+                        <div class="flow-desc">Serves React frontend from S3 bucket globally</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">🔐 FastAPI Backend (EC2)</div>
+                        <div class="flow-desc">Validates data, hashes password with bcrypt</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box db">
+                        <div class="flow-title">💾 PostgreSQL Database</div>
+                        <div class="flow-desc">Stores user record with hashed password, initial ELO 300</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">🎫 JWT Token Generation</div>
+                        <div class="flow-desc">Creates signed JWT token with user ID, username, email</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">✅ User Authenticated</div>
+                        <div class="flow-desc">Receives JWT token, redirected to dashboard</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matchmaking Flow -->
+        <div class="flow-section">
+            <div class="section-title">2️⃣ Matchmaking Process</div>
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="flow-box user">
+                        <div class="flow-title">🎮 Player Clicks "Find Match"</div>
+                        <div class="flow-desc">Selects arena (DSA/Debug), difficulty preference</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">📋 Join Queue (EC2)</div>
+                        <div class="flow-desc">Player added to matchmaking queue with current ELO</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box db">
+                        <div class="flow-title">🔍 Search for Opponent</div>
+                        <div class="flow-desc">Finds player within ±200 ELO range in same arena</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-title">🤝 Match Created</div>
+                        <div class="flow-desc">Both players removed from queue, match record created</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box ai">
+                        <div class="flow-title">🤖 AI Challenge Generation</div>
+                        <div class="flow-desc">Groq API generates unique problem based on average ELO</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">⚔️ Match Starts</div>
+                        <div class="flow-desc">Both players see challenge, timer starts (30-120s)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Challenge Generation Flow -->
+        <div class="flow-section">
+            <div class="section-title">3️⃣ AI Challenge Generation (Detailed)</div>
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-title">📊 Analyze Player Stats</div>
+                        <div class="flow-desc">Backend fetches both players' ELO, recent matches, domains</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">🎯 Determine Difficulty</div>
+                        <div class="flow-desc">Maps average ELO to difficulty: <500=beginner, 500-1000=intermediate, >1000=advanced</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box ai">
+                        <div class="flow-title">🌐 Groq API Call</div>
+                        <div class="flow-desc">Sends prompt with difficulty, domain, recent problems to avoid</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box ai">
+                        <div class="flow-title">🧠 Llama 3.1 70B</div>
+                        <div class="flow-desc">Generates problem: title, description, test cases, boilerplate code</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-title">✅ Validate Response</div>
+                        <div class="flow-desc">Parses JSON, validates structure, checks test cases</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box db">
+                        <div class="flow-title">💾 Store Challenge</div>
+                        <div class="flow-desc">Saves to database with unique ID, links to match</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">📝 Display to Players</div>
+                        <div class="flow-desc">Both players see problem simultaneously</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Submission Flow -->
+        <div class="flow-section">
+            <div class="section-title">4️⃣ Code Submission & Execution</div>
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="flow-box user">
+                        <div class="flow-title">💻 Player Writes Code</div>
+                        <div class="flow-desc">Types solution in browser code editor</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">🚀 Clicks Submit</div>
+                        <div class="flow-desc">Code sent to backend via HTTPS POST request</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">📝 Create Submission</div>
+                        <div class="flow-desc">Backend creates submission record with code, timestamp</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-title">🔒 Sandbox Execution</div>
+                        <div class="flow-desc">Code runs in isolated Python subprocess with 5s timeout</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">🧪 Run Test Cases</div>
+                        <div class="flow-desc">Executes code against all test cases, captures output</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">✅ Compare Results</div>
+                        <div class="flow-desc">Matches actual output with expected output</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box ai">
+                        <div class="flow-title">🛡️ Cheat Detection</div>
+                        <div class="flow-desc">XGBoost model analyzes code style, timing, complexity</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box db">
+                        <div class="flow-title">💾 Update Submission</div>
+                        <div class="flow-desc">Stores results: passed/failed, execution time, cheat score</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">📊 Show Results</div>
+                        <div class="flow-desc">Player sees test results, can submit again</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Conclusion Flow -->
+        <div class="flow-section">
+            <div class="section-title">5️⃣ Match Conclusion & ELO Update</div>
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-title">⏱️ Timer Expires OR Both Done</div>
+                        <div class="flow-desc">Match ends when time runs out or both players signal done</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">🏆 Determine Winner</div>
+                        <div class="flow-desc">Compare test cases passed, execution time, submissions count</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box">
+                        <div class="flow-title">📈 Calculate ELO Changes</div>
+                        <div class="flow-desc">Winner gains ELO, loser loses ELO based on rating difference</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box db">
+                        <div class="flow-title">💾 Update Database</div>
+                        <div class="flow-desc">Updates player ratings, match stats, win/loss records</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">🎉 Show Results</div>
+                        <div class="flow-desc">Players see winner, ELO changes, match summary</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AWS Infrastructure Flow -->
+        <div class="flow-section">
+            <div class="section-title">6️⃣ AWS Infrastructure Flow</div>
+            <div class="flow-container">
+                <div class="flow-row">
+                    <div class="flow-box user">
+                        <div class="flow-title">🌐 User Browser</div>
+                        <div class="flow-desc">Requests coderoad.online</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">
+                        <div class="flow-title">🌍 Route 53 DNS</div>
+                        <div class="flow-desc">Resolves domain to CloudFront distribution</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">
+                        <div class="flow-title">⚡ CloudFront CDN</div>
+                        <div class="flow-desc">Serves cached frontend from nearest edge location</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box aws">
+                        <div class="flow-title">📦 S3 Bucket</div>
+                        <div class="flow-desc">Stores React build files (HTML, CSS, JS)</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">🖥️ Frontend Loaded</div>
+                        <div class="flow-desc">React app renders in browser</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box user">
+                        <div class="flow-title">📡 API Requests</div>
+                        <div class="flow-desc">Frontend makes HTTPS calls to backend</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">
+                        <div class="flow-title">🔒 Security Group</div>
+                        <div class="flow-desc">Firewall allows ports 80, 443, 8000</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box aws">
+                        <div class="flow-title">🖥️ EC2 Instance</div>
+                        <div class="flow-desc">t3.small running Ubuntu + FastAPI</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box aws">
+                        <div class="flow-title">🔄 Nginx Reverse Proxy</div>
+                        <div class="flow-desc">Routes requests to backend, handles SSL</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <div class="flow-title">🐍 FastAPI Backend</div>
+                        <div class="flow-desc">Processes request, queries database</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box db">
+                        <div class="flow-title">🐘 PostgreSQL (Docker)</div>
+                        <div class="flow-desc">Returns data to backend</div>
+                    </div>
+                </div>
+                <div class="flow-arrow-down">↓</div>
+                <div class="flow-row">
+                    <div class="flow-box aws">
+                        <div class="flow-title">💾 EBS Volume</div>
+                        <div class="flow-desc">Persistent storage for database, logs, code</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box user">
+                        <div class="flow-title">✅ Response to User</div>
+                        <div class="flow-desc">JSON data displayed in React UI</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box user"></div>
+                <span>User/Frontend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box aws"></div>
+                <span>AWS Services</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box ai"></div>
+                <span>AI/ML Components</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box backend"></div>
+                <span>Backend Logic</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box db"></div>
+                <span>Database</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -16,7 +16,7 @@ const Landing = () => {
     const duration = 2000;
     const steps = 60;
     const interval = duration / steps;
-    const targets = { players: 50, matches: 120, challenges: 999 };
+    const targets = { players: 10, matches: 120, challenges: 999 };
     let step = 0;
 
     const timer = setInterval(() => {

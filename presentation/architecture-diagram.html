@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRoad - System Architecture</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .diagram {
+            width: 95vw;
+            height: 95vh;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .title {
+            text-align: center;
+            color: #667eea;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .arch-flow {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0 50px;
+        }
+        .layer {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 3px solid;
+            position: relative;
+        }
+        .layer.user { border-color: #11998e; background: linear-gradient(135deg, #e8f5f3 0%, #d4f1e8 100%); }
+        .layer.aws { border-color: #FF9900; background: linear-gradient(135deg, #fff4e6 0%, #ffe6cc 100%); }
+        .layer.frontend { border-color: #61dafb; background: linear-gradient(135deg, #e3f7ff 0%, #cceeff 100%); }
+        .layer.backend { border-color: #667eea; background: linear-gradient(135deg, #e8ebf9 0%, #d4daf5 100%); }
+        .layer.ai { border-color: #00D9FF; background: linear-gradient(135deg, #e0f7ff 0%, #b3ecff 100%); }
+        .layer.db { border-color: #4776E6; background: linear-gradient(135deg, #e6eeff 0%, #ccd9ff 100%); }
+        
+        .box {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 140px;
+            border: 2px solid #ddd;
+        }
+        .box-icon {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .box-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .box-tech {
+            font-size: 10px;
+            color: #666;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 36px;
+            color: #667eea;
+            line-height: 1;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .layer-label {
+            position: absolute;
+            left: -100px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram">
+        <div class="logo">⚡ CodeRoad</div>
+        <div class="title">System Architecture Diagram</div>
+        
+        <div class="arch-flow">
+            <!-- User Layer -->
+            <div class="layer user">
+                <div class="layer-label">USER</div>
+                <div class="box">
+                    <div class="box-icon">🌐</div>
+                    <div class="box-title">Web Browser</div>
+                    <div class="box-tech">Chrome/Firefox/Safari</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">📱</div>
+                    <div class="box-title">Responsive UI</div>
+                    <div class="box-tech">Mobile/Desktop</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🔐</div>
+                    <div class="box-title">JWT Auth</div>
+                    <div class="box-tech">LocalStorage</div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓ HTTPS ↓</div>
+            
+            <!-- AWS CDN Layer -->
+            <div class="layer aws">
+                <div class="layer-label">AWS CDN</div>
+                <div class="box">
+                    <div class="box-icon">🌍</div>
+                    <div class="box-title">CloudFront</div>
+                    <div class="box-tech">Global CDN</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">📦</div>
+                    <div class="box-title">S3 Bucket</div>
+                    <div class="box-tech">Static Hosting</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🔒</div>
+                    <div class="box-title">SSL/TLS</div>
+                    <div class="box-tech">Let's Encrypt</div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓ React App ↓</div>
+            
+            <!-- Frontend Layer -->
+            <div class="layer frontend">
+                <div class="layer-label">FRONTEND</div>
+                <div class="box">
+                    <div class="box-icon">⚛️</div>
+                    <div class="box-title">React 18</div>
+                    <div class="box-tech">TypeScript + Vite</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🎨</div>
+                    <div class="box-title">UI Components</div>
+                    <div class="box-tech">TailwindCSS</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">📡</div>
+                    <div class="box-title">API Client</div>
+                    <div class="box-tech">Axios</div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓ REST API ↓</div>
+            
+            <!-- AWS Infrastructure -->
+            <div class="layer aws">
+                <div class="layer-label">AWS INFRA</div>
+                <div class="box">
+                    <div class="box-icon">🖥️</div>
+                    <div class="box-title">EC2 t3.small</div>
+                    <div class="box-tech">2 vCPU, 2GB RAM</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🔒</div>
+                    <div class="box-title">Security Group</div>
+                    <div class="box-tech">Firewall Rules</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🌐</div>
+                    <div class="box-title">VPC</div>
+                    <div class="box-tech">Network Isolation</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">💾</div>
+                    <div class="box-title">EBS 8GB</div>
+                    <div class="box-tech">SSD Storage</div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓ Nginx Proxy ↓</div>
+            
+            <!-- Backend Layer -->
+            <div class="layer backend">
+                <div class="layer-label">BACKEND</div>
+                <div class="box">
+                    <div class="box-icon">⚡</div>
+                    <div class="box-title">FastAPI</div>
+                    <div class="box-tech">Python 3.10</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🔐</div>
+                    <div class="box-title">Auth Service</div>
+                    <div class="box-tech">JWT + bcrypt</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🎮</div>
+                    <div class="box-title">Match Service</div>
+                    <div class="box-tech">ELO Matchmaking</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">⚖️</div>
+                    <div class="box-title">Judge Service</div>
+                    <div class="box-tech">Code Execution</div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓ AI API Calls ↓</div>
+            
+            <!-- AI Layer -->
+            <div class="layer ai">
+                <div class="layer-label">AI/ML</div>
+                <div class="box">
+                    <div class="box-icon">🧠</div>
+                    <div class="box-title">Groq API</div>
+                    <div class="box-tech">5 API Keys</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🦙</div>
+                    <div class="box-title">Llama 3.1 70B</div>
+                    <div class="box-tech">Challenge Gen</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">🌲</div>
+                    <div class="box-title">XGBoost</div>
+                    <div class="box-tech">Cheat Detection</div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓ Data Storage ↓</div>
+            
+            <!-- Database Layer -->
+            <div class="layer db">
+                <div class="layer-label">DATABASE</div>
+                <div class="box">
+                    <div class="box-icon">🐘</div>
+                    <div class="box-title">PostgreSQL 15</div>
+                    <div class="box-tech">Docker Container</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">📊</div>
+                    <div class="box-title">SQLAlchemy ORM</div>
+                    <div class="box-tech">6 Tables</div>
+                </div>
+                <div class="box">
+                    <div class="box-icon">💾</div>
+                    <div class="box-title">Persistent Volume</div>
+                    <div class="box-tech">274MB Data</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Footer -->
+        <div style="display: flex; justify-content: space-around; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #FF9900;">7+</div>
+                <div style="font-size: 11px; color: #666;">AWS Services</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #667eea;">99.8%</div>
+                <div style="font-size: 11px; color: #666;">Uptime</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #00D9FF;">&lt;250ms</div>
+                <div style="font-size: 11px; color: #666;">Response Time</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 24px; font-weight: bold; color: #4caf50;">$0</div>
+                <div style="font-size: 11px; color: #666;">Monthly Cost</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

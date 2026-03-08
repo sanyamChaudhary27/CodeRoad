@@ -173,7 +173,9 @@ class MatchService:
         
         if recent_match:
             # If we found a match, make sure to remove from queue if still there
-            self.db.query(MatchQueue).filter(MatchQueue.player_id == player_id).delete()
+            removed = self.db.query(MatchQueue).filter(MatchQueue.player_id == player_id).delete()
+            if removed:
+                logger.info(f"Removed player {player_id} from queue (found existing match {recent_match.id})")
             self.db.commit()
             
             logger.info(f"S5: Match {recent_match.id} detected for player {player_id}. Transitioning.")
@@ -391,13 +393,16 @@ class MatchService:
         self.db.add(match)
         
         # Remove players from queue
-        self.db.query(MatchQueue).filter(
+        removed_count = self.db.query(MatchQueue).filter(
             MatchQueue.player_id.in_([player1_id, player2_id])
         ).delete(synchronize_session=False)
         
-        self.db.commit()
+        logger.info(f"Removed {removed_count} players from queue: {player1_id}, {player2_id}")
         
-        logger.info(f"Created match {match.id} between {player1_id} and {player2_id}")
+        self.db.commit()
+        self.db.refresh(match)
+        
+        logger.info(f"Created match {match.id} between {player1_id} and {player2_id}, challenge_type={challenge_type}")
         
         return {
             "match_id": match.id,
@@ -881,7 +886,13 @@ class MatchService:
         """
         Get match information with enriched player data and challenge details.
         """
-        match = self.db.query(Match).filter(Match.id == match_id).first()
+        from sqlalchemy.orm import joinedload
+        
+        # Eagerly load player relationships to avoid lazy loading issues
+        match = self.db.query(Match).options(
+            joinedload(Match.player1),
+            joinedload(Match.player2)
+        ).filter(Match.id == match_id).first()
         
         if not match:
             return None
@@ -891,6 +902,10 @@ class MatchService:
         # Enrich with player data and submission counts
         if match.player1_id:
             p1 = match.player1
+            # Fallback: Query directly if relationship failed
+            if not p1:
+                p1 = self.db.query(Player).filter(Player.id == match.player1_id).first()
+            
             if p1:
                 data["player1_username"] = p1.username
                 # Use appropriate rating based on challenge type
@@ -899,9 +914,15 @@ class MatchService:
                 else:
                     data["player1_rating"] = p1.current_rating
                 data["player1_submissions"] = match.player1_submissions
+            else:
+                logger.warning(f"Player1 {match.player1_id} not found for match {match_id}")
             
         if match.player2_id:
             p2 = match.player2
+            # Fallback: Query directly if relationship failed
+            if not p2:
+                p2 = self.db.query(Player).filter(Player.id == match.player2_id).first()
+            
             if p2:
                 data["player2_username"] = p2.username
                 # Use appropriate rating based on challenge type
@@ -910,6 +931,8 @@ class MatchService:
                 else:
                     data["player2_rating"] = p2.current_rating
                 data["player2_submissions"] = match.player2_submissions
+            else:
+                logger.warning(f"Player2 {match.player2_id} not found for match {match_id}")
         
         # Fetch challenge details
         challenge = self.db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
