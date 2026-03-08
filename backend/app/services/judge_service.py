@@ -18,7 +18,7 @@ class JudgeService:
         self.supported_languages = {
             "python": {
                 "extension": ".py",
-                "command": ["python"],
+                "command": ["python3"],  # Use python3 explicitly
                 "timeout_seconds": 5
             }
         }

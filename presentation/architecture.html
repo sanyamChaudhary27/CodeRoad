@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRoad - Architecture Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .container {
+            width: 100%;
+            max-width: 1920px;
+            height: 95vh;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 42px;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        .arch-diagram {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+        .layer {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 3px solid #667eea;
+            position: relative;
+        }
+        .layer.user { border-color: #11998e; background: linear-gradient(135deg, #e8f5f3 0%, #d4f1e8 100%); }
+        .layer.aws { border-color: #FF9900; background: linear-gradient(135deg, #fff4e6 0%, #ffe6cc 100%); }
+        .layer.frontend { border-color: #61dafb; background: linear-gradient(135deg, #e3f7ff 0%, #cceeff 100%); }
+        .layer.backend { border-color: #667eea; background: linear-gradient(135deg, #e8ebf9 0%, #d4daf5 100%); }
+        .layer.ai { border-color: #00D9FF; background: linear-gradient(135deg, #e0f7ff 0%, #b3ecff 100%); }
+        .layer.db { border-color: #4776E6; background: linear-gradient(135deg, #e6eeff 0%, #ccd9ff 100%); }
+        
+        .box {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 180px;
+            border: 2px solid #ddd;
+        }
+        .box-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .box-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .box-tech {
+            font-size: 11px;
+            color: #666;
+        }
+        .arrow-down {
+            text-align: center;
+            font-size: 40px;
+            color: #667eea;
+            line-height: 1;
+            margin: 8px 0;
+        }
+        .layer-label {
+            position: absolute;
+            left: -120px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: #667eea;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ CodeRoad System Architecture</h1>
+
+        <!-- User Layer -->
+        <div class="layer">
+            <div class="layer-title">
+                <span>👥</span>
+                <span>User Layer</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">🌐</div>
+                    <div class="component-name">Web Browser</div>
+                    <div class="component-desc">Chrome, Firefox, Safari, Edge - Modern browsers with JavaScript enabled</div>
+                    <div class="component-tech">HTML5, CSS3, ES6+</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📱</div>
+                    <div class="component-name">Responsive UI</div>
+                    <div class="component-desc">Mobile-first design, works on desktop, tablet, and mobile devices</div>
+                    <div class="component-tech">TailwindCSS, Flexbox, Grid</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔐</div>
+                    <div class="component-name">Authentication</div>
+                    <div class="component-desc">JWT tokens stored in localStorage, automatic session management</div>
+                    <div class="component-tech">JWT, LocalStorage</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">⚡</div>
+                    <div class="component-name">Real-Time Updates</div>
+                    <div class="component-desc">Polling for match status, instant feedback on submissions</div>
+                    <div class="component-tech">Axios, React State</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-line">↓ HTTPS ↓</div>
+
+        <!-- AWS CDN Layer -->
+        <div class="layer aws">
+            <div class="layer-title">
+                <span>☁️</span>
+                <span>AWS Content Delivery (CDN)</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">🌍</div>
+                    <div class="component-name">CloudFront</div>
+                    <div class="component-desc">Global CDN with 95% cache hit rate, serves frontend from 200+ edge locations</div>
+                    <div class="component-tech">Distribution ID: E1SDADDHAQZFDE</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📦</div>
+                    <div class="component-name">S3 Bucket</div>
+                    <div class="component-desc">Static website hosting for React build files (HTML, CSS, JS, assets)</div>
+                    <div class="component-tech">Bucket: coderoad-frontend</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔒</div>
+                    <div class="component-name">SSL/TLS</div>
+                    <div class="component-desc">Let's Encrypt certificates, automatic HTTPS redirect, TLS 1.2+</div>
+                    <div class="component-tech">Let's Encrypt, Auto-renewal</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🌐</div>
+                    <div class="component-name">Route 53</div>
+                    <div class="component-desc">DNS management for coderoad.online domain routing</div>
+                    <div class="component-tech">A Record, CNAME</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-line">↓ API Calls ↓</div>
+
+        <!-- Frontend Layer -->
+        <div class="layer frontend">
+            <div class="layer-title">
+                <span>⚛️</span>
+                <span>Frontend Application Layer</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">⚛️</div>
+                    <div class="component-name">React 18</div>
+                    <div class="component-desc">Component-based UI framework with hooks, context, and state management</div>
+                    <div class="component-tech">React, TypeScript, Vite</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🎨</div>
+                    <div class="component-name">UI Components</div>
+                    <div class="component-desc">Dashboard, Arena, Leaderboard, Profile, Match History pages</div>
+                    <div class="component-tech">TailwindCSS, Lucide Icons</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔄</div>
+                    <div class="component-name">State Management</div>
+                    <div class="component-desc">React Context for auth, local state for UI, localStorage for persistence</div>
+                    <div class="component-tech">Context API, useState, useEffect</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📡</div>
+                    <div class="component-name">API Client</div>
+                    <div class="component-desc">Axios HTTP client with interceptors for auth, error handling</div>
+                    <div class="component-tech">Axios, REST API</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-line">↓ REST API ↓</div>
+
+        <!-- AWS Infrastructure Layer -->
+        <div class="layer aws">
+            <div class="layer-title">
+                <span>🖥️</span>
+                <span>AWS Compute & Network Layer</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">🖥️</div>
+                    <div class="component-name">EC2 Instance</div>
+                    <div class="component-desc">t3.small (2 vCPU, 2GB RAM) running Ubuntu 22.04 LTS</div>
+                    <div class="component-tech">IP: 100.48.103.123</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔒</div>
+                    <div class="component-name">Security Group</div>
+                    <div class="component-desc">Firewall rules: Allow 80 (HTTP), 443 (HTTPS), 8000 (Backend), 22 (SSH)</div>
+                    <div class="component-tech">Inbound/Outbound Rules</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🌐</div>
+                    <div class="component-name">VPC</div>
+                    <div class="component-desc">Virtual Private Cloud for network isolation and security</div>
+                    <div class="component-tech">Subnet, Route Tables</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">💾</div>
+                    <div class="component-name">EBS Volume</div>
+                    <div class="component-desc">8GB SSD persistent storage for OS, app, database, logs</div>
+                    <div class="component-tech">gp3, Auto-backup</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-line">↓ Nginx Proxy ↓</div>
+
+        <!-- Backend Layer -->
+        <div class="layer backend">
+            <div class="layer-title">
+                <span>🐍</span>
+                <span>Backend Application Layer</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">⚡</div>
+                    <div class="component-name">FastAPI</div>
+                    <div class="component-desc">Modern async Python web framework with automatic OpenAPI docs</div>
+                    <div class="component-tech">Python 3.10, Uvicorn, 2 workers</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔐</div>
+                    <div class="component-name">Auth Service</div>
+                    <div class="component-desc">JWT authentication, password hashing (bcrypt), session management</div>
+                    <div class="component-tech">JWT, bcrypt, Pydantic</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🎮</div>
+                    <div class="component-name">Match Service</div>
+                    <div class="component-desc">Matchmaking queue, ELO-based pairing, match lifecycle management</div>
+                    <div class="component-tech">SQLAlchemy, Async</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">⚖️</div>
+                    <div class="component-name">Judge Service</div>
+                    <div class="component-desc">Code execution in sandboxes, test case validation, result scoring</div>
+                    <div class="component-tech">subprocess, tempfile</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📊</div>
+                    <div class="component-name">Rating Service</div>
+                    <div class="component-desc">ELO calculation, rating updates, confidence scoring</div>
+                    <div class="component-tech">Math algorithms</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🛡️</div>
+                    <div class="component-name">Integrity Service</div>
+                    <div class="component-desc">Cheat detection using XGBoost ML model, stylometry analysis</div>
+                    <div class="component-tech">XGBoost, scikit-learn</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🔄</div>
+                    <div class="component-name">Nginx</div>
+                    <div class="component-desc">Reverse proxy, SSL termination, load balancing, static file serving</div>
+                    <div class="component-tech">Nginx 1.18</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">⚙️</div>
+                    <div class="component-name">Systemd</div>
+                    <div class="component-desc">Service management, auto-restart on failure, logging</div>
+                    <div class="component-tech">coderoad.service</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-line">↓ API Calls ↓</div>
+
+        <!-- AI/ML Layer -->
+        <div class="layer ai">
+            <div class="layer-title">
+                <span>🤖</span>
+                <span>AI/ML Services Layer</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">🧠</div>
+                    <div class="component-name">Groq API</div>
+                    <div class="component-desc">LLM API for challenge generation, 5 API keys with rotation</div>
+                    <div class="component-tech">Groq SDK 1.0.0</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🦙</div>
+                    <div class="component-name">Llama 3.1 70B</div>
+                    <div class="component-desc">Large language model for generating unique coding problems</div>
+                    <div class="component-tech">70B parameters, Instruct</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🎯</div>
+                    <div class="component-name">Challenge Service</div>
+                    <div class="component-desc">Prompt engineering, difficulty scaling, test case generation</div>
+                    <div class="component-tech">Python, JSON parsing</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🌲</div>
+                    <div class="component-name">XGBoost Model</div>
+                    <div class="component-desc">Gradient boosting classifier for cheat detection (87% accuracy)</div>
+                    <div class="component-tech">XGBoost, pickle</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="connection-line">↓ Data Persistence ↓</div>
+
+        <!-- Data Layer -->
+        <div class="layer data">
+            <div class="layer-title">
+                <span>💾</span>
+                <span>Data Storage Layer</span>
+            </div>
+            <div class="components">
+                <div class="component">
+                    <div class="component-icon">🐘</div>
+                    <div class="component-name">PostgreSQL 15</div>
+                    <div class="component-desc">Relational database running in Docker container with persistent volume</div>
+                    <div class="component-tech">PostgreSQL 15 Alpine</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">📊</div>
+                    <div class="component-name">Database Schema</div>
+                    <div class="component-desc">Tables: players, matches, submissions, challenges, badges, queue</div>
+                    <div class="component-tech">SQLAlchemy ORM</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">🐳</div>
+                    <div class="component-name">Docker Container</div>
+                    <div class="component-desc">Isolated PostgreSQL container with volume mount for data persistence</div>
+                    <div class="component-tech">Docker Compose</div>
+                </div>
+                <div class="component">
+                    <div class="component-icon">💾</div>
+                    <div class="component-name">Data Models</div>
+                    <div class="component-desc">Player, Match, Submission, Challenge, Badge, MatchQueue entities</div>
+                    <div class="component-tech">Pydantic, SQLAlchemy</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Stats -->
+        <div style="margin-top: 50px; padding: 30px; background: #f8f9fa; border-radius: 15px;">
+            <h2 style="color: #667eea; margin-bottom: 20px; text-align: center;">📊 System Specifications</h2>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center;">
+                <div>
+                    <div style="font-size: 32px; font-weight: bold; color: #667eea;">7+</div>
+                    <div style="color: #666;">AWS Services</div>
+                </div>
+                <div>
+                    <div style="font-size: 32px; font-weight: bold; color: #667eea;">99.8%</div>
+                    <div style="color: #666;">Uptime</div>
+                </div>
+                <div>
+                    <div style="font-size: 32px; font-weight: bold; color: #667eea;">&lt;250ms</div>
+                    <div style="color: #666;">Avg Response</div>
+                </div>
+                <div>
+                    <div style="font-size: 32px; font-weight: bold; color: #667eea;">$0</div>
+                    <div style="color: #666;">Monthly Cost</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

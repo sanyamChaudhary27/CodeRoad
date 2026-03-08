@@ -35,7 +35,7 @@ class Player(Base):
     debug_draws = Column(Integer, default=0, nullable=False)
     
     # Profile customization
-    profile_picture = Column(String(500), nullable=True)  # URL or base64 data
+    profile_picture = Column(Text, nullable=True)  # URL or base64 data
     
     # Win rate calculated property
     @property
