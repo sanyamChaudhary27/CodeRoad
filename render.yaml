@@ -6,8 +6,9 @@ services:
     plan: free
     branch: feature/aws-deployment
     runtime: python
-    buildCommand: "pip install --no-cache-dir -r backend/requirements-render.txt"
+    buildCommand: "cd backend && pip install --no-cache-dir -r requirements-render.txt"
     startCommand: "cd backend && python init_db.py && uvicorn app.app:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
     envVars:
       - key: SECRET_KEY
         value: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
