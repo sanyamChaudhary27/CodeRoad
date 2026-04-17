@@ -46,6 +46,8 @@ class Settings(BaseSettings):
         "https://www.coderoad.online",
         "http://coderoad.online",
         "http://www.coderoad.online",
+        "https://code-road-7mvbpv7st-sanyamchaudhary27s-projects.vercel.app",
+        "https://code-road-inline-vercel.app",
     ]
     
     # Match settings
