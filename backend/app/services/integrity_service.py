@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from ..models import Submission, Player
-from .xgb_integrity_service import get_xgb_integrity_service
+# from .xgb_integrity_service import get_xgb_integrity_service
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,9 @@ class IntegrityService:
     
     def __init__(self):
         # Use XGBoost model only (no AI providers)
-        self.xgb_service = get_xgb_integrity_service()
-        logger.info("IntegrityService initialized with XGBoost model")
+        # self.xgb_service = get_xgb_integrity_service()
+        self.xgb_service = None
+        logger.info("IntegrityService initialized (XGBoost disabled for Render)")
 
     def analyze_submission(self, db: Session, submission_id: str) -> None:
         """
@@ -45,8 +46,8 @@ class IntegrityService:
         if submission.copy_paste_events > 0:
             submission.code_paste_probability = min(100.0, submission.copy_paste_events * 25.0)
         
-        # 2. Use XGBoost Model
-        if self.xgb_service.model_available:
+        # 2. Use XGBoost Model (disabled for Render)
+        if self.xgb_service and hasattr(self.xgb_service, 'model_available') and self.xgb_service.model_available:
             try:
                 logger.info(f"Using XGBoost model for {submission_id}")
                 self.xgb_service.analyze_submission(db, submission_id)
