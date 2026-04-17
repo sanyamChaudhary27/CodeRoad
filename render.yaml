@@ -6,6 +6,7 @@ services:
     plan: free
     branch: main
     runtime: python
+    pythonVersion: "3.11.9"
     buildCommand: "pip install --no-cache-dir -r backend/requirements-render.txt"
     startCommand: "cd backend && python init_db.py && uvicorn app.app:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
