@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: coderoad-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: feature/aws-deployment
+    runtime: python
+    buildCommand: "pip install --no-cache-dir -r backend/requirements-render.txt"
+    startCommand: "cd backend && python init_db.py && uvicorn app.app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: SECRET_KEY
+        value: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - key: DATABASE_URL
+        value: sqlite:///./coderoad.db
+      - key: GROQ_API_KEY
+        value: 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
+      - key: GROQ_API_KEY_2
+        value: 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
+      - key: GROQ_API_KEY_3
+        value: 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
+      - key: GROQ_API_KEY_4
+        value: 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
+      - key: GROQ_API_KEY_5
+        value: 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
+      - key: PYTHONUNBUFFERED
+        value: "1"
