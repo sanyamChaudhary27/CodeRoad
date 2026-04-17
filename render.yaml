@@ -13,7 +13,7 @@ services:
       - key: SECRET_KEY
         value: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
       - key: DATABASE_URL
-        value: sqlite:///./coderoad.db
+        value: postgresql://coderoad:sx24AaBRZyLk5LmPLx1000xxrqd8l1LBb@dpg-d7h3b4eqvct57bts8hg-a.oregon-postgres.render.com/coderoad
       - key: GROQ_API_KEY
         value: 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
       - key: GROQ_API_KEY_2
