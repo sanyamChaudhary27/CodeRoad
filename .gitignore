@@ -9,6 +9,9 @@
 *.crt
 *.p12
 secrets/
+DEPLOYMENT_SECRETS.md
+backend/railway.env.example
+render.yaml
 
 # ========================
 # PYTHON
