@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from .core.database import engine, Base, get_db
 from .core.security import verify_token
-from .api import auth, match, submission, leaderboard, websocket, challenge
+from .api import auth, match, submission, leaderboard, websocket, challenge, admin_migration
 from .config import settings
 
 # Configure logging
@@ -92,6 +92,7 @@ def create_app() -> FastAPI:
     app.include_router(leaderboard.router, prefix="/api/v1/leaderboard", tags=["Leaderboard"])
     app.include_router(challenge.router, prefix="/api/v1", tags=["Challenges"])
     app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
+    app.include_router(admin_migration.router, prefix="/api/v1", tags=["Admin"])
     
     # Health check endpoint
     @app.get("/health", tags=["Health"])
