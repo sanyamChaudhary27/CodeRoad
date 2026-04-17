@@ -1,11 +1,11 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 class PlayerRegister(BaseModel):
     """Request model for player registration."""
     username: str = Field(..., min_length=3, max_length=50, description="Unique username")
-    email: EmailStr = Field(..., description="Valid email address")
+    email: str = Field(..., description="Valid email address")
     password: str = Field(..., min_length=8, description="Strong password")
     
     class Config:
@@ -19,7 +19,7 @@ class PlayerRegister(BaseModel):
 
 class PlayerLogin(BaseModel):
     """Request model for player login."""
-    email: EmailStr = Field(..., description="Registered email")
+    email: str = Field(..., description="Registered email")
     password: str = Field(..., description="Account password")
     
     class Config:
