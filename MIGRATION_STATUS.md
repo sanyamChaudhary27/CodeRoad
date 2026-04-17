@@ -1,98 +1,87 @@
 # Migration Status - Render + Vercel Deployment
 
-## ✅ Completed Steps
+## ⚠️ IMPORTANT: Production Data Status
 
-### 1. PostgreSQL Database Setup
-- Created PostgreSQL database on Render
-- Connection details saved in DEPLOYMENT_SECRETS.md
-- Database URL: `postgresql://coderoad:sx24AaBRZyLk5LmPLx1000xxrqd8l1LBb@dpg-d7h3b4eqvct57bts8hg-a.oregon-postgres.render.com/coderoad`
+### EC2 Production Database (SAFE)
+- ✅ **51 players** on EC2 (confirmed via API)
+- ✅ EC2 backend still running and accessible
+- ✅ All production data intact
+- ✅ Site working at coderoad.online
 
-### 2. Backend Configuration
-- Updated `render.yaml` with PostgreSQL DATABASE_URL
-- Created `backend/init_db.py` to initialize tables
-- Created `backend/requirements-render.txt` with necessary dependencies
-- Created `backend/migrate_data.py` for data migration
-- Pushed to main branch - Render is now deploying
+### Local Database (Development Only)
+- ⚠️ Local `backend/coderoad.db` has only 3 players (development data)
+- ⚠️ This was migrated to Render (not production data)
 
-### 3. Database Backup
-- Original SQLite database safe at `backend/coderoad.db` (50 users)
-- Local backup exists
+### Render Database (Test Data Only)
+- ⚠️ Currently has 3 players from local dev database
+- ⚠️ Needs production database from EC2
 
-### 4. Migration Scripts
-- `migrate_to_postgres.py` - Local migration script (SSL issues from Windows)
-- `backend/migrate_data.py` - Server-side migration script (to run on Render)
+## 🔄 Current Situation
 
-## 🔄 In Progress
+### What Works
+- ✅ EC2 backend: http://100.48.103.123:8000 (51 players)
+- ✅ Render backend: https://coderoad-gmq6.onrender.com (3 test players)
+- ✅ Migration endpoint created and working
+- ✅ Registration/login working on both
 
-### Render Deployment
-- Render is currently deploying the backend
-- Will create PostgreSQL tables automatically via `init_db.py`
-- Backend URL: https://coderoad-gmq6.onrender.com
+### What's Needed
+- ⏳ Download production database from EC2
+- ⏳ Migrate 51 players to Render
+- ⏳ Update Vercel to point to Render
+- ⏳ Update DNS
 
-## ⏳ Next Steps
+## 📋 Next Steps
 
-### Step 1: Wait for Render Deployment
-Monitor Render dashboard for deployment completion
+### Step 1: Get Production Database from EC2
+**SSH connection timing out - need to fix**
 
-### Step 2: Migrate Data to PostgreSQL
-After Render deployment completes, we need to upload the SQLite database and run migration:
+Options:
+1. **Fix SSH access** (check AWS Security Group for port 22)
+2. **Use AWS Systems Manager Session Manager**
+3. **Create database export endpoint on EC2**
+4. **Download via AWS Console** (if EC2 has backup to S3)
 
-**Option A: Using Render Shell**
-1. Go to Render Dashboard → coderoad-backend → Shell
-2. Upload `backend/coderoad.db` file
-3. Run: `python migrate_data.py coderoad.db $DATABASE_URL`
+Command to try:
+```bash
+scp -i "C:\Users\HP\Downloads\coderoad-key.pem" ubuntu@100.48.103.123:/home/ubuntu/CodeRoad/backend/coderoad.db ./backend/coderoad_production.db
+```
 
-**Option B: Create Temporary Admin Endpoint**
-Create an endpoint that accepts the SQLite file and migrates data
+### Step 2: Migrate Production Data
+Once we have the production database:
+```bash
+python migrate_local_to_render.py backend/coderoad_production.db
+```
 
 ### Step 3: Update Vercel Environment Variables
-```
-VITE_API_URL=https://coderoad-gmq6.onrender.com/api/v1
-VITE_WS_URL=wss://coderoad-gmq6.onrender.com/ws
-```
+(Same as before - see VERCEL_ENV_UPDATE.md)
 
-### Step 4: Rebuild and Deploy Frontend on Vercel
-```bash
-cd frontend
-npm run build
-# Vercel will auto-deploy from main branch
-```
+### Step 4: Update DNS
+(Only after confirming all 51 players migrated successfully)
 
-### Step 5: Update DNS on Hostinger
-- Remove A record pointing to EC2 (100.48.103.123)
-- Add CNAME record: `coderoad.online` → `[your-vercel-domain].vercel.app`
+## 💡 Alternative: Hybrid Approach
 
-### Step 6: Test Everything
-1. Visit https://coderoad.online
-2. Test login with existing users
-3. Test registration
-4. Test matchmaking
-5. Test WebSocket connections
-6. Verify all features work
+Keep EC2 running temporarily:
+- New users → Render (free)
+- Existing 51 players → EC2 (until migration complete)
+- Gradually migrate when SSH access restored
 
-### Step 7: Stop AWS Resources (After Verification)
-```bash
-# Stop EC2 instance
-# Delete CloudFront distribution E1SDADDHAQZFDE
-# Empty and delete S3 bucket
-```
+## 🔐 Important Files
+- `backend/coderoad.db` - Local dev database (3 players)
+- EC2: `/home/ubuntu/CodeRoad/backend/coderoad.db` - Production (51 players)
+- SSH Key: `C:\Users\HP\Downloads\coderoad-key.pem`
 
-## 💰 Cost Savings
-- Current AWS cost: $15-25/month
-- New cost: $0/month (Render free tier + Vercel free tier)
-- Savings: $180-300/year
+## ✅ Completed
+- [x] Render backend deployed
+- [x] PostgreSQL database created
+- [x] Migration endpoint created
+- [x] Test migration successful (3 dev players)
+- [x] Confirmed 51 players safe on EC2
 
-## 🔐 Important Notes
-- Database has 50 users - cannot lose data
-- Site currently running on AWS with all data intact
-- PostgreSQL database created but empty (waiting for migration)
-- All credentials in DEPLOYMENT_SECRETS.md
-
-## 📊 Current State
-- **AWS**: Still running (EC2 + CloudFront + S3)
-- **Render**: Deploying backend with PostgreSQL (empty database)
-- **Vercel**: Frontend deployed but pointing to old AWS backend
-- **DNS**: Still pointing to AWS (A record to EC2)
-
-## 🎯 Goal
-Migrate from AWS to Render + Vercel without losing any user data.
+## ⏳ Pending
+- [ ] Fix SSH access to EC2
+- [ ] Download production database
+- [ ] Migrate 51 players to Render
+- [ ] Update Vercel environment variables
+- [ ] Test with production data
+- [ ] Update DNS
+- [ ] Stop EC2 (after verification)
