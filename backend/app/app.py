@@ -28,6 +28,11 @@ async def lifespan(app: FastAPI):
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
+        
+        # Auto-restore data if database is empty
+        from .core.auto_migrate import check_and_migrate
+        check_and_migrate()
+        
     except Exception as e:
         logger.error(f"Failed to create database tables: {e}")
     
