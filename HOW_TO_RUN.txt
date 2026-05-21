@@ -43,3 +43,6 @@ If you switch git branches and get database errors, run the migration:
 Then also install any new dependencies:
 
    pip install -r requirements.txt
+
+
+
