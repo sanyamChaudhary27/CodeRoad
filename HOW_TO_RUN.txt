@@ -6,7 +6,16 @@ HOW TO RUN CODE ROAD
    cd d:\CodeRoad\backend
    .\venv\Scripts\activate
 
-    python.exe -m uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
+   python -m uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
+
+ 
+   the virtual environment was created against a Python install that is no longer present.
+   Recreate it from an installed Python interpreter:
+
+   rmdir /s /q venv
+   py -3 -m venv venv
+   .\venv\Scripts\activate
+   pip install -r requirements.txt
    
 
 2. Start the frontend (Terminal 2):
