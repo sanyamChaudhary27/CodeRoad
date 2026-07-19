@@ -164,7 +164,7 @@ HOST=0.0.0.0
 PORT=8000
 
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/coderoad
+DATABASE_URL=sqlite:///./coderoad.db
 
 # Redis
 REDIS_URL=redis://localhost:6379/0

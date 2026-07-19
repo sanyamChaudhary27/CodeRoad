@@ -25,7 +25,7 @@ export interface DebugChallenge {
     description: string;
     is_hidden: boolean;
   }>;
-  coverage_metrics?: Record<string, any>;
+  coverage_metrics?: Record<string, unknown>;
   generated_at: string;
 }
 

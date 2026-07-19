@@ -75,6 +75,8 @@ dmypy.json
 *.sqlite3
 *.db-shm
 *.db-wal
+coderoad_production_export.json
+*production_export*.json
 
 # ========================
 # LOGS & TEMP

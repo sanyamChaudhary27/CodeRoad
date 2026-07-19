@@ -10,17 +10,15 @@ from ..models import Submission, Player
 logger = logging.getLogger(__name__)
 
 class IntegrityService:
-    """Service for analyzing submission integrity using XGBoost model."""
+    """Record inspectable behavioral signals without claiming AI detection."""
     
     def __init__(self):
-        # Use XGBoost model only (no AI providers)
-        # self.xgb_service = get_xgb_integrity_service()
         self.xgb_service = None
-        logger.info("IntegrityService initialized (XGBoost disabled for Render)")
+        logger.info("IntegrityService initialized with behavioral signals only")
 
     def analyze_submission(self, db: Session, submission_id: str) -> None:
         """
-        Analyze a submission using XGBoost model only.
+        Calculate simple, disclosed behavioral signals.
         """
         logger.info(f"Running integrity analysis on {submission_id}")
         
@@ -46,29 +44,16 @@ class IntegrityService:
         if submission.copy_paste_events > 0:
             submission.code_paste_probability = min(100.0, submission.copy_paste_events * 25.0)
         
-        # 2. Use XGBoost Model (disabled for Render)
-        if self.xgb_service and hasattr(self.xgb_service, 'model_available') and self.xgb_service.model_available:
-            try:
-                logger.info(f"Using XGBoost model for {submission_id}")
-                self.xgb_service.analyze_submission(db, submission_id)
-                logger.info(f"XGBoost analysis successful for {submission_id}")
-            except Exception as e:
-                logger.warning(f"XGBoost analysis failed: {e}")
-                # Set default values if XGBoost fails
-                submission.ai_assisted_probability = 0.0
-        else:
-            logger.warning("XGBoost model not available, using default values")
-            submission.cheat_probability = 0.0
-        
-        # Use paste probability as the main indicator
-        # (XGBoost model already provides cheat detection)
+        # Paste events are the only integrity signal currently collected. This
+        # is deliberately not described as cheating or AI-use detection.
         paste_prob = submission.code_paste_probability or 0.0
-        xgb_prob = submission.cheat_probability or 0.0
-        
-        # Combine paste detection with XGBoost analysis
-        overall = max(paste_prob, xgb_prob)  # Use the higher probability
+        overall = paste_prob
         submission.cheat_probability = min(100.0, overall)
-        submission.integrity_model_used = 'xgboost'
+        submission.integrity_model_used = 'behavioral_signals_v1'
         
         db.commit()
-        logger.info(f"Integrity analysis complete for {submission_id} (Cheat Prob: {overall:.1f}%)")
+        logger.info(
+            "Behavioral signal analysis complete for %s (paste signal: %.1f%%)",
+            submission_id,
+            overall,
+        )

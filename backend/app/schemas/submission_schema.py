@@ -1,21 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
 class CodeSubmissionRequest(BaseModel):
     """Request model for code submission."""
     match_id: str = Field(..., description="ID of the match")
-    code: str = Field(..., description="Source code to submit")
+    code: str = Field(..., min_length=1, max_length=50_000, description="Source code to submit")
     language: str = Field(..., description="Programming language (python, cpp, java, etc.)")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "match_id": "match_123",
                 "code": "def solution(n):\n    return n * 2",
                 "language": "python"
             }
         }
+    )
 
 class TestCaseResult(BaseModel):
     """Result of a single test case."""
@@ -63,25 +64,24 @@ class SubmissionResponse(BaseModel):
     code_paste_probability: Optional[float] = None  # 0-100
     ai_assisted_probability: Optional[float] = None  # 0-100
     classification_confidence: Optional[float] = None
+    integrity_signal_score: Optional[float] = None
+    integrity_model_used: Optional[str] = None
     
     created_at: datetime
     completed_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SubmissionDetailResponse(SubmissionResponse):
     """Detailed submission response with test case results."""
-    test_case_results: List[TestCaseResult] = []
+    test_case_results: List[TestCaseResult] = Field(default_factory=list)
     error_details: Optional[str] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SubmissionListResponse(BaseModel):
     """List of submissions for a match."""
     submissions: List[SubmissionResponse]
     total_count: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

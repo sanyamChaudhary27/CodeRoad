@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Trophy } from 'lucide-react';
+import { LogOut, Swords, Trophy } from 'lucide-react';
 import { authService, type User } from '../services/authService';
 
 interface HeaderProps {
@@ -39,6 +39,13 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
       
       {/* Right side - Actions */}
       <div className="flex items-center gap-4 relative z-10">
+        <button
+          onClick={() => navigate('/attack-arena')}
+          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-danger/20 to-accent/10 border border-danger/40 hover:border-danger/70 transition-all text-white font-bold shadow-lg hover:scale-105 group"
+        >
+          <Swords size={19} className="text-danger group-hover:rotate-12 transition-transform" />
+          <span>Attack Arena</span>
+        </button>
         {showLeaderboard && (
           <button 
             onClick={() => navigate('/leaderboard')}

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from .core.database import engine, Base, get_db
 from .core.security import verify_token
-from .api import auth, match, submission, leaderboard, websocket, challenge, data_migration
+from .api import auth, match, submission, leaderboard, websocket, challenge, attack_round, public
 from .config import settings
 
 # Configure logging
@@ -24,17 +24,13 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Code Road Backend...")
     
-    # Create database tables
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created successfully")
-        
-        # Auto-restore data if database is empty
-        from .core.auto_migrate import check_and_migrate
-        check_and_migrate()
-        
-    except Exception as e:
-        logger.error(f"Failed to create database tables: {e}")
+    if not settings.DEBUG and settings.SECRET_KEY == "your-secret-key-change-in-production":
+        raise RuntimeError("SECRET_KEY must be configured outside development")
+
+    # Schema creation is intentionally the only automatic database mutation.
+    # Production data must be migrated through an authenticated, reviewed job.
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created successfully")
     
     yield
     
@@ -45,8 +41,8 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
         title="Code Road API",
-        description="Real-time competitive coding platform with AI-generated challenges",
-        version="1.0.0",
+        description="Real-time coding competition with deterministically verified adversarial tests",
+        version="2.0.0",
         docs_url="/docs" if settings.DEBUG else None,
         redoc_url="/redoc" if settings.DEBUG else None,
         lifespan=lifespan
@@ -70,10 +66,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def global_exception_handler(request, exc):
         logger.error(f"Global error: {exc}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={"detail": "Internal Server Error", "message": str(exc)}
-        )
+        return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
     
     # Dependency to get current user from token
     async def get_current_user(
@@ -97,7 +90,12 @@ def create_app() -> FastAPI:
     app.include_router(leaderboard.router, prefix="/api/v1/leaderboard", tags=["Leaderboard"])
     app.include_router(challenge.router, prefix="/api/v1", tags=["Challenges"])
     app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
-    app.include_router(data_migration.router, prefix="/api/v1", tags=["Migration"])
+    app.include_router(public.router, prefix="/api/v1", tags=["Public"])
+    app.include_router(
+        attack_round.router,
+        prefix="/api/v1/attack-rounds",
+        tags=["Adversarial Test Arena"],
+    )
     
     # Health check endpoint
     @app.get("/health", tags=["Health"])
@@ -107,7 +105,7 @@ def create_app() -> FastAPI:
         return {
             "status": "healthy",
             "service": "code-road-backend",
-            "version": "1.0.0"
+            "version": "2.0.0"
         }
     
     # Root endpoint
@@ -116,7 +114,7 @@ def create_app() -> FastAPI:
         """Root endpoint with API information."""
         return {
             "message": "Welcome to Code Road API",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "docs": "/docs" if settings.DEBUG else None,
             "endpoints": {
                 "auth": "/api/v1/auth",
@@ -124,6 +122,7 @@ def create_app() -> FastAPI:
                 "submissions": "/api/v1/submissions",
                 "leaderboard": "/api/v1/leaderboard",
                 "challenges": "/api/v1/challenges",
+                "attack_rounds": "/api/v1/attack-rounds",
                 "websocket": "/ws"
             }
         }

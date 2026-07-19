@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -7,13 +7,14 @@ class QueueJoinRequest(BaseModel):
     preferred_format: str = Field(default="1v1", description="Match format (1v1, 2v2, etc.)")
     challenge_type: str = Field(default="dsa", description="Challenge type (dsa or debug)")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "preferred_format": "1v1",
                 "challenge_type": "dsa"
             }
         }
+    )
 
 class QueueStatusResponse(BaseModel):
     """Response for queue status."""
@@ -32,8 +33,7 @@ class PlayerMatchInfo(BaseModel):
     submissions_count: int
     is_done: bool
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RatingUpdateDetail(BaseModel):
     """Details of a single player's rating update."""
@@ -79,27 +79,26 @@ class MatchResponse(BaseModel):
     challenge_type: Optional[str] = None
     time_remaining: Optional[int] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MatchListResponse(BaseModel):
     """List of matches for a player."""
     matches: List[MatchResponse]
     total_count: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlayerDoneRequest(BaseModel):
     """Request to signal player is done with submission."""
     match_id: str = Field(..., description="ID of the match")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "match_id": "match_123"
             }
         }
+    )
 
 class MatchConclusionResponse(BaseModel):
     """Response when match concludes."""
@@ -115,5 +114,4 @@ class MatchConclusionResponse(BaseModel):
     result: Optional[str] = None
     concluded_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

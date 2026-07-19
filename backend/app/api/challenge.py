@@ -92,7 +92,7 @@ async def generate_challenge(
         logger.error(f"Failed to generate challenge: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate challenge: {str(e)}"
+            detail="Failed to generate challenge"
         )
 
 
@@ -127,7 +127,7 @@ async def get_challenge(
         logger.error(f"Failed to retrieve challenge: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve challenge: {str(e)}"
+            detail="Failed to retrieve challenge"
         )
 
 

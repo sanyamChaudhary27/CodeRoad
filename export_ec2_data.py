@@ -5,11 +5,14 @@ Run this script on EC2 to export all database data to JSON
 import psycopg2
 import json
 import sys
+import os
 
-DB_URL = "postgresql://coderoad:CodeRoad2026Secure!@localhost:5432/coderoad"
+DB_URL = os.getenv("SOURCE_DATABASE_URL")
 
 def export_database():
     """Export all database tables to JSON"""
+    if not DB_URL:
+        raise RuntimeError("Set SOURCE_DATABASE_URL before running this export")
     
     print("Connecting to PostgreSQL...")
     conn = psycopg2.connect(DB_URL)

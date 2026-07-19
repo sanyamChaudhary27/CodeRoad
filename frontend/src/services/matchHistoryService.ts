@@ -1,4 +1,5 @@
 import api from '../lib/api';
+import type { Challenge } from './challengeService';
 
 export interface MatchPlayer {
   player_id: string;
@@ -46,7 +47,7 @@ class MatchHistoryService {
     return response.data;
   }
 
-  async getChallengeDetails(challengeId: string) {
+  async getChallengeDetails(challengeId: string): Promise<Challenge> {
     const response = await api.get(`/challenges/${challengeId}`);
     return response.data;
   }

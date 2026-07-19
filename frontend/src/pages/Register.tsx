@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { UserPlus, Mail, Lock, User, AlertCircle, Code, Trophy, Target, Sparkles } from 'lucide-react';
+import { getApiErrorInfo, getApiErrorMessage } from '../lib/apiError';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -19,21 +20,16 @@ const Register = () => {
     try {
       await authService.register({ username, email, password });
       navigate('/dashboard');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err);
-      const status = err.response?.status;
-      const errMsg = err.response?.data?.detail;
+      const info = getApiErrorInfo(err);
       
-      if (status === 500) {
+      if (info.status === 500) {
         setError('Server Error: Something went wrong. Please try again.');
-      } else if (Array.isArray(errMsg)) {
-        setError(errMsg[0]?.msg || 'Validation error');
-      } else if (errMsg) {
-        setError(errMsg);
-      } else if (err.code === 'ERR_NETWORK' || !err.response) {
+      } else if (info.code === 'ERR_NETWORK' || !info.hasResponse) {
         setError('Network error: Unable to connect. Please check your connection.');
       } else {
-        setError('Registration failed. Please try again.');
+        setError(getApiErrorMessage(err, 'Registration failed. Please try again.'));
       }
     } finally {
       setLoading(false);

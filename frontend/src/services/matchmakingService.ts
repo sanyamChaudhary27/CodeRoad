@@ -31,6 +31,52 @@ export interface PlayerMatchInfo {
   is_done: boolean;
 }
 
+export interface RatingUpdate {
+  rating_change: number;
+  new_rating: number;
+}
+
+export interface MatchDetails {
+  match_id?: string;
+  id?: string;
+  status: string;
+  format?: string;
+  match_format?: string;
+  challenge_type?: 'dsa' | 'debug';
+  challenge_id?: string;
+  created_at?: string;
+  time_remaining?: number;
+  time_limit_seconds?: number;
+  player1?: PlayerMatchInfo | null;
+  player2?: PlayerMatchInfo | null;
+  player1_id?: string;
+  player2_id?: string;
+  player1_username?: string;
+  player2_username?: string;
+  player1_rating?: number;
+  player2_rating?: number;
+  player1_submissions?: number;
+  player2_submissions?: number;
+  player1_done?: boolean;
+  player2_done?: boolean;
+  player1_score?: number;
+  player2_score?: number;
+  winner_id?: string;
+  result?: string;
+  rating_updates?: { player1?: RatingUpdate; player2?: RatingUpdate };
+}
+
+export interface PlayerMatchHistory {
+  matches: MatchDetails[];
+  total_count: number;
+}
+
+export interface PracticeMatchResponse {
+  match_id?: string;
+  id?: string;
+  challenge_id?: string;
+}
+
 export interface LeaderboardResponse {
   leaderboard: LeaderboardPlayer[];
   total_players: number;
@@ -64,17 +110,17 @@ export const matchmakingService = {
     return response.data;
   },
 
-  async getMatch(matchId: string): Promise<any> {
+  async getMatch(matchId: string): Promise<MatchDetails> {
     const response = await api.get(`/matches/${matchId}`);
     return response.data;
   },
 
-  async getPlayerMatches(limit: number = 50) {
+  async getPlayerMatches(limit: number = 50): Promise<PlayerMatchHistory> {
     const response = await api.get(`/matches/player/history?limit=${limit}`);
     return response.data;
   },
 
-  async createPracticeMatch(difficulty: string = 'intermediate', challengeType: string = 'dsa', challengeId?: string) {
+  async createPracticeMatch(difficulty: string = 'intermediate', challengeType: string = 'dsa', challengeId?: string): Promise<PracticeMatchResponse> {
     const params = new URLSearchParams({ difficulty, challenge_type: challengeType });
     if (challengeId) {
       params.append('challenge_id', challengeId);

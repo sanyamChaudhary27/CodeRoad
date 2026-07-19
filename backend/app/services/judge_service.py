@@ -1,256 +1,312 @@
-import logging
-import subprocess
-import tempfile
-import os
-import json
-import time
-from sqlalchemy.orm import Session
-from datetime import datetime
+"""Isolated submission execution through a separately hosted Judge0 runner.
 
-from ..models import Submission, SubmissionStatus, Challenge, Match
+The API process must never execute player-provided code. The old implementation
+wrote source to a temporary file and invoked ``python3`` with ``subprocess`` on
+the web server. This module intentionally fails closed when Judge0 is not
+configured.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime
+import json
+import logging
+from typing import Any, Optional
+
+import httpx
+from sqlalchemy.orm import Session
+
+from ..config import settings
+from ..models import Challenge, Match, Submission, SubmissionStatus
 
 logger = logging.getLogger(__name__)
 
-class JudgeService:
-    """Service for evaluating code submissions."""
-    
-    def __init__(self):
-        self.supported_languages = {
-            "python": {
-                "extension": ".py",
-                "command": ["python3"],  # Use python3 explicitly
-                "timeout_seconds": 5
-            }
+
+class CodeExecutionUnavailable(RuntimeError):
+    """Raised when the isolated runner is unavailable or not configured."""
+
+
+@dataclass(frozen=True)
+class ExecutionResult:
+    """Normalized result returned by the isolated execution service."""
+
+    status_id: int
+    status: str
+    stdout: str
+    stderr: str
+    compile_output: str
+    execution_time_ms: Optional[float]
+    memory_used_mb: Optional[float]
+
+    @property
+    def accepted(self) -> bool:
+        # Judge0 status 3 is Accepted. Output is compared by CodeRoad so this
+        # only means the program completed successfully.
+        return self.status_id == 3
+
+    @property
+    def diagnostic(self) -> str:
+        return (self.compile_output or self.stderr or self.status).strip()[:500]
+
+
+class Judge0Client:
+    """Small, synchronous Judge0 adapter used by background submission jobs."""
+
+    def __init__(
+        self,
+        base_url: Optional[str] = None,
+        auth_token: Optional[str] = None,
+        auth_header: Optional[str] = None,
+        timeout_seconds: Optional[float] = None,
+        transport: Optional[httpx.BaseTransport] = None,
+    ) -> None:
+        self.base_url = (base_url if base_url is not None else settings.JUDGE0_API_URL).rstrip("/")
+        self.auth_token = auth_token if auth_token is not None else settings.JUDGE0_AUTH_TOKEN
+        self.auth_header = auth_header or settings.JUDGE0_AUTH_HEADER
+        self.timeout_seconds = timeout_seconds or max(
+            10.0,
+            float(settings.CODE_EXECUTION_TIMEOUT_SECONDS) + 5.0,
+        )
+        self.transport = transport
+
+    @property
+    def configured(self) -> bool:
+        return self.base_url.startswith(("https://", "http://"))
+
+    def execute_python(self, source_code: str, stdin: str) -> ExecutionResult:
+        if not self.configured:
+            raise CodeExecutionUnavailable(
+                "Isolated execution is not configured. Set JUDGE0_API_URL to a separately hosted runner."
+            )
+
+        headers = {"Accept": "application/json"}
+        if self.auth_token:
+            headers[self.auth_header] = self.auth_token
+
+        payload = {
+            "source_code": source_code,
+            "language_id": settings.JUDGE0_PYTHON_LANGUAGE_ID,
+            "stdin": stdin,
+            "cpu_time_limit": settings.CODE_EXECUTION_TIMEOUT_SECONDS,
+            "wall_time_limit": settings.CODE_EXECUTION_TIMEOUT_SECONDS + 1,
+            "memory_limit": settings.CODE_MEMORY_LIMIT_MB * 1024,
+            "max_file_size": 1024,
+            "enable_network": False,
         }
 
-    def evaluate_submission(self, db: Session, submission_id: str) -> None:
-        """
-        Evaluate a submission by running it against test cases.
-        Routes to appropriate judging method based on challenge type.
-        """
-        logger.info(f"Evaluating submission {submission_id}")
-        
-        # Fetch submission and determine challenge type
-        submission = db.query(Submission).filter(Submission.id == submission_id).first()
-        if not submission:
-            logger.error(f"Submission {submission_id} not found.")
-            return
-        
-        # Get match and challenge to determine type
-        match = db.query(Match).filter(Match.id == submission.match_id).first()
-        if not match:
-            submission.status = SubmissionStatus.RUNTIME_ERROR
-            submission.error_message = "Match not found for this submission"
-            submission.completed_at = datetime.utcnow()
-            db.commit()
-            return
-        
-        challenge = db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
-        if not challenge:
-            submission.status = SubmissionStatus.RUNTIME_ERROR
-            submission.error_message = "Challenge not found"
-            submission.completed_at = datetime.utcnow()
-            db.commit()
-            return
-        
-        # Route to appropriate judging method
-        challenge_type = getattr(challenge, 'challenge_type', 'dsa')
-        if challenge_type == 'debug':
-            self._evaluate_debug_submission(db, submission, challenge)
-        else:
-            self._evaluate_dsa_submission(db, submission, challenge)
-    
-    def _evaluate_debug_submission(self, db: Session, submission: Submission, challenge: Challenge) -> None:
-        """
-        Evaluate a debug challenge submission.
-        Debug challenges use the same driver as DSA but may have different internal logic.
-        """
-        logger.info(f"Evaluating debug submission {submission.id}")
-        
-        # Debug challenges actually use the same evaluation as DSA
-        # The difference is in the challenge content, not the judging
-        # So we just call the DSA evaluation method
-        self._evaluate_dsa_submission(db, submission, challenge)
-    
-    def _evaluate_dsa_submission(self, db: Session, submission: Submission, challenge: Challenge) -> None:
-        """
-        Evaluate a DSA challenge submission.
-        This is the original evaluation logic for solve(arr) format.
-        """
-        logger.info(f"Evaluating DSA submission {submission.id}")
-        
         try:
-            # Update status
-            submission.status = SubmissionStatus.EXECUTING
-            db.commit()
+            with httpx.Client(
+                timeout=self.timeout_seconds,
+                transport=self.transport,
+                follow_redirects=False,
+            ) as client:
+                response = client.post(
+                    f"{self.base_url}/submissions",
+                    params={"base64_encoded": "false", "wait": "true"},
+                    headers=headers,
+                    json=payload,
+                )
+                response.raise_for_status()
+                data = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise CodeExecutionUnavailable("The isolated execution service could not complete the request.") from exc
 
-            # Check language support
-            lang_str = submission.language.value.lower() if hasattr(submission.language, 'value') else str(submission.language).lower()
-            lang_config = self.supported_languages.get(lang_str)
-            if not lang_config:
-                submission.status = SubmissionStatus.COMPILE_ERROR
-                submission.error_message = f"Unsupported language: {submission.language}"
-                submission.completed_at = datetime.utcnow()
-                db.commit()
-                return
+        status_data = data.get("status") or {}
+        try:
+            status_id = int(status_data.get("id", 0))
+        except (TypeError, ValueError):
+            status_id = 0
 
-            test_cases = []
-            if challenge:
-                try:
-                    if challenge.test_cases:
-                        test_cases.extend(json.loads(challenge.test_cases))
-                except Exception as e:
-                    logger.error(f"Failed to parse test cases: {e}")
-            
-            if not test_cases:
-                logger.warning(f"No test cases found for challenge {challenge.id}")
-                submission.status = SubmissionStatus.SUCCESS
-                submission.test_cases_passed = 0
-                submission.test_cases_total = 0
-                submission.completed_at = datetime.utcnow()
-                db.commit()
-                return
+        execution_time_ms: Optional[float] = None
+        if data.get("time") not in (None, ""):
+            try:
+                execution_time_ms = float(data["time"]) * 1000
+            except (TypeError, ValueError):
+                pass
 
-            submission.test_cases_total = len(test_cases)
-            
-            # 2. Write code + driver to temp file
-            # The driver reads stdin and calls solve() with the correct number
-            # of arguments by inspecting the signature.
-            PYTHON_DRIVER = '''
+        memory_used_mb: Optional[float] = None
+        if data.get("memory") not in (None, ""):
+            try:
+                # Judge0 reports memory in kilobytes.
+                memory_used_mb = float(data["memory"]) / 1024
+            except (TypeError, ValueError):
+                pass
 
-import sys as _sys
+        return ExecutionResult(
+            status_id=status_id,
+            status=str(status_data.get("description") or "Unknown runner status"),
+            stdout=str(data.get("stdout") or ""),
+            stderr=str(data.get("stderr") or ""),
+            compile_output=str(data.get("compile_output") or ""),
+            execution_time_ms=execution_time_ms,
+            memory_used_mb=memory_used_mb,
+        )
+
+
+PYTHON_DRIVER = r'''
 import inspect as _inspect
+import sys as _sys
 
-def _main():
+def _coderoad_main():
     raw_input = _sys.stdin.read().strip()
-    if not raw_input:
-        return
-        
-    # Attempt to parse as integers
     try:
-        input_data = list(map(int, raw_input.split()))
+        input_data = list(map(int, raw_input.split())) if raw_input else []
     except ValueError:
-        # Fallback to list of strings
         input_data = raw_input.split()
-        if len(input_data) == 1:
-            input_data = input_data[0] # just the string
-            
+
     if "solve" not in globals():
-        print("Error: solve function not found")
-        return
-        
+        raise RuntimeError("solve function not found")
+
     solve_func = globals()["solve"]
-    sig = _inspect.signature(solve_func)
-    params = list(sig.parameters.values())
-    
-    # Ensure input_data is always a list for easier handling
-    if not isinstance(input_data, list):
-        input_data = [input_data]
-    
-    # Heuristic for mapping input to function signature
-    if len(params) == len(input_data) and len(params) > 1:
-        # e.g. solve(a, b) with "5 3" -> solve(5, 3)
-        result = solve_func(*input_data)
-    elif len(params) == 1:
-        # e.g. solve(arr) with "5 7 2" -> solve([5, 7, 2])
-        # Always pass as list for single parameter functions
+    params = list(_inspect.signature(solve_func).parameters.values())
+
+    if len(params) == 1:
         result = solve_func(input_data)
-    elif len(params) == 2:
-        # e.g. solve(arr, x) with "2 7 11 15 9" -> solve([2, 7, 11, 15], 9)
-        if len(input_data) >= 2:
-            result = solve_func(input_data[:-1], input_data[-1])
-        else:
-            result = solve_func(input_data, None)
+    elif len(params) == 2 and len(input_data) >= 2:
+        result = solve_func(input_data[:-1], input_data[-1])
     else:
-        # Fallback for 3+ args or other mismatches
         result = solve_func(*input_data[:len(params)])
 
-    # Consistent output formatting
     if result is None:
         print("")
     elif isinstance(result, (list, tuple)):
-        print(" ".join(str(v) for v in result))
+        print(" ".join(str(value) for value in result))
     elif isinstance(result, bool):
         print(str(result).lower())
     else:
         print(result)
 
-_main()
+_coderoad_main()
 '''
-            passed = 0
-            execution_times = []
-            
-            with tempfile.NamedTemporaryFile(suffix=lang_config["extension"], delete=False, mode='w', encoding='utf-8') as f:
-                f.write(submission.code)
-                f.write(PYTHON_DRIVER)
-                temp_file_path = f.name
 
-            try:
-                # 3. Run against each test case
-                for tc in test_cases:
-                    input_data = tc.get("input", "")
-                    expected_output = str(tc.get("expected_output", "")).strip()
-                    
-                    start_time = time.time()
-                    
-                    try:
-                        process = subprocess.run(
-                            lang_config["command"] + [temp_file_path],
-                            input=input_data,
-                            text=True,
-                            capture_output=True,
-                            timeout=lang_config["timeout_seconds"]
-                        )
-                        end_time = time.time()
-                        
-                        if process.returncode == 0:
-                            actual_output = process.stdout.strip()
-                            if actual_output == expected_output:
-                                passed += 1
-                            else:
-                                logger.debug(f"TC failed: expected={repr(expected_output)}, got={repr(actual_output)}")
-                            execution_times.append((end_time - start_time) * 1000)
-                        else:
-                            submission.error_message = process.stderr.strip()[:500]
-                            
-                    except subprocess.TimeoutExpired:
-                        submission.status = SubmissionStatus.TIMEOUT
-                        submission.error_message = "Execution timed out"
-                        break
-                    except Exception as e:
-                        submission.status = SubmissionStatus.RUNTIME_ERROR
-                        submission.error_message = str(e)[:500]
-                        break
 
-                # 4. Finalize Results
-                submission.test_cases_passed = passed
-                
-                if execution_times:
-                    submission.execution_time_ms = int(sum(execution_times) / len(execution_times))
-                
-                if submission.status == SubmissionStatus.EXECUTING:
-                    if passed == len(test_cases):
-                        submission.status = SubmissionStatus.SUCCESS
-                    else:
-                        submission.status = SubmissionStatus.RUNTIME_ERROR
-                        
-                submission.completed_at = datetime.utcnow()
-                db.commit()
-                
-            finally:
-                # Clean up
-                if os.path.exists(temp_file_path):
-                    os.remove(temp_file_path)
-                    
-            logger.info(f"DSA submission {submission.id} evaluated: {passed}/{len(test_cases)} passed.")
+def build_python_source(player_code: str) -> str:
+    """Append the stable CodeRoad driver without interpolating user input."""
 
-        except Exception as e:
-            # Catch-all: ensure status is always updated so the frontend never hangs
-            logger.error(f"Unexpected error evaluating DSA submission {submission.id}: {e}", exc_info=True)
-            try:
-                submission.status = SubmissionStatus.RUNTIME_ERROR
-                submission.error_message = f"Internal judge error: {str(e)[:300]}"
-                submission.completed_at = datetime.utcnow()
-                db.commit()
-            except Exception:
-                pass
+    return f"{player_code.rstrip()}\n\n{PYTHON_DRIVER}"
+
+
+class JudgeService:
+    """Evaluate submissions through the isolated execution boundary."""
+
+    def __init__(self, runner: Optional[Judge0Client] = None) -> None:
+        self.runner = runner or Judge0Client()
+
+    def run_python_solution(self, source_code: str, stdin: str) -> ExecutionResult:
+        """Run one solution/input pair through the isolated service."""
+
+        return self.runner.execute_python(build_python_source(source_code), stdin)
+
+    def evaluate_submission(self, db: Session, submission_id: str) -> None:
+        logger.info("Evaluating submission %s", submission_id)
+        submission = db.query(Submission).filter(Submission.id == submission_id).first()
+        if not submission:
+            logger.error("Submission %s not found", submission_id)
+            return
+
+        match = db.query(Match).filter(Match.id == submission.match_id).first()
+        challenge = (
+            db.query(Challenge).filter(Challenge.id == match.challenge_id).first()
+            if match
+            else None
+        )
+        if not match or not challenge:
+            self._finish_with_error(db, submission, "Match or challenge not found")
+            return
+
+        language = submission.language.value if hasattr(submission.language, "value") else str(submission.language)
+        if language.lower() != "python":
+            submission.status = SubmissionStatus.COMPILE_ERROR
+            submission.error_message = f"Unsupported language: {language}"
+            submission.completed_at = datetime.utcnow()
+            db.commit()
+            return
+
+        try:
+            test_cases = json.loads(challenge.test_cases or "[]")
+        except (TypeError, json.JSONDecodeError):
+            test_cases = []
+        if not test_cases:
+            self._finish_with_error(db, submission, "Challenge has no executable test cases")
+            return
+
+        submission.status = SubmissionStatus.EXECUTING
+        submission.test_cases_total = len(test_cases)
+        db.commit()
+
+        passed = 0
+        times: list[float] = []
+        peak_memory = 0.0
+
+        try:
+            for test_case in test_cases:
+                input_data = str(test_case.get("input", ""))
+                expected_output = str(test_case.get("expected_output", "")).strip()
+                result = self.run_python_solution(submission.code, input_data)
+
+                if result.execution_time_ms is not None:
+                    times.append(result.execution_time_ms)
+                if result.memory_used_mb is not None:
+                    peak_memory = max(peak_memory, result.memory_used_mb)
+
+                if not result.accepted:
+                    self._apply_runner_failure(submission, result)
+                    break
+
+                actual_output = result.stdout.strip()
+                if actual_output == expected_output:
+                    passed += 1
+                else:
+                    submission.error_message = (
+                        f"Wrong answer: expected {expected_output!r}, received {actual_output!r}"
+                    )[:500]
+
+            submission.test_cases_passed = passed
+            if times:
+                submission.execution_time_ms = int(sum(times) / len(times))
+            if peak_memory:
+                submission.memory_used_mb = peak_memory
+
+            if submission.status == SubmissionStatus.EXECUTING:
+                submission.status = (
+                    SubmissionStatus.SUCCESS
+                    if passed == len(test_cases)
+                    else SubmissionStatus.RUNTIME_ERROR
+                )
+        except CodeExecutionUnavailable as exc:
+            submission.status = SubmissionStatus.SECURITY_VIOLATION
+            submission.error_message = str(exc)[:500]
+        except Exception:
+            logger.exception("Unexpected isolated judge failure for %s", submission.id)
+            submission.status = SubmissionStatus.RUNTIME_ERROR
+            submission.error_message = "Internal judge error"
+        finally:
+            submission.completed_at = datetime.utcnow()
+            db.commit()
+
+        logger.info(
+            "Submission %s evaluated in isolated runner: %s/%s",
+            submission.id,
+            passed,
+            len(test_cases),
+        )
+
+    @staticmethod
+    def _apply_runner_failure(submission: Submission, result: ExecutionResult) -> None:
+        if result.status_id == 5:
+            submission.status = SubmissionStatus.TIMEOUT
+        elif result.status_id == 6:
+            submission.status = SubmissionStatus.COMPILE_ERROR
+        elif result.status_id in {7, 8, 9, 10, 11, 12}:
+            submission.status = SubmissionStatus.RUNTIME_ERROR
+        else:
+            submission.status = SubmissionStatus.RUNTIME_ERROR
+        submission.error_message = result.diagnostic
+
+    @staticmethod
+    def _finish_with_error(db: Session, submission: Submission, message: str) -> None:
+        submission.status = SubmissionStatus.RUNTIME_ERROR
+        submission.error_message = message
+        submission.completed_at = datetime.utcnow()
+        db.commit()

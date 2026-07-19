@@ -7,6 +7,7 @@ import sqlite3
 import psycopg2
 from psycopg2.extras import execute_values
 import sys
+import os
 
 def migrate_sqlite_to_postgres(sqlite_path, postgres_url):
     """Migrate data from SQLite to PostgreSQL"""
@@ -17,34 +18,13 @@ def migrate_sqlite_to_postgres(sqlite_path, postgres_url):
     sqlite_conn.row_factory = sqlite3.Row
     sqlite_cur = sqlite_conn.cursor()
     
-    # Connect to PostgreSQL without SSL (try both ways)
+    # Require encrypted transport by default. Override only for an explicitly
+    # local development database.
     print(f"Connecting to PostgreSQL...")
-    try:
-        # Try without SSL first
-        pg_conn = psycopg2.connect(postgres_url, sslmode='disable')
-    except:
-        try:
-            # Try with SSL but don't verify
-            pg_conn = psycopg2.connect(postgres_url, sslmode='require')
-        except Exception as e:
-            print(f"❌ Failed to connect to PostgreSQL: {e}")
-            print("\nTrying alternative connection method...")
-            # Parse URL and connect with individual parameters
-            import re
-            match = re.match(r'postgresql://([^:]+):([^@]+)@([^:]+):?(\d+)?/(.+)', postgres_url)
-            if match:
-                user, password, host, port, dbname = match.groups()
-                port = port or '5432'
-                pg_conn = psycopg2.connect(
-                    host=host,
-                    port=port,
-                    user=user,
-                    password=password,
-                    dbname=dbname,
-                    sslmode='prefer'
-                )
-            else:
-                raise e
+    pg_conn = psycopg2.connect(
+        postgres_url,
+        sslmode=os.getenv("POSTGRES_SSLMODE", "require"),
+    )
     
     print("✅ Connected to PostgreSQL")
     pg_cur = pg_conn.cursor()
@@ -98,10 +78,10 @@ def migrate_sqlite_to_postgres(sqlite_path, postgres_url):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python migrate_to_postgres.py <sqlite_path> [postgres_url]")
-        print("\nIf postgres_url is not provided, will use the one from DEPLOYMENT_SECRETS.md")
+        print("\nIf postgres_url is omitted, set TARGET_DATABASE_URL.")
         print("\nExample:")
         print("  python migrate_to_postgres.py backend/coderoad.db")
-        print("  python migrate_to_postgres.py backend/coderoad.db 'postgresql://user:pass@host:5432/dbname'")
+        print("  TARGET_DATABASE_URL='<provider connection string>' python migrate_to_postgres.py backend/coderoad.db")
         sys.exit(1)
     
     sqlite_path = sys.argv[1]
@@ -109,8 +89,10 @@ if __name__ == "__main__":
     if len(sys.argv) >= 3:
         postgres_url = sys.argv[2]
     else:
-        # Default PostgreSQL URL from Render
-        postgres_url = "postgresql://coderoad:sx24AaBRZyLk5LmPLx1000xxrqd8l1LBb@dpg-d7h3b4eqvct57bts8hg-a.oregon-postgres.render.com/coderoad"
-        print(f"Using default PostgreSQL URL from Render\n")
+        postgres_url = os.getenv("TARGET_DATABASE_URL")
+        if not postgres_url:
+            print("TARGET_DATABASE_URL is required when no URL argument is supplied")
+            sys.exit(1)
+        print("Using TARGET_DATABASE_URL from the environment\n")
     
     migrate_sqlite_to_postgres(sqlite_path, postgres_url)

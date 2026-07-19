@@ -1,35 +1,35 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
+import { publicStatsService } from '../services/publicStatsService';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(false);
+  const isVisible = true;
   const [activeFeature, setActiveFeature] = useState(0);
   const [counters, setCounters] = useState({ players: 0, matches: 0, challenges: 0 });
   const [timerSeconds, setTimerSeconds] = useState(84); // starts at 01:24
 
   useEffect(() => {
-    setIsVisible(true);
-
-    // Animate counters
-    const duration = 2000;
-    const steps = 60;
-    const interval = duration / steps;
-    const targets = { players: 25, matches: 200, challenges: 999 };
-    let step = 0;
-
-    const timer = setInterval(() => {
-      step++;
-      const progress = step / steps;
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-      setCounters({
-        players: Math.floor(targets.players * eased),
-        matches: Math.floor(targets.matches * eased),
-        challenges: Math.floor(targets.challenges * eased),
-      });
-      if (step >= steps) clearInterval(timer);
-    }, interval);
+    let counterTimer: ReturnType<typeof setInterval> | undefined;
+    publicStatsService.getStats().then((stats) => {
+      const duration = 1000;
+      const steps = 40;
+      let step = 0;
+      counterTimer = setInterval(() => {
+        step += 1;
+        const eased = 1 - Math.pow(1 - step / steps, 3);
+        setCounters({
+          players: Math.floor(stats.players * eased),
+          matches: Math.floor(stats.battles * eased),
+          challenges: Math.floor(stats.challenges * eased),
+        });
+        if (step >= steps && counterTimer) clearInterval(counterTimer);
+      }, duration / steps);
+    }).catch(() => {
+      // Zero is honest when statistics are temporarily unavailable.
+      setCounters({ players: 0, matches: 0, challenges: 0 });
+    });
 
     // Auto-rotate features
     const featureTimer = setInterval(() => {
@@ -42,7 +42,7 @@ const Landing = () => {
     }, 1000);
 
     return () => {
-      clearInterval(timer);
+      if (counterTimer) clearInterval(counterTimer);
       clearInterval(featureTimer);
       clearInterval(battleTimer);
     };
@@ -66,14 +66,14 @@ const Landing = () => {
       description: 'Find and fix bugs in broken code before your opponent does. A unique twist on competitive programming.',
     },
     {
-      icon: '🤖',
-      title: 'AI-Generated Challenges',
-      description: 'Every problem is unique. Our AI crafts challenges tailored to your rating across 8 different coding domains.',
+      icon: '🧪',
+      title: 'Adversarial Test Arena',
+      description: 'When both solutions pass, GPT‑5.6 proposes counterexamples and deterministic execution decides which one is robust.',
     },
     {
       icon: '🛡️',
-      title: 'Integrity Verified',
-      description: 'Advanced stylometric analysis and LLM detection ensure fair play. Your rank means something here.',
+      title: 'Inspectably Verified',
+      description: 'Expected outputs come from deterministic oracles and player code runs outside the API process in an isolated judge.',
     },
   ];
 
@@ -115,8 +115,8 @@ const Landing = () => {
           </h1>
           <p className="hero-subtitle">
             Battle opponents in real-time 1v1 coding duels. <br/>
-            Our AI generates unique challenges matched to your skill level - solve them faster, climb the
-            ELO leaderboard & earn your place among the best.
+            Solve under pressure, then survive the adversarial tie-break. GPT‑5.6 attacks assumptions;
+            verified execution—not model confidence—decides the result.
           </p>
           <div className="hero-actions">
             <button className="btn-primary" onClick={() => navigate('/register')}>
@@ -129,18 +129,18 @@ const Landing = () => {
           </div>
           <div className="hero-stats">
             <div className="stat-item">
-              <span className="stat-number">{counters.players.toLocaleString()}+</span>
+              <span className="stat-number">{counters.players.toLocaleString()}</span>
               <span className="stat-label">Players</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
-              <span className="stat-number">{counters.matches.toLocaleString()}+</span>
+              <span className="stat-number">{counters.matches.toLocaleString()}</span>
               <span className="stat-label">Battles Fought</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat-item">
-              <span className="stat-number">∞</span>
-              <span className="stat-label">AI-Generated Challenges</span>
+              <span className="stat-number">{counters.challenges.toLocaleString()}</span>
+              <span className="stat-label">Challenges Generated</span>
             </div>
           </div>
         </div>
@@ -148,8 +148,8 @@ const Landing = () => {
         <div className="hero-visual">
           <div className="battle-card">
             <div className="battle-card-header">
-              <span className="live-badge">● LIVE</span>
-              <span className="match-type">RANKED 1v1</span>
+              <span className="live-badge">INTERACTIVE SAMPLE</span>
+              <span className="match-type">ADVERSARIAL 1v1</span>
             </div>
             <div className="battle-card-players">
               <div className="player-side player-left">

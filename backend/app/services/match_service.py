@@ -229,14 +229,16 @@ class MatchService:
                         db=self.db,
                         difficulty=difficulty,
                         player_rating=player_rating,
-                        player_id=player_id
+                        player_id=player_id,
+                        use_ai=False,
                     )
                 else:
                     challenge = challenge_service.generate_challenge(
                         db=self.db, 
                         difficulty=difficulty,
                         player_rating=player_rating,
-                        player_id=player_id
+                        player_id=player_id,
+                        use_ai=False,
                     )
                 
                 match_data = self.create_match(
@@ -248,6 +250,7 @@ class MatchService:
                 
                 # Automatically start competitive matches
                 self.start_match(match_data["match_id"])
+                challenge_service.prewarm_template(challenge_type, difficulty)
                 
                 return {
                     "player_id": player_id,
@@ -485,15 +488,18 @@ class MatchService:
                     db=self.db,
                     difficulty=difficulty,
                     player_rating=player_rating,
-                    player_id=player_id
+                    player_id=player_id,
+                    use_ai=False,
                 )
             else:
                 challenge_data = challenge_service.generate_challenge(
                     db=self.db,
                     difficulty=difficulty,
                     player_rating=player_rating,
-                    player_id=player_id
+                    player_id=player_id,
+                    use_ai=False,
                 )
+            challenge_service.prewarm_template(challenge_type, difficulty)
         
         # Create WebSocket room ID
         websocket_room = f"match_solo_{uuid.uuid4().hex[:16]}"

@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
@@ -11,6 +11,12 @@ load_dotenv(env_file)
 
 class Settings(BaseSettings):
     """Application settings."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
     
     # Application
     APP_NAME: str = "Code Road"
@@ -68,6 +74,21 @@ class Settings(BaseSettings):
     CODE_EXECUTION_TIMEOUT_SECONDS: int = 5
     CODE_MEMORY_LIMIT_MB: int = 256
     CODE_CPU_LIMIT: int = 1
+
+    # Isolated code execution. CodeRoad never executes player code in the API
+    # process. Configure a separately hosted Judge0 instance for submissions.
+    JUDGE0_API_URL: str = os.getenv("JUDGE0_API_URL", "").rstrip("/")
+    JUDGE0_AUTH_TOKEN: Optional[str] = os.getenv("JUDGE0_AUTH_TOKEN") or None
+    JUDGE0_AUTH_HEADER: str = os.getenv("JUDGE0_AUTH_HEADER", "X-Auth-Token")
+    JUDGE0_PYTHON_LANGUAGE_ID: int = int(os.getenv("JUDGE0_PYTHON_LANGUAGE_ID", "71"))
+
+    # OpenAI powers hypothesis generation only. Candidate counterexamples still
+    # have to pass deterministic validation and isolated execution.
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY") or None
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    OPENAI_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "20"))
+    OPENAI_CACHE_MAX_ENTRIES: int = int(os.getenv("OPENAI_CACHE_MAX_ENTRIES", "128"))
+    ATTACK_ROUND_MAX_CANDIDATES: int = int(os.getenv("ATTACK_ROUND_MAX_CANDIDATES", "12"))
     
     # ML Service URLs (Gajendra's team)
     CHALLENGE_SERVICE_URL: str = os.getenv("CHALLENGE_SERVICE_URL", "http://localhost:8001")
@@ -85,10 +106,5 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
-
 # Create settings instance
 settings = Settings()

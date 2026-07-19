@@ -16,7 +16,7 @@ export interface SubmissionResponse {
   match_id: string;
   challenge_id?: string;
   player_id: string;
-  status: 'pending' | 'executing' | 'success' | 'runtime_error' | 'timeout';
+  status: 'pending' | 'executing' | 'success' | 'compile_error' | 'runtime_error' | 'timeout' | 'security_violation';
   code: string;
   language: string;
   test_cases_passed: number;
@@ -27,6 +27,8 @@ export interface SubmissionResponse {
   ai_quality_score: number | null;
   complexity_score: number | null;
   ai_assisted_probability: number | null;
+  integrity_signal_score: number | null;
+  integrity_model_used: string | null;
   score: number;
   created_at: string;
   completed_at: string | null;

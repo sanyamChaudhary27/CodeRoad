@@ -2,71 +2,31 @@ import logging
 import uuid
 import json
 import random
-import os
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Optional, Dict, List, Any, Set
+from threading import Lock
+from typing import DefaultDict, Optional, Dict, List, Any, Set, Tuple
 from sqlalchemy.orm import Session
+from ..config import settings
 from ..models import Challenge
 
 logger = logging.getLogger(__name__)
 
-# Try to import Groq
-try:
-    from groq import Groq
-    GROQ_AVAILABLE = True
-except ImportError:
-    GROQ_AVAILABLE = False
-    logger.warning("groq not installed - AI challenge generation disabled")
-
-
 class ChallengeService:
-    """Robust challenge generation service with Groq AI and multi-key rotation"""
+    """Challenge generation service with deterministic templates for live matches."""
     
     def __init__(self):
-        """Initialize service with multiple Groq API keys for redundancy"""
+        """Initialize deterministic challenge templates and optional AI state."""
         self.ai_available = False
         self.groq_clients = []
         self.current_key_index = 0
         self._recently_used_titles: Set[str] = set()
-        
-        logger.info("=== Initializing ChallengeService ===")
-        logger.info(f"GROQ_AVAILABLE (library installed): {GROQ_AVAILABLE}")
-        
-        # Load all Groq API keys
-        if GROQ_AVAILABLE:
-            groq_keys = []
-            # Try to load up to 10 keys (GROQ_API_KEY, GROQ_API_KEY_2, etc.)
-            for i in range(1, 11):
-                key_name = f"GROQ_API_KEY_{i}" if i > 1 else "GROQ_API_KEY"
-                api_key = os.getenv(key_name)
-                if api_key:
-                    groq_keys.append(api_key)
-                    logger.info(f"Found {key_name}: {api_key[:20]}...")
-            
-            logger.info(f"Total Groq keys found: {len(groq_keys)}")
-            
-            # Initialize clients for each key
-            for i, api_key in enumerate(groq_keys):
-                try:
-                    # Simple initialization without extra parameters
-                    client = Groq(api_key=api_key)
-                    self.groq_clients.append(client)
-                    logger.info(f"✓ Groq client {i+1} initialized successfully")
-                except Exception as e:
-                    logger.error(f"✗ Failed to initialize Groq client {i+1}: {e}")
-            
-            if self.groq_clients:
-                self.ai_available = True
-                logger.info(f"✓ Groq AI initialized with {len(self.groq_clients)} API keys")
-            else:
-                logger.warning("✗ No Groq API keys available")
-        else:
-            logger.warning("✗ Groq library not installed")
-        
-        if not self.ai_available:
-            logger.warning("⚠ No AI providers available, using templates only")
-        
-        logger.info(f"Final state: ai_available={self.ai_available}, groq_clients={len(self.groq_clients)}")
+        self._prewarmed_templates: DefaultDict[Tuple[str, str], List[Dict[str, Any]]] = defaultdict(list)
+        self._prewarming: Set[Tuple[str, str]] = set()
+        self._prewarm_lock = Lock()
+        self._prewarm_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="challenge-prewarm")
+        logger.info("ChallengeService initialized with deterministic live-match templates")
         
         self.templates = self._load_templates()
         
@@ -169,9 +129,13 @@ class ChallengeService:
             # Fall back to templates if AI fails or disabled
             if not challenge_data:
                 try:
-                    logger.info(f"Using template generation for {difficulty} challenge")
-                    challenge_data = self._generate_template_challenge(difficulty, domain)
-                    challenge_data['generation_method'] = 'template'
+                    challenge_data = self._take_prewarmed_template('dsa', difficulty)
+                    if challenge_data:
+                        challenge_data['generation_method'] = 'openai_selected_template'
+                    else:
+                        logger.info(f"Using template generation for {difficulty} challenge")
+                        challenge_data = self._generate_template_challenge(difficulty, domain)
+                        challenge_data['generation_method'] = 'template'
                 except Exception as e:
                     logger.warning(f"Template generation failed, using minimal fallback: {e}")
             
@@ -540,6 +504,74 @@ Generate a problem appropriate for rating {player_rating}!"""
             challenge['coverage_metrics'] = {}
         
         return challenge
+
+    def _take_prewarmed_template(self, challenge_type: str, difficulty: str) -> Optional[Dict[str, Any]]:
+        """Return an OpenAI-selected local template without making a network request."""
+        with self._prewarm_lock:
+            templates = self._prewarmed_templates[(challenge_type, difficulty)]
+            if not templates:
+                return None
+            template = templates.pop(0).copy()
+
+        template['id'] = str(uuid.uuid4())
+        template['generated_at'] = datetime.utcnow().isoformat()
+        template.setdefault('coverage_metrics', {})
+        template.setdefault('challenge_type', challenge_type)
+        return template
+
+    def prewarm_template(self, challenge_type: str, difficulty: str) -> None:
+        """Schedule one bounded OpenAI template selection for a future match."""
+        if not settings.OPENAI_API_KEY:
+            return
+
+        key = (challenge_type, difficulty)
+        with self._prewarm_lock:
+            if self._prewarmed_templates[key] or key in self._prewarming:
+                return
+            self._prewarming.add(key)
+
+        self._prewarm_executor.submit(self._prewarm_template, challenge_type, difficulty)
+
+    def _prewarm_template(self, challenge_type: str, difficulty: str) -> None:
+        key = (challenge_type, difficulty)
+        try:
+            from openai import OpenAI
+
+            templates = (
+                self._get_debug_templates()
+                if challenge_type == 'debug'
+                else self.templates
+            )
+            candidates = [template for template in templates if template['difficulty'] == difficulty] or templates
+            titles = [template['title'] for template in candidates]
+            client = OpenAI(
+                api_key=settings.OPENAI_API_KEY,
+                timeout=settings.OPENAI_TIMEOUT_SECONDS,
+                max_retries=0,
+            )
+            response = client.responses.create(
+                model=settings.OPENAI_MODEL,
+                input=(
+                    "Select exactly one challenge title from this JSON array for the next "
+                    f"{difficulty} {challenge_type} match. Return only the exact title. "
+                    f"Titles: {json.dumps(titles)}"
+                ),
+                max_output_tokens=64,
+                store=False,
+            )
+            title = response.output_text.strip()
+            selected = next((template for template in candidates if template['title'] == title), None)
+            if selected is None:
+                logger.warning("OpenAI prewarm returned an unknown template title")
+                return
+            with self._prewarm_lock:
+                self._prewarmed_templates[key].append(selected.copy())
+            logger.info("Prewarmed %s %s template with OpenAI", difficulty, challenge_type)
+        except Exception:
+            logger.exception("OpenAI template prewarm failed; deterministic templates remain available")
+        finally:
+            with self._prewarm_lock:
+                self._prewarming.discard(key)
     
     def _generate_minimal_challenge(self, difficulty: str) -> Dict[str, Any]:
         """Generate minimal fallback challenge"""
@@ -646,9 +678,13 @@ Generate a problem appropriate for rating {player_rating}!"""
             # Fall back to debug templates
             if not challenge_data:
                 try:
-                    logger.info(f"Using template generation for {difficulty} debug challenge")
-                    challenge_data = self._generate_template_debug_challenge(difficulty, recent_titles)
-                    challenge_data['generation_method'] = 'template'
+                    challenge_data = self._take_prewarmed_template('debug', difficulty)
+                    if challenge_data:
+                        challenge_data['generation_method'] = 'openai_selected_template'
+                    else:
+                        logger.info(f"Using template generation for {difficulty} debug challenge")
+                        challenge_data = self._generate_template_debug_challenge(difficulty, recent_titles)
+                        challenge_data['generation_method'] = 'template'
                 except Exception as e:
                     logger.warning(f"Debug template generation failed: {e}")
             
@@ -687,14 +723,14 @@ Generate a problem appropriate for rating {player_rating}!"""
 
     def _generate_template_debug_challenge(self, difficulty: str, recent_titles: Set[str]) -> Dict[str, Any]:
         """Generate debug challenge from templates"""
-        from .extended_templates import DEBUG_TEMPLATES
+        debug_templates = self._get_debug_templates()
         
         # Filter templates by difficulty
-        matching_templates = [t for t in DEBUG_TEMPLATES if t['difficulty'] == difficulty]
+        matching_templates = [t for t in debug_templates if t['difficulty'] == difficulty]
         
         if not matching_templates:
             # Fallback to any difficulty
-            matching_templates = DEBUG_TEMPLATES
+            matching_templates = debug_templates
         
         # Filter out recently used titles
         available_templates = [t for t in matching_templates if t['title'] not in recent_titles]
@@ -728,6 +764,75 @@ Generate a problem appropriate for rating {player_rating}!"""
         }
         
         return challenge_data
+
+    def _get_debug_templates(self) -> List[Dict[str, Any]]:
+        """Return bundled debug templates even when optional extended templates are absent."""
+        try:
+            from .extended_templates import DEBUG_TEMPLATES
+            if DEBUG_TEMPLATES:
+                return DEBUG_TEMPLATES
+        except ImportError:
+            logger.info("Using bundled debug challenge templates")
+
+        return [
+            {
+                'title': 'Correct the Even Number Counter',
+                'description': 'Fix the function so it returns how many values in the list are even.',
+                'difficulty': 'beginner',
+                'domain': 'arrays',
+                'broken_code': 'def count_evens(values):\n    count = 0\n    for value in values:\n        if value % 2 == 1:\n            count += 1\n    return count',
+                'bug_count': 1,
+                'bug_types': ['incorrect_condition'],
+                'input_format': 'A space-separated list of integers',
+                'output_format': 'The number of even integers',
+                'example_input': '1 2 3 4',
+                'example_output': '2',
+                'constraints': {'input_size': '1 ≤ n ≤ 100'},
+                'time_limit_seconds': 300,
+                'test_cases': [
+                    {'id': 'tc1', 'input': '1 2 3 4', 'expected_output': '2', 'category': 'basic', 'description': 'Mixed parity', 'is_hidden': False},
+                    {'id': 'tc2', 'input': '2 4 6', 'expected_output': '3', 'category': 'edge', 'description': 'All even', 'is_hidden': False},
+                ],
+            },
+            {
+                'title': 'Fix the Maximum Search',
+                'description': 'Fix the function so it returns the largest value in a non-empty list.',
+                'difficulty': 'intermediate',
+                'domain': 'arrays',
+                'broken_code': 'def find_maximum(values):\n    maximum = values[0]\n    for value in values[1:]:\n        if value < maximum:\n            maximum = value\n    return maximum',
+                'bug_count': 1,
+                'bug_types': ['reversed_comparison'],
+                'input_format': 'A space-separated non-empty list of integers',
+                'output_format': 'The largest integer',
+                'example_input': '3 7 2 9',
+                'example_output': '9',
+                'constraints': {'input_size': '1 ≤ n ≤ 100'},
+                'time_limit_seconds': 300,
+                'test_cases': [
+                    {'id': 'tc1', 'input': '3 7 2 9', 'expected_output': '9', 'category': 'basic', 'description': 'Mixed values', 'is_hidden': False},
+                    {'id': 'tc2', 'input': '-5 -1 -8', 'expected_output': '-1', 'category': 'edge', 'description': 'Negative values', 'is_hidden': False},
+                ],
+            },
+            {
+                'title': 'Repair the Prefix Sum',
+                'description': 'Fix the function so it returns the sum of every value in the list.',
+                'difficulty': 'advanced',
+                'domain': 'arrays',
+                'broken_code': 'def total(values):\n    result = 0\n    for value in values:\n        result = value\n    return result',
+                'bug_count': 1,
+                'bug_types': ['assignment_instead_of_accumulation'],
+                'input_format': 'A space-separated list of integers',
+                'output_format': 'The sum of all integers',
+                'example_input': '2 4 6',
+                'example_output': '12',
+                'constraints': {'input_size': '1 ≤ n ≤ 100'},
+                'time_limit_seconds': 300,
+                'test_cases': [
+                    {'id': 'tc1', 'input': '2 4 6', 'expected_output': '12', 'category': 'basic', 'description': 'Positive values', 'is_hidden': False},
+                    {'id': 'tc2', 'input': '-2 5 -1', 'expected_output': '2', 'category': 'edge', 'description': 'Mixed signs', 'is_hidden': False},
+                ],
+            },
+        ]
 
     def _generate_groq_debug_challenge(self, difficulty: str, player_rating: int, domain: Optional[str], db: Session, player_id: str, recent_titles: Set[str]) -> Dict[str, Any]:
         """Generate debug challenge using Groq AI"""

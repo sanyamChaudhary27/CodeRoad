@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { matchHistoryService, type Match } from '../services/matchHistoryService';
 import { matchmakingService } from '../services/matchmakingService';
 import { Trophy, Target, Clock, Code, Eye, RotateCcw, Calendar, Award, X } from 'lucide-react';
+import type { Challenge } from '../services/challengeService';
 
 interface MatchHistoryProps {
   userId: string;
@@ -14,14 +15,10 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [challengeDetails, setChallengeDetails] = useState<any>(null);
+  const [challengeDetails, setChallengeDetails] = useState<Challenge | null>(null);
   const [loadingChallenge, setLoadingChallenge] = useState(false);
 
-  useEffect(() => {
-    fetchMatchHistory();
-  }, [limit]);
-
-  const fetchMatchHistory = async () => {
+  const fetchMatchHistory = useCallback(async () => {
     try {
       setLoading(true);
       const data = await matchHistoryService.getMatchHistory(limit);
@@ -32,7 +29,11 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
+
+  useEffect(() => {
+    void fetchMatchHistory();
+  }, [fetchMatchHistory]);
 
   const handleViewMatch = async (match: Match) => {
     setSelectedMatch(match);
@@ -305,14 +306,14 @@ const MatchHistory = ({ userId, limit = 20 }: MatchHistoryProps) => {
                   <h3 className="text-lg font-semibold text-white mb-3">Challenge Description</h3>
                   <p className="text-text-secondary whitespace-pre-wrap">{challengeDetails.description}</p>
                   
-                  {challengeDetails.examples && challengeDetails.examples.length > 0 && (
+                  {challengeDetails.test_cases && challengeDetails.test_cases.length > 0 && (
                     <div className="mt-4">
                       <h4 className="text-sm font-semibold text-white mb-2">Examples:</h4>
                       <div className="space-y-2">
-                        {challengeDetails.examples.map((example: any, idx: number) => (
+                        {challengeDetails.test_cases.filter((test) => !test.is_hidden).map((example, idx) => (
                           <div key={idx} className="bg-bg-panel/50 p-3 rounded-lg font-mono text-sm">
                             <div className="text-text-secondary">Input: <span className="text-white">{example.input}</span></div>
-                            <div className="text-text-secondary">Output: <span className="text-success">{example.output}</span></div>
+                            <div className="text-text-secondary">Output: <span className="text-success">{example.expected_output}</span></div>
                           </div>
                         ))}
                       </div>

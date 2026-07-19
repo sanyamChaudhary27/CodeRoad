@@ -45,7 +45,9 @@ def _submission_to_dict(s: Submission) -> dict:
         "memory_used_mb": s.memory_used_mb,
         "ai_quality_score": s.ai_quality_score,
         "complexity_score": s.complexity_score,
-        "ai_assisted_probability": s.cheat_probability,
+        "ai_assisted_probability": None,
+        "integrity_signal_score": s.cheat_probability,
+        "integrity_model_used": s.integrity_model_used,
         "score": 0,  # Placeholder for Elo impact, to be implemented after match resolution
         "created_at": s.submitted_at,
         "completed_at": s.completed_at,

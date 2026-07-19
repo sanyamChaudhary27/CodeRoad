@@ -6,15 +6,15 @@ Connects to both databases and copies all data
 import psycopg2
 from psycopg2.extras import execute_values
 import sys
+import os
 
-# EC2 PostgreSQL (from .env file)
-EC2_DB_URL = "postgresql://coderoad:CodeRoad2026Secure!@100.48.103.123:5432/coderoad"
-
-# Render PostgreSQL
-RENDER_DB_URL = "postgresql://coderoad:sx24AaBRZyLk5LmPLx1000xxrqd8l1LBb@dpg-d7h3b4eqvct57bts8hg-a.oregon-postgres.render.com/coderoad"
+EC2_DB_URL = os.getenv("SOURCE_DATABASE_URL")
+RENDER_DB_URL = os.getenv("TARGET_DATABASE_URL")
 
 def migrate_postgres_to_postgres():
     """Migrate data from EC2 PostgreSQL to Render PostgreSQL"""
+    if not EC2_DB_URL or not RENDER_DB_URL:
+        raise RuntimeError("Set SOURCE_DATABASE_URL and TARGET_DATABASE_URL before migrating")
     
     print("Connecting to EC2 PostgreSQL...")
     try:

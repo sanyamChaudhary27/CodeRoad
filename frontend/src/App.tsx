@@ -8,6 +8,7 @@ import Arena from './pages/Arena';
 // import DebugArena from './pages/DebugArena'; // Not needed - going directly to Arena
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
+import AttackArena from './pages/AttackArena';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           {/* <Route path="/debug-arena" element={<DebugArena />} /> */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/attack-arena" element={<AttackArena />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

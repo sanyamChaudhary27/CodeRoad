@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { challengeService, type Challenge } from '../services/challengeService';
 import { submissionService, type SubmissionResponse } from '../services/submissionService';
-import { matchmakingService, type PlayerMatchInfo } from '../services/matchmakingService';
+import { matchmakingService, type MatchDetails, type PlayerMatchInfo } from '../services/matchmakingService';
 import { Play, CheckCircle2, XCircle, Clock, AlertTriangle, Terminal as TerminalIcon, User as UserIcon, Trophy, Activity, RefreshCw } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { authService, type User } from '../services/authService';
+import { getApiErrorMessage } from '../lib/apiError';
+import type { TestCase } from '../services/challengeService';
+
+interface ArenaRouteState {
+  matchId?: string;
+  challengeType?: 'dsa' | 'debug';
+}
 
 // Final Results Component (Moved to top for hoisting/scope clarity)
-const MatchResults = ({ data, user, onDashboard, challengeType }: { data: any, user: User, onDashboard: () => void, challengeType?: 'dsa' | 'debug' }) => {
+const MatchResults = ({ data, user, onDashboard, challengeType }: { data: MatchDetails, user: User, onDashboard: () => void, challengeType?: 'dsa' | 'debug' }) => {
   const isDraw = data.result === 'draw_draw' || data.result?.includes('draw');
   const isWinner = !isDraw && data.winner_id === user.id;
   
@@ -20,6 +27,7 @@ const MatchResults = ({ data, user, onDashboard, challengeType }: { data: any, u
   // Determine which rating to display based on challenge type
   const isDebugChallenge = challengeType === 'debug' || data.challenge_type === 'debug';
   const displayRating = ratingUpdate?.new_rating || (isDebugChallenge ? user.debug_rating : user.current_rating);
+  const ratingChange = ratingUpdate?.rating_change ?? 0;
   const ratingLabel = isDebugChallenge ? 'Debug Rating' : 'DSA Rating';
 
   return (
@@ -59,11 +67,11 @@ const MatchResults = ({ data, user, onDashboard, challengeType }: { data: any, u
                <span className="text-2xl font-black text-white">{myScore?.toFixed(0)}%</span>
             </div>
             
-            <div className={`flex items-center justify-between p-4 rounded-xl border ${ratingUpdate?.rating_change >= 0 ? 'bg-success/5 border-success/20' : 'bg-danger/5 border-danger/20'}`}>
-               <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>{ratingLabel} Impact</span>
+            <div className={`flex items-center justify-between p-4 rounded-xl border ${ratingChange >= 0 ? 'bg-success/5 border-success/20' : 'bg-danger/5 border-danger/20'}`}>
+               <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${ratingChange >= 0 ? 'text-success' : 'text-danger'}`}>{ratingLabel} Impact</span>
                <div className="flex items-center gap-3">
-                 <span className={`text-2xl font-black tabular-nums ${ratingUpdate?.rating_change >= 0 ? 'text-success' : 'text-danger'}`}>
-                   {ratingUpdate?.rating_change >= 0 ? `+${ratingUpdate.rating_change}` : ratingUpdate?.rating_change || 0}
+                 <span className={`text-2xl font-black tabular-nums ${ratingChange >= 0 ? 'text-success' : 'text-danger'}`}>
+                   {ratingChange >= 0 ? `+${ratingChange}` : ratingChange}
                  </span>
                  <span className="text-xs text-text-muted font-mono opacity-50">({displayRating || '---'})</span>
                </div>
@@ -85,9 +93,11 @@ const MatchResults = ({ data, user, onDashboard, challengeType }: { data: any, u
 const Arena = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const routeState = (location.state as ArenaRouteState | null) || {};
+  const initialMatchId = useRef<string | null>(routeState.matchId || null);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [matchId, setMatchId] = useState<string | null>(location.state?.matchId || null);
-  const [challengeType, setChallengeType] = useState<'dsa' | 'debug'>(location.state?.challengeType || 'dsa');
+  const [matchId, setMatchId] = useState<string | null>(initialMatchId.current);
+  const [challengeType, setChallengeType] = useState<'dsa' | 'debug'>(routeState.challengeType || 'dsa');
   const [opponent, setOpponent] = useState<PlayerMatchInfo | null>(null);
   const [code, setCode] = useState<string>('def solve():\n    # Write your code here\n    pass');
   const [opponentCode, setOpponentCode] = useState('// Opponent is typing...');
@@ -100,20 +110,17 @@ const Arena = () => {
   const [searchTime, setSearchTime] = useState<number>(30);
   const [isDone, setIsDone] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [matchData, setMatchData] = useState<any>(null);
+  const [matchData, setMatchData] = useState<MatchDetails | null>(null);
   const [userSubmissions, setUserSubmissions] = useState<number>(0);
 
   useEffect(() => {
     const initializeArena = async () => {
       console.log("Arena INITIALIZING - S5 Sync Fix");
       
-      // Prevent multiple concurrent initializations
-      if (status === 'polling' || status === 'submitting') return;
-
       // Set generating status to trigger skeleton loading
       setStatus('generating');
 
-      let localMatchId = matchId;
+      let localMatchId = initialMatchId.current;
       let localChallenge: Challenge | null = null;
       let localOpponent: PlayerMatchInfo | null = null;
       let localTimeLeft = 120;
@@ -127,12 +134,14 @@ const Arena = () => {
         if (!localMatchId) {
           const history = await matchmakingService.getPlayerMatches(5);
           if (history?.matches) {
-            const activeMatch = history.matches.find((m: any) => {
-              const isValid = !['concluded', 'cancelled', 'timeout'].includes(m.status);
-              const isRecent = (new Date().getTime() - new Date(m.created_at).getTime()) < 5 * 60 * 1000;
+            const activeMatch = history.matches.find((match) => {
+              const isValid = !['concluded', 'cancelled', 'timeout'].includes(match.status);
+              const isRecent = match.created_at
+                ? (Date.now() - new Date(match.created_at).getTime()) < 5 * 60 * 1000
+                : false;
               return isValid && isRecent;
             });
-            if (activeMatch) {
+            if (activeMatch?.match_id) {
               localMatchId = activeMatch.match_id;
             }
           }
@@ -142,7 +151,8 @@ const Arena = () => {
         if (!localMatchId) {
           console.log("S5: Creating fresh practice match");
           const practice = await matchmakingService.createPracticeMatch('intermediate');
-          localMatchId = practice.match_id || practice.id;
+          localMatchId = practice.match_id || practice.id || null;
+          if (!localMatchId) throw new Error('Practice match creation returned no match ID.');
         }
 
         // 3. Fetch Match & Challenge Details
@@ -170,15 +180,20 @@ const Arena = () => {
               // The opponent is whoever IS NOT the current user
               const p1_id = matchDetails.player1?.player_id || matchDetails.player1_id;
               const isUserPlayer1 = p1_id === currentUser.id;
+              const opponentId = isUserPlayer1
+                ? (matchDetails.player2_id || matchDetails.player2?.player_id)
+                : (matchDetails.player1_id || matchDetails.player1?.player_id);
               
               // Use flat fields from backend (player2_username, player2_rating, etc.)
-              localOpponent = {
-                player_id: isUserPlayer1 ? matchDetails.player2_id : matchDetails.player1_id,
-                username: isUserPlayer1 ? (matchDetails.player2_username || 'Opponent') : (matchDetails.player1_username || 'Opponent'),
-                current_rating: isUserPlayer1 ? (matchDetails.player2_rating || 1200) : (matchDetails.player1_rating || 1200),
-                submissions_count: isUserPlayer1 ? (matchDetails.player2_submissions || 0) : (matchDetails.player1_submissions || 0),
-                is_done: isUserPlayer1 ? (matchDetails.player2_done || false) : (matchDetails.player1_done || false)
-              };
+              if (opponentId) {
+                localOpponent = {
+                  player_id: opponentId,
+                  username: isUserPlayer1 ? (matchDetails.player2_username || 'Opponent') : (matchDetails.player1_username || 'Opponent'),
+                  current_rating: isUserPlayer1 ? (matchDetails.player2_rating || 1200) : (matchDetails.player1_rating || 1200),
+                  submissions_count: isUserPlayer1 ? (matchDetails.player2_submissions || 0) : (matchDetails.player1_submissions || 0),
+                  is_done: isUserPlayer1 ? (matchDetails.player2_done || false) : (matchDetails.player1_done || false)
+                };
+              }
               
               console.log("S5: Opponent data set:", localOpponent);
               console.log("S5: Match details:", {
@@ -218,16 +233,16 @@ const Arena = () => {
         if (localChallenge?.boilerplate_code) setCode(localChallenge.boilerplate_code);
 
         // Start search timer for multiplayer, or go directly to idle
-        if (isMultiplayer && status !== 'idle') {
+        if (isMultiplayer) {
           setSearchTime(5); 
           setStatus('searching');
         } else {
           setStatus('idle');
         }
 
-      } catch (err) {
-        console.error("S5: Critical Init Error", err);
-        setError("Failed to load combat data.");
+      } catch (initializationError: unknown) {
+        console.error("S5: Critical Init Error", initializationError);
+        setError(getApiErrorMessage(initializationError, "Failed to load combat data."));
         setStatus('idle');
       }
     };
@@ -292,7 +307,7 @@ const Arena = () => {
 
   // Periodic Refresh for Match Stats
   useEffect(() => {
-    if (!matchId || matchId === "prototype_match_id") return;
+    if (!matchId) return;
     
     const refreshInterval = setInterval(async () => {
       try {
@@ -328,8 +343,8 @@ const Arena = () => {
         
         console.log("Periodic refresh - opponent info:", opponentInfo);
         
-        if (matchDetails.player2_id) {
-          setOpponent(opponentInfo);
+        if (matchDetails.player2_id && opponentInfo.player_id) {
+          setOpponent({ ...opponentInfo, player_id: opponentInfo.player_id });
         }
 
         // Update local user submission count from server - only if server count is higher
@@ -353,28 +368,34 @@ const Arena = () => {
   // WebSocket Integration
   useEffect(() => {
     if (!matchId) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
     // Use environment variable for WebSocket URL
     const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
     const socketUrl = `${wsBaseUrl}/${matchId}`;
     
-    console.log('Connecting to WebSocket:', socketUrl);
-    const socket = new WebSocket(socketUrl);
+    const socket = new WebSocket(socketUrl, ['coderoad', `coderoad-auth.${token}`]);
 
     socket.onopen = () => {
-      console.log('WebSocket Connected to match:', matchId);
       setWs(socket);
     };
 
     socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
-        if (data.type === 'CODE_SYNC') {
+        const data: unknown = JSON.parse(event.data);
+        if (
+          typeof data === 'object' &&
+          data !== null &&
+          'type' in data &&
+          'code' in data &&
+          data.type === 'CODE_SYNC' &&
+          typeof data.code === 'string'
+        ) {
           setOpponentCode(data.code);
         }
-      } catch (err) {
-        console.warn('Failed to parse WS message:', event.data);
+      } catch {
+        console.warn('Failed to parse WebSocket message');
       }
     };
 
@@ -383,7 +404,6 @@ const Arena = () => {
     };
 
     socket.onclose = () => {
-      console.log('WebSocket Disconnected');
       setWs(null);
     };
 
@@ -397,7 +417,6 @@ const Arena = () => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
     const timeoutId = setTimeout(() => {
-      console.log('→ Broadcasting code update, length:', code.length);
       ws.send(JSON.stringify({
         type: 'CODE_SYNC',
         code: code
@@ -433,14 +452,12 @@ const Arena = () => {
     setSubmissionResult(null);
 
     try {
-      if (!matchId || matchId === "prototype_match_id") {
-        console.error("CRITICAL: Submitting without matchId!", { matchId, challengeId: challenge.id });
-      }
+      if (!matchId) throw new Error('A real match is required before submitting code.');
 
       // 1. Submit Code Structure
       console.log("EXECUTION: Submitting code", { match_id: matchId, challenge_id: challenge.id });
       const response = await submissionService.submitCode({
-        match_id: matchId || "prototype_match_id",
+        match_id: matchId,
         challenge_id: challenge.id,
         code,
         language: 'python'
@@ -471,12 +488,12 @@ const Arena = () => {
         try {
           const result = await submissionService.getSubmission(submissionId);
           
-          if (result.status === 'success' || result.status === 'runtime_error' || result.status === 'timeout') {
+          if (['success', 'compile_error', 'runtime_error', 'timeout', 'security_violation'].includes(result.status)) {
             clearInterval(pollInterval);
             setSubmissionResult(result);
             setStatus('idle');
           }
-        } catch (pollErr: any) {
+        } catch (pollErr: unknown) {
           // Stop polling on persistent errors to avoid flooding
           clearInterval(pollInterval);
           console.error("Polling failed:", pollErr);
@@ -484,14 +501,9 @@ const Arena = () => {
         }
       }, 1000);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Submission failed", err);
-      const detailedError = err.response?.data?.detail 
-        ? (typeof err.response.data.detail === 'string' 
-            ? err.response.data.detail 
-            : JSON.stringify(err.response.data.detail, null, 2))
-        : err.message || "Submission failed. Please try again.";
-      setError(detailedError);
+      setError(getApiErrorMessage(err, "Submission failed. Please try again."));
       setStatus('idle');
     }
   };
@@ -504,34 +516,14 @@ const Arena = () => {
       await matchmakingService.markPlayerDone(matchId);
       setIsDone(true);
       setStatus('idle');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to signal completion.");
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Failed to signal completion."));
       setStatus('idle');
     }
   };
 
-  // Show skeleton immediately if generating, or after 1 second if still loading
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  
-  useEffect(() => {
-    // Show skeleton immediately if status is generating
-    if (status === 'generating' && !challenge) {
-      setShowSkeleton(true);
-      return;
-    }
-    
-    // Otherwise show skeleton after 1 second if still loading
-    if (!challenge && (status === 'generating' || status === 'loading_skeleton')) {
-      const timer = setTimeout(() => setShowSkeleton(true), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowSkeleton(false);
-    }
-  }, [challenge, status]);
-
   if (!challenge || status === 'generating' || status === 'searching' || status === 'loading_skeleton') {
-    // Show skeleton UI after 1 second
-    if (showSkeleton && status !== 'searching') {
+    if (status !== 'searching') {
       return (
         <div className="min-h-screen p-4 md:p-6 flex flex-col animate-fade-in bg-bg-dark">
           <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
@@ -760,27 +752,27 @@ const Arena = () => {
             </div>
             <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">Constraints</h3>
             <ul className="list-disc pl-5 mb-6 text-sm text-text-secondary space-y-1">
-               {challenge.constraints && Object.entries(challenge.constraints).map(([_, v], i) => (
-                  <li key={i}><span className="text-white font-mono">{String(v)}</span></li>
+               {challenge.constraints && Object.values(challenge.constraints).map((value, i) => (
+                  <li key={i}><span className="text-white font-mono">{String(value)}</span></li>
                ))}
                <li>Time Limit: <span className="text-warning">{challenge.time_limit_seconds || 120}s</span></li>
             </ul>
             <h3 className="text-sm uppercase tracking-wider text-text-muted mb-3 font-bold">Examples</h3>
             <div className="space-y-4 mb-4">
-               {challenge.test_cases?.filter((t: any) => !t.is_hidden).map((tc: any, idx: number) => (
+               {challenge.test_cases?.filter((test: TestCase) => !test.is_hidden).map((testCase: TestCase, idx: number) => (
                  <div key={idx} className="bg-bg-dark rounded p-4 border border-border-light">
                     <div className="flex-between mb-2">
                       <span className="text-xs text-primary font-bold">Example {idx + 1}</span>
-                      <span className="badge badge-secondary">{tc.category}</span>
+                      <span className="badge badge-secondary">{testCase.category}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <span className="text-xs text-text-secondary block mb-1">Input</span>
-                        <pre className="text-sm font-mono text-white bg-black/40 p-2 rounded">{tc.input}</pre>
+                        <pre className="text-sm font-mono text-white bg-black/40 p-2 rounded">{testCase.input}</pre>
                       </div>
                       <div>
                         <span className="text-xs text-text-secondary block mb-1">Output</span>
-                        <pre className="text-sm font-mono text-success bg-black/40 p-2 rounded">{tc.expected_output}</pre>
+                        <pre className="text-sm font-mono text-success bg-black/40 p-2 rounded">{testCase.expected_output}</pre>
                       </div>
                     </div>
                  </div>
@@ -847,7 +839,7 @@ const Arena = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div><span className="text-xs text-text-muted block">Passed</span><span className="text-white text-lg">{submissionResult.test_cases_passed} / {challenge.test_cases?.length || '?'}</span></div>
                         <div><span className="text-xs text-text-muted block">Runtime</span><span className="text-white text-lg">{submissionResult.execution_time_ms ? `${submissionResult.execution_time_ms}ms` : 'N/A'}</span></div>
-                        <div><span className="text-xs text-text-muted block">Integrity</span><span className={(submissionResult.ai_assisted_probability ?? 0) > 70 ? "text-danger text-lg" : "text-success text-lg"}>{(submissionResult.ai_assisted_probability ?? 0) > 70 ? 'AI Check' : 'Human'}</span></div>
+                        <div><span className="text-xs text-text-muted block">Paste signal</span><span className="text-white text-lg">{submissionResult.integrity_signal_score != null ? `${submissionResult.integrity_signal_score.toFixed(0)}%` : 'N/A'}</span></div>
                         <div><span className="text-xs text-text-muted block">ELO</span><span className={submissionResult.score >= 0 ? "text-success text-lg" : "text-danger text-lg"}>{submissionResult.score >= 0 ? `+${submissionResult.score}` : submissionResult.score}</span></div>
                       </div>
                       {submissionResult.status !== 'success' && submissionResult.error_details && (

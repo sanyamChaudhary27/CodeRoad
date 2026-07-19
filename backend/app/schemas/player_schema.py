@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
@@ -8,27 +8,29 @@ class PlayerRegister(BaseModel):
     email: str = Field(..., description="Valid email address")
     password: str = Field(..., min_length=8, description="Strong password")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "username": "coder_pro",
                 "email": "[email]",
                 "password": "SecurePass123!"
             }
         }
+    )
 
 class PlayerLogin(BaseModel):
     """Request model for player login."""
     email: str = Field(..., description="Registered email")
     password: str = Field(..., description="Account password")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "email": "[email]",
                 "password": "SecurePass123!"
             }
         }
+    )
 
 class PlayerResponse(BaseModel):
     """Response model for player information."""
@@ -50,8 +52,7 @@ class PlayerResponse(BaseModel):
     debug_wins: Optional[int] = None
     debug_losses: Optional[int] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TokenResponse(BaseModel):
     """Response model for authentication."""
@@ -59,8 +60,8 @@ class TokenResponse(BaseModel):
     token_type: str = Field(default="bearer", description="Token type")
     player: PlayerResponse
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "token_type": "bearer",
@@ -79,6 +80,7 @@ class TokenResponse(BaseModel):
                 }
             }
         }
+    )
 
 class PlayerStatsResponse(BaseModel):
     """Detailed player statistics."""
@@ -97,8 +99,7 @@ class PlayerStatsResponse(BaseModel):
     worst_rating: int
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlayerLeaderboardEntry(BaseModel):
     """Player entry in leaderboard."""
@@ -110,29 +111,16 @@ class PlayerLeaderboardEntry(BaseModel):
     wins: int
     win_rate: float
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProfilePictureUpdate(BaseModel):
     """Request model for profile picture update."""
     profile_picture: Optional[str] = Field(None, description="Base64 encoded image or URL")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "profile_picture": "data:image/png;base64,iVBORw0KGgoAAAANS..."
             }
         }
-
-
-    class ProfilePictureUpdate(BaseModel):
-        """Request model for profile picture update."""
-        profile_picture: Optional[str] = Field(None, description="Base64 encoded image or URL")
-
-        class Config:
-            json_schema_extra = {
-                "example": {
-                    "profile_picture": "data:image/png;base64,iVBORw0KGgoAAAANS..."
-                }
-            }
-
+    )

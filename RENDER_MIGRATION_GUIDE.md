@@ -57,5 +57,6 @@ Once everything works:
 
 ## Database Connection Details
 
-- **External URL**: `postgresql://coderoad:sx24AaBRZyLk5LmPLx1000xxrqd8l1LBb@dpg-d7h3b4eqvct57bts8hg-a.oregon-postgres.render.com/coderoad`
-- **Internal URL** (use from Render): `postgresql://coderoad:sx24AaBRZyLk5LmPLx1000xxrqd8l1LBb@dpg-d7h3b4eqvct57bts8hg-a/coderoad`
+Copy the current external or internal URL from the Render dashboard directly
+into the destination service's `DATABASE_URL` environment variable. Never put
+database credentials in this repository or in screenshots.

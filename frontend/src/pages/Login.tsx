@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { LogIn, Mail, Lock, AlertCircle, Code, Zap, Shield, TrendingUp } from 'lucide-react';
+import { getApiErrorInfo, getApiErrorMessage } from '../lib/apiError';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,15 +19,12 @@ const Login = () => {
     try {
       await authService.login({ email, password });
       navigate('/dashboard');
-    } catch (err: any) {
-      if (err.code === 'ERR_NETWORK' || !err.response) {
+    } catch (err: unknown) {
+      const info = getApiErrorInfo(err);
+      if (info.code === 'ERR_NETWORK' || !info.hasResponse) {
         setError('Cannot connect to the backend server.');
       } else {
-        setError(
-          err.response?.data?.detail?.[0]?.msg || 
-          err.response?.data?.detail || 
-          'Invalid credentials. Please try again.'
-        );
+        setError(getApiErrorMessage(err, 'Invalid credentials. Please try again.'));
       }
     } finally {
       setLoading(false);

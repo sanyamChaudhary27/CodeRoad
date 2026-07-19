@@ -23,14 +23,25 @@ export interface AuthResponse {
   player: User;
 }
 
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 export const authService = {
-  async register(data: any): Promise<AuthResponse> {
+  async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await api.post('/auth/register', data);
     this.setSession(response.data);
     return response.data;
   },
 
-  async login(data: any): Promise<AuthResponse> {
+  async login(data: LoginRequest): Promise<AuthResponse> {
     const response = await api.post('/auth/login', data);
     this.setSession(response.data);
     return response.data;
@@ -43,7 +54,7 @@ export const authService = {
     return response.data;
   },
 
-  async updateProfilePicture(profilePicture: string): Promise<any> {
+  async updateProfilePicture(profilePicture: string): Promise<User> {
     const response = await api.put('/auth/profile-picture', { profile_picture: profilePicture });
     // Refresh user data
     await this.getCurrentUser();
