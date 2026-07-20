@@ -4,6 +4,7 @@ import { authService, type User as AuthUser } from '../services/authService';
 import { matchmakingService, type MatchQueueStatus } from '../services/matchmakingService';
 import { Activity, Users, ChevronRight, Award, Database, Bug, Palette, Code2, Clock, Trophy, Swords } from 'lucide-react';
 import Header from '../components/Header';
+import './Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -153,12 +154,12 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
+    <div className="dashboard-page min-h-screen p-6 lg:p-12 animate-fade-in max-w-7xl mx-auto">
       
       <Header user={user} />
 
       {/* Hero Stats Section */}
-      <div className="glass-panel p-8 mb-8 relative overflow-hidden">
+      <section className="dashboard-hero glass-panel p-8 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-danger/10 rounded-full blur-3xl"></div>
         
@@ -209,7 +210,7 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Stats Bar */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="dashboard-kpis grid grid-cols-4 gap-4">
             <div className="bg-white/5 rounded-lg p-4 border border-white/10">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-lg bg-primary/20 flex-center">
@@ -260,13 +261,13 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="dashboard-layout grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         {/* Left Column - Arena Stats */}
-        <div className="lg:col-span-1 space-y-4">
+        <aside className="dashboard-rail lg:col-span-1 space-y-4">
           
           {/* DSA Arena Stats */}
           <div className="glass-panel p-6 relative overflow-hidden">
@@ -354,28 +355,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="glass-panel p-6 relative overflow-hidden border border-pink-500/30">
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-12 w-12 flex-center">
-                  <Swords size={28} className="text-pink-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Attack Arena</h3>
-                  <p className="text-xs text-text-muted">Adversarial Test Rounds</p>
-                </div>
-              </div>
-              <p className="text-sm text-text-secondary mb-4">Find a verified counterexample that separates two solutions.</p>
-              <button
-                onClick={() => navigate('/attack-arena')}
-                className="btn btn-secondary w-full flex items-center justify-center gap-2 border border-pink-500/30 hover:border-pink-400"
-              >
-                Open Attack Arena
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-
           {/* DBMS Arena Stats */}
           <div className="glass-panel p-6 relative overflow-hidden opacity-60">
             <div className="relative">
@@ -456,13 +435,13 @@ const Dashboard = () => {
             </div>
           </div>
 
-        </div>
+        </aside>
 
         {/* Right Column - Arena Selection */}
-        <div className="lg:col-span-2 space-y-4">
+        <section className="dashboard-arena-list lg:col-span-2 space-y-4">
         
           {/* DSA Arena Card */}
-          <div className="glass-panel p-10 hover:border-primary/50 transition-all relative overflow-hidden group h-[240px]">
+          <article className="arena-command-card arena-command-card--dsa glass-panel p-10 hover:border-primary/50 transition-all relative overflow-hidden group h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
             
             <div className="relative flex flex-col h-full">
@@ -520,10 +499,10 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </article>
 
           {/* Debug Arena Card */}
-          <div className="glass-panel p-10 hover:border-danger/50 transition-all relative overflow-hidden group h-[240px]">
+          <article className="arena-command-card arena-command-card--debug glass-panel p-10 hover:border-danger/50 transition-all relative overflow-hidden group h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-danger/5 rounded-full blur-3xl group-hover:bg-danger/10 transition-all"></div>
             
             <div className="relative flex flex-col h-full">
@@ -587,10 +566,37 @@ const Dashboard = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </article>
+
+          <article className="arena-command-card arena-command-card--attack glass-panel p-10 relative overflow-hidden">
+            <div className="relative flex flex-col h-full">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="h-14 w-14 flex-center shrink-0">
+                  <Swords size={32} className="text-danger" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-bold text-white">Attack Arena</h3>
+                    <div className="arena-command-card__tag">LAB</div>
+                  </div>
+                  <p className="text-text-secondary mb-6">Find a verified counterexample that separates two plausible solutions.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-auto">
+                <button
+                  onClick={() => navigate('/attack-arena')}
+                  className="btn btn-attack px-6 py-3 flex items-center gap-2"
+                >
+                  <Swords size={18} />
+                  Open attack round
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          </article>
 
           {/* DBMS Arena Card */}
-          <div className="glass-panel p-10 hover:border-yellow-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
+          <article className="arena-command-card arena-command-card--future glass-panel p-10 hover:border-yellow-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-500/5 rounded-full blur-3xl"></div>
             
             <div className="relative flex flex-col h-full">
@@ -627,10 +633,10 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </article>
 
           {/* UI Arena Card */}
-          <div className="glass-panel p-10 hover:border-green-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
+          <article className="arena-command-card arena-command-card--future glass-panel p-10 hover:border-green-500/50 transition-all relative overflow-hidden opacity-60 h-[240px]">
             <div className="absolute top-0 right-0 w-40 h-40 bg-green-500/5 rounded-full blur-3xl"></div>
             
             <div className="relative flex flex-col h-full">
@@ -667,9 +673,9 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </article>
 
-        </div>
+        </section>
 
       </div>
 

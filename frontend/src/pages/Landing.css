@@ -1010,3 +1010,81 @@
     padding: 20px;
   }
 }
+
+/* Product refresh: preserve the content while removing decorative visual noise. */
+.landing-page {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.landing-page .grid-overlay {
+  background-image:
+    linear-gradient(rgba(173, 190, 215, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(173, 190, 215, 0.025) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+.landing-page .glow-orb,
+.landing-page .floating-code,
+.landing-page .feature-glow,
+.landing-page .arena-glow { display: none; }
+
+.landing-page .section-tag,
+.landing-page .hero-badge {
+  border-color: rgba(91, 141, 239, 0.28);
+  background: var(--primary-muted);
+  color: #a9c7ff;
+  letter-spacing: 0.12em;
+}
+
+.landing-page .title-accent {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: #9ec0ff;
+}
+
+.landing-page .battle-card,
+.landing-page .feature-card,
+.landing-page .arena-card,
+.landing-page .cta-content {
+  border-color: var(--border);
+  border-radius: 14px;
+  background: rgba(17, 20, 28, 0.88);
+  box-shadow: var(--shadow-md);
+}
+
+.landing-page .battle-card::before { background: rgba(173, 190, 215, 0.16); }
+
+.landing-page .feature-card:hover,
+.landing-page .feature-active,
+.landing-page .arena-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  background: var(--bg-raised);
+}
+
+.landing-page .btn-primary {
+  border-radius: 9px;
+  background: var(--primary);
+  color: #07111f;
+  box-shadow: none;
+}
+
+.landing-page .btn-primary::before { display: none; }
+.landing-page .btn-primary:hover { transform: translateY(-1px); background: var(--primary-hover); box-shadow: none; }
+
+.landing-page .btn-secondary,
+.landing-page .btn-arena {
+  border-color: var(--border-strong);
+  border-radius: 9px;
+  color: var(--text-primary);
+}
+
+.landing-page .btn-secondary:hover,
+.landing-page .btn-arena:hover { background: var(--bg-hover); border-color: var(--primary); }
+
+.landing-page .live-badge,
+.landing-page .challenge-difficulty,
+.landing-page .arena-rating,
+.landing-page .arena-domains { border-radius: 7px; }

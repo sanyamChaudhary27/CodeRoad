@@ -403,3 +403,25 @@
   .attack-stage-heading { align-items: flex-start; flex-direction: column; }
   .attack-proof-card { min-width: 0; width: 100%; }
 }
+
+/* Keep the adversarial workflow intense, but use the same calm product surfaces. */
+.attack-page { background: var(--bg-dark); }
+.attack-orb { display: none; }
+.attack-shell { width: min(100% - 40px, 1360px); }
+.attack-hero h1 span { color: #a9c7ff; background: none; -webkit-text-fill-color: currentColor; }
+.attack-proof-card,
+.attack-problem-card,
+.attack-editor-card,
+.attack-launch,
+.attack-results {
+  border-color: var(--border);
+  background: rgba(17, 20, 28, 0.94);
+  box-shadow: var(--shadow-md);
+}
+.attack-editor-card--a,
+.attack-editor-card--b { border-color: var(--border); }
+.attack-launch button { background: #e85c6b; box-shadow: none; }
+.attack-launch button:hover:not(:disabled) { box-shadow: none; filter: none; background: #fb7185; }
+.attack-versus { border-color: rgba(244, 63, 94, 0.34); background: var(--bg-raised); box-shadow: none; }
+.attack-particle { border-color: var(--border); background: rgba(255, 255, 255, 0.025); }
+.attack-particle--witness { border-color: rgba(244, 63, 94, 0.5); background: rgba(244, 63, 94, 0.08); box-shadow: none; }
