@@ -68,7 +68,7 @@ const Landing = () => {
     {
       icon: '🧪',
       title: 'Adversarial Test Arena',
-      description: 'When both solutions pass, NVIDIA NIM proposes counterexamples and deterministic execution decides which one is robust.',
+      description: 'When both solutions pass, GPT‑5.6 proposes counterexamples and deterministic execution decides which one is robust.',
     },
     {
       icon: '🛡️',
@@ -115,7 +115,7 @@ const Landing = () => {
           </h1>
           <p className="hero-subtitle">
             Battle opponents in real-time 1v1 coding duels. <br/>
-            Solve under pressure, then survive the adversarial tie-break. NVIDIA NIM attacks assumptions;
+            Solve under pressure, then survive the adversarial tie-break. GPT‑5.6 attacks assumptions;
             verified execution—not model confidence—decides the result.
           </p>
           <div className="hero-actions">
