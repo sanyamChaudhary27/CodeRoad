@@ -205,7 +205,15 @@ class NvidiaNimCandidateGenerator:
         content = "".join(content_parts).strip()
         if content.startswith("```"):
             content = "\n".join(content.splitlines()[1:-1]).strip()
-        parsed = CandidateBatch.model_validate_json(content)
+        raw_batch = json.loads(content)
+        raw_candidates = raw_batch.get("candidates", []) if isinstance(raw_batch, dict) else []
+        candidates: list[CandidateInput] = []
+        for candidate in raw_candidates:
+            try:
+                candidates.append(CandidateInput.model_validate(candidate))
+            except ValueError:
+                continue
+        parsed = CandidateBatch(candidates=candidates)
         result = GenerationResult(
             batch=parsed,
             source="nvidia-nim",

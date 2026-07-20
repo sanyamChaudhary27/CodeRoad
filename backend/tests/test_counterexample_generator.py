@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 from app.schemas.attack_round_schema import CandidateBatch, CandidateInput
@@ -54,3 +55,34 @@ def test_nvidia_generator_caches_identical_solution_pair() -> None:
     assert first.batch == second.batch
     assert completions.arguments is None
     assert "no new API credits" in second.note
+
+
+def test_nvidia_generator_discards_invalid_candidates() -> None:
+    NvidiaNimCandidateGenerator._cache.clear()
+    valid = CandidateInput(
+        values=[-5, -2, -8],
+        category="sign",
+        rationale="All values are negative.",
+        targets_assumption="The optimum is non-negative.",
+    ).model_dump()
+    payload = {"candidates": [valid, {**valid, "category": "edge-case"}]}
+
+    class InvalidCandidateCompletions:
+        def create(self, **kwargs):
+            del kwargs
+            return [
+                SimpleNamespace(
+                    choices=[
+                        SimpleNamespace(delta=SimpleNamespace(content=json.dumps(payload)))
+                    ]
+                )
+            ]
+
+    generator = NvidiaNimCandidateGenerator(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=InvalidCandidateCompletions()))
+    )
+
+    result = generator.generate(MAX_SUBARRAY, "solution a", "solution b")
+
+    assert result.source == "nvidia-nim"
+    assert result.batch.candidates == [CandidateInput.model_validate(valid)]
