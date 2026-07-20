@@ -136,11 +136,11 @@ const AttackArena = () => {
 
         <section className="attack-hero">
           <div>
-            <div className="attack-eyebrow"><Sparkles size={15} /> Build Week · GPT‑5.6</div>
+            <div className="attack-eyebrow"><Sparkles size={15} /> Build Week · OpenAI-assisted</div>
             <h1>Passing tests is only the <span>first round.</span></h1>
             <p>
-              Both solutions clear the ordinary suite. GPT‑5.6 attacks their assumptions with
-              structured counterexample hypotheses; deterministic tools decide what is actually true.
+              Both solutions clear the ordinary suite. Cached OpenAI hypotheses and deterministic
+              templates attack their assumptions; isolated tools decide what is actually true.
             </p>
           </div>
           <div className="attack-proof-card">
@@ -200,11 +200,11 @@ const AttackArena = () => {
         <section className="attack-launch">
           <div>
             <FlaskConical size={24} />
-            <div><strong>Ordinary suite → candidate generation → deterministic oracle → isolated execution</strong><span>One bounded model call. Every claim is independently checked.</span></div>
+            <div><strong>Ordinary suite → candidate generation → deterministic oracle → isolated execution</strong><span>Model prewarming never delays a verified result.</span></div>
           </div>
           <button onClick={runAttack} disabled={isRunning || !solutionA.trim() || !solutionB.trim()}>
             {isRunning ? <LoaderCircle className="attack-spin" size={19} /> : <Zap size={19} fill="currentColor" />}
-            {isRunning ? 'Running real executions…' : 'Attack both solutions'}
+            {isRunning ? 'Running isolated checks…' : 'Attack both solutions'}
             {!isRunning && <ArrowRight size={18} />}
           </button>
         </section>

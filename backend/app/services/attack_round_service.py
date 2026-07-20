@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable
 
 from ..config import settings
@@ -107,19 +108,24 @@ class AttackRoundService:
         solution_a: str,
         solution_b: str,
     ) -> list[BaselineTrial]:
-        trials: list[BaselineTrial] = []
-        for values_tuple in problem.ordinary_tests:
-            values = list(values_tuple)
-            expected = problem.expected_output(values)
-            trials.append(
-                BaselineTrial(
-                    values=values,
-                    expected_output=expected,
-                    solution_a=self._execute(solution_a, problem.stdin(values), expected),
-                    solution_b=self._execute(solution_b, problem.stdin(values), expected),
-                )
+        cases = [list(values_tuple) for values_tuple in problem.ordinary_tests]
+        expected_outputs = [problem.expected_output(values) for values in cases]
+        executions = self._execute_many(
+            [
+                (source_code, problem.stdin(values), expected)
+                for values, expected in zip(cases, expected_outputs)
+                for source_code in (solution_a, solution_b)
+            ]
+        )
+        return [
+            BaselineTrial(
+                values=values,
+                expected_output=expected,
+                solution_a=executions[index * 2],
+                solution_b=executions[index * 2 + 1],
             )
-        return trials
+            for index, (values, expected) in enumerate(zip(cases, expected_outputs))
+        ]
 
     def _verified_candidates(
         self,
@@ -145,24 +151,45 @@ class AttackRoundService:
         solution_a: str,
         solution_b: str,
     ) -> list[AttackTrial]:
-        trials: list[AttackTrial] = []
-        for candidate in candidates:
-            expected = problem.expected_output(candidate.values)
-            result_a = self._execute(solution_a, problem.stdin(candidate.values), expected)
-            result_b = self._execute(solution_b, problem.stdin(candidate.values), expected)
-            trials.append(
+        candidate_list = list(candidates)
+        expected_outputs = [problem.expected_output(candidate.values) for candidate in candidate_list]
+        executions = self._execute_many(
+            [
+                (source_code, problem.stdin(candidate.values), expected)
+                for candidate, expected in zip(candidate_list, expected_outputs)
+                for source_code in (solution_a, solution_b)
+            ]
+        )
+        return [
                 AttackTrial(
                     values=candidate.values,
-                    expected_output=expected,
+                    expected_output=expected_outputs[index],
                     category=candidate.category,
                     rationale=candidate.rationale,
                     targets_assumption=candidate.targets_assumption,
-                    solution_a=result_a,
-                    solution_b=result_b,
-                    distinguished=result_a.passed != result_b.passed,
+                    solution_a=executions[index * 2],
+                    solution_b=executions[index * 2 + 1],
+                    distinguished=executions[index * 2].passed != executions[index * 2 + 1].passed,
                 )
-            )
-        return trials
+            for index, candidate in enumerate(candidate_list)
+        ]
+
+    def _execute_many(
+        self,
+        requests: list[tuple[str, str, str]],
+    ) -> list[ExecutionView]:
+        if not requests:
+            return []
+        worker_count = min(
+            len(requests),
+            max(1, settings.ATTACK_ROUND_EXECUTION_WORKERS),
+        )
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            futures = [
+                executor.submit(self._execute, source_code, stdin, expected)
+                for source_code, stdin, expected in requests
+            ]
+            return [future.result() for future in futures]
 
     def _execute(self, source_code: str, stdin: str, expected: str) -> ExecutionView:
         result: ExecutionResult = self.judge.run_python_solution(source_code, stdin)

@@ -13,8 +13,8 @@ from app.services.judge_service import (
 )
 
 
-def test_unconfigured_runner_fails_closed() -> None:
-    client = Judge0Client(base_url="")
+def test_invalid_runner_fails_closed() -> None:
+    client = Judge0Client(base_url="not-a-url")
 
     with pytest.raises(CodeExecutionUnavailable, match="Isolated execution is not configured"):
         client.execute_python("print('never runs')", "")

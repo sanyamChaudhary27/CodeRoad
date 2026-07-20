@@ -7,7 +7,7 @@ from collections import OrderedDict
 from hashlib import sha256
 import json
 import logging
-from threading import Lock
+from threading import Lock, Thread
 from typing import Protocol
 
 from ..config import settings
@@ -106,8 +106,8 @@ class DeterministicCandidateGenerator:
             source="deterministic-fallback",
             model=None,
             note=(
-                "OPENAI_API_KEY is unavailable or the model call failed; CodeRoad used its "
-                "inspectable zero-credit boundary library."
+                "CodeRoad used its inspectable zero-credit boundary library while optional "
+                "OpenAI hypotheses are unavailable or being prepared."
             ),
         )
 
@@ -129,6 +129,36 @@ class OpenAICandidateGenerator:
             )
         self.client = client
 
+    @staticmethod
+    def _cache_key(problem: ProblemContract, solution_a: str, solution_b: str) -> str:
+        prompt_data = {
+            "problem": problem.public.model_dump(),
+            "solution_a": solution_a,
+            "solution_b": solution_b,
+        }
+        return sha256(
+            json.dumps(prompt_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+
+    def get_cached(
+        self,
+        problem: ProblemContract,
+        solution_a: str,
+        solution_b: str,
+    ) -> GenerationResult | None:
+        cache_key = self._cache_key(problem, solution_a, solution_b)
+        with self._cache_lock:
+            cached = self._cache.get(cache_key)
+            if cached is None:
+                return None
+            self._cache.move_to_end(cache_key)
+            return GenerationResult(
+                batch=cached.batch.model_copy(deep=True),
+                source=cached.source,
+                model=cached.model,
+                note=f"{cached.note} Reused a cached model result; no new API credits were used.",
+            )
+
     def generate(
         self,
         problem: ProblemContract,
@@ -140,19 +170,10 @@ class OpenAICandidateGenerator:
             "solution_a": solution_a,
             "solution_b": solution_b,
         }
-        cache_key = sha256(
-            json.dumps(prompt_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ).hexdigest()
-        with self._cache_lock:
-            cached = self._cache.get(cache_key)
-            if cached is not None:
-                self._cache.move_to_end(cache_key)
-                return GenerationResult(
-                    batch=cached.batch.model_copy(deep=True),
-                    source=cached.source,
-                    model=cached.model,
-                    note=f"{cached.note} Reused a cached model result; no new API credits were used.",
-                )
+        cache_key = self._cache_key(problem, solution_a, solution_b)
+        cached = self.get_cached(problem, solution_a, solution_b)
+        if cached is not None:
+            return cached
 
         response = self.client.responses.parse(
             model=settings.OPENAI_MODEL,
@@ -199,6 +220,9 @@ class OpenAICandidateGenerator:
 class ResilientCandidateGenerator:
     """Prefer OpenAI and degrade explicitly to deterministic candidates."""
 
+    _prewarm_lock = Lock()
+    _prewarming: set[str] = set()
+
     def __init__(
         self,
         primary: CandidateGenerator | None = None,
@@ -220,6 +244,13 @@ class ResilientCandidateGenerator:
             except Exception:
                 logger.exception("Could not initialize OpenAI candidate generator")
 
+        if isinstance(primary, OpenAICandidateGenerator):
+            cached = primary.get_cached(problem, solution_a, solution_b)
+            if cached is not None:
+                return cached
+            self._prewarm(primary, problem, solution_a, solution_b)
+            return self.fallback.generate(problem, solution_a, solution_b)
+
         if primary is not None:
             try:
                 return primary.generate(problem, solution_a, solution_b)
@@ -227,3 +258,28 @@ class ResilientCandidateGenerator:
                 logger.exception("OpenAI candidate generation failed; using deterministic fallback")
 
         return self.fallback.generate(problem, solution_a, solution_b)
+
+    @classmethod
+    def _prewarm(
+        cls,
+        generator: OpenAICandidateGenerator,
+        problem: ProblemContract,
+        solution_a: str,
+        solution_b: str,
+    ) -> None:
+        cache_key = generator._cache_key(problem, solution_a, solution_b)
+        with cls._prewarm_lock:
+            if cache_key in cls._prewarming:
+                return
+            cls._prewarming.add(cache_key)
+
+        def generate() -> None:
+            try:
+                generator.generate(problem, solution_a, solution_b)
+            except Exception:
+                logger.exception("OpenAI candidate prewarm failed")
+            finally:
+                with cls._prewarm_lock:
+                    cls._prewarming.discard(cache_key)
+
+        Thread(target=generate, name="coderoad-openai-prewarm", daemon=True).start()

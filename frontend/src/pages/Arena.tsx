@@ -220,9 +220,9 @@ const Arena = () => {
           }
         }
 
-        // 4. Challenge Fallback
+        // 4. Require the deterministic challenge assigned to this match.
         if (!localChallenge) {
-          localChallenge = await challengeService.generateChallenge('intermediate', 'arrays');
+          throw new Error('The match challenge was unavailable. Return to the dashboard and start a new match.');
         }
 
         // 5. Final State Commit

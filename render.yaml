@@ -22,7 +22,7 @@ services:
       - key: OPENAI_MODEL
         value: gpt-4.1-mini
       - key: JUDGE0_API_URL
-        sync: false
+        value: https://ce.judge0.com
       - key: JUDGE0_AUTH_TOKEN
         sync: false
       - key: PYTHONUNBUFFERED

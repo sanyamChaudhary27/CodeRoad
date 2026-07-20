@@ -77,18 +77,23 @@ class Settings(BaseSettings):
 
     # Isolated code execution. CodeRoad never executes player code in the API
     # process. Configure a separately hosted Judge0 instance for submissions.
-    JUDGE0_API_URL: str = os.getenv("JUDGE0_API_URL", "").rstrip("/")
+    JUDGE0_API_URL: str = (
+        os.getenv("JUDGE0_API_URL") or "https://ce.judge0.com"
+    ).rstrip("/")
     JUDGE0_AUTH_TOKEN: Optional[str] = os.getenv("JUDGE0_AUTH_TOKEN") or None
     JUDGE0_AUTH_HEADER: str = os.getenv("JUDGE0_AUTH_HEADER", "X-Auth-Token")
     JUDGE0_PYTHON_LANGUAGE_ID: int = int(os.getenv("JUDGE0_PYTHON_LANGUAGE_ID", "71"))
 
     # OpenAI powers hypothesis generation only. Candidate counterexamples still
     # have to pass deterministic validation and isolated execution.
-    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY") or None
+    OPENAI_API_KEY: Optional[str] = (
+        os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_AI_API_KEY") or None
+    )
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
     OPENAI_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "20"))
     OPENAI_CACHE_MAX_ENTRIES: int = int(os.getenv("OPENAI_CACHE_MAX_ENTRIES", "128"))
     ATTACK_ROUND_MAX_CANDIDATES: int = int(os.getenv("ATTACK_ROUND_MAX_CANDIDATES", "12"))
+    ATTACK_ROUND_EXECUTION_WORKERS: int = int(os.getenv("ATTACK_ROUND_EXECUTION_WORKERS", "4"))
     
     # ML Service URLs (Gajendra's team)
     CHALLENGE_SERVICE_URL: str = os.getenv("CHALLENGE_SERVICE_URL", "http://localhost:8001")

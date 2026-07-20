@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService, type User as AuthUser } from '../services/authService';
 import { matchmakingService, type MatchQueueStatus } from '../services/matchmakingService';
-import { Activity, Users, ChevronRight, Award, Database, Bug, Palette, Code2, Clock, Trophy } from 'lucide-react';
+import { Activity, Users, ChevronRight, Award, Database, Bug, Palette, Code2, Clock, Trophy, Swords } from 'lucide-react';
 import Header from '../components/Header';
 
 const Dashboard = () => {
@@ -351,6 +351,28 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="glass-panel p-6 relative overflow-hidden border border-pink-500/30">
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-12 w-12 flex-center">
+                  <Swords size={28} className="text-pink-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Attack Arena</h3>
+                  <p className="text-xs text-text-muted">Adversarial Test Rounds</p>
+                </div>
+              </div>
+              <p className="text-sm text-text-secondary mb-4">Find a verified counterexample that separates two solutions.</p>
+              <button
+                onClick={() => navigate('/attack-arena')}
+                className="btn btn-secondary w-full flex items-center justify-center gap-2 border border-pink-500/30 hover:border-pink-400"
+              >
+                Open Attack Arena
+                <ChevronRight size={18} />
+              </button>
             </div>
           </div>
 
