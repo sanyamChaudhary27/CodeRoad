@@ -4,14 +4,14 @@
 
 CodeRoad is a real-time coding competition platform. Its Build Week feature,
 the **Adversarial Test Arena**, compares two Python solutions that both pass an
-ordinary test suite, asks the configured OpenAI model for structured counterexample hypotheses, and
+ordinary test suite, asks the configured NVIDIA NIM model for structured counterexample hypotheses, and
 then uses deterministic code to prove which hypotheses are valid.
 
 The important trust boundary is simple:
 
 > **The model proposes. Code proves.**
 
-The configured OpenAI model never supplies the expected answer and never declares the winner. A
+The configured NVIDIA NIM model never supplies the expected answer and never declares the winner. A
 problem-specific oracle computes the correct answer, input contracts reject
 invalid cases, and the two player programs execute in a separately hosted
 Judge0 sandbox.
@@ -27,7 +27,7 @@ The Adversarial Test Arena makes that hidden weakness visible:
 
 1. Run both solutions against the ordinary suite.
 2. Continue only when both pass.
-3. Ask the configured OpenAI model for a typed batch of candidate inputs designed to distinguish
+3. Ask the configured NVIDIA NIM model for a typed batch of candidate inputs designed to distinguish
    the implementations.
 4. Validate every candidate against explicit size and value constraints.
 5. Compute each expected output with a deterministic oracle.
@@ -42,7 +42,7 @@ that arbitrary programs can already be judged correctly.
 
 ## The demo moment
 
-The preloaded solutions both pass four ordinary cases. The configured OpenAI model (or the
+The preloaded solutions both pass four ordinary cases. The configured NVIDIA NIM model (or the
 zero-credit fallback) proposes an all-negative input such as `[-5, -2, -8]`.
 The deterministic oracle returns `-2`:
 
@@ -60,11 +60,11 @@ backend's real execution response.
 
 - Two Monaco code editors with a clear A/B duel.
 - Ordinary-suite qualification.
-- Typed adversarial candidates from one bounded OpenAI Responses API call.
+- Typed adversarial candidates from one bounded NVIDIA NIM streaming API call.
 - Deterministic input validation and expected-output calculation.
 - Isolated Judge0 execution.
 - Animated candidate swarm, verified witness, and robustness verdict.
-- Explicit source label: `openai` or `deterministic-fallback`.
+- Explicit source label: `nvidia-nim` or `deterministic-fallback`.
 - In-memory LRU cache for identical solution pairs, avoiding repeat model spend.
 
 ### Existing CodeRoad platform
@@ -81,7 +81,7 @@ backend's real execution response.
 flowchart TD
     UI["React Attack Arena"] --> API["FastAPI attack endpoint"]
     API --> BASE["Ordinary test suite"]
-    BASE --> GEN["OpenAI typed candidates"]
+    BASE --> GEN["NVIDIA NIM typed candidates"]
     GEN --> CHECK["Contract validator + oracle"]
     CHECK --> RUN["Separate Judge0 sandbox"]
     RUN --> VERDICT["Verified witness + verdict"]
@@ -89,7 +89,7 @@ flowchart TD
     FALLBACK["Zero-credit candidate library"] --> CHECK
 ```
 
-The configured OpenAI model is used only for the step where language-model reasoning adds value:
+The configured NVIDIA NIM model is used only for the step where language-model reasoning adds value:
 reading two implementations and proposing small, diverse attacks. The
 deterministic path owns all safety- and correctness-critical decisions.
 
@@ -102,7 +102,7 @@ deterministic path owns all safety- and correctness-critical decisions.
 | Invalid model output cannot reach execution | Pydantic structured output plus deterministic length/type/range validation |
 | The model cannot choose the winner | Winner is derived from independently executed pass/fail results |
 | Repeated clicks do not repeatedly spend credits | Identical problem/solution pairs use a bounded in-memory LRU cache |
-| Missing OpenAI access does not fake a model run | The response explicitly reports `deterministic-fallback` |
+| Missing NVIDIA NIM access does not fake a model run | The response explicitly reports `deterministic-fallback` |
 | Missing Judge0 does not run code locally | The endpoint returns `503` and labels isolated execution unavailable |
 | Match rooms reject spectators/injection | WebSockets require a valid JWT and database-confirmed match membership |
 
@@ -110,8 +110,8 @@ deterministic path owns all safety- and correctness-critical decisions.
 
 - Frontend: React 19, TypeScript, Vite 7, Monaco Editor, Lucide icons.
 - Backend: FastAPI, Pydantic, SQLAlchemy, PostgreSQL or SQLite.
-- AI: OpenAI Responses API with `responses.parse` and a Pydantic
-  `CandidateBatch` schema; default model `gpt-4.1-mini`.
+- AI: NVIDIA NIM's OpenAI-compatible streaming Chat Completions API with a
+  validated Pydantic `CandidateBatch`; default model `deepseek-ai/deepseek-v4-pro`.
 - Execution: separately hosted Judge0 CE or managed Judge0.
 - Existing real-time layer: WebSockets and Redis configuration.
 
@@ -148,7 +148,7 @@ coderoad/
 - Node.js 20+
 - npm
 - A separately hosted or managed Judge0 endpoint for real code execution
-- Optional: a fresh OpenAI API key for live OpenAI candidates
+- Optional: a fresh NVIDIA NIM key for live NIM candidates
 
 Do not reuse any key that has appeared in a chat, commit, screenshot, or public
 deployment file. Revoke it and create a fresh key.
@@ -186,18 +186,19 @@ For a low-volume local smoke test, Judge0's public CE endpoint documents
 `wait=true` submissions. Do not send private source code to a public service;
 use a runner you control for production.
 
-Optional live OpenAI generation:
+Optional live NVIDIA NIM generation:
 
 ```env
-OPENAI_API_KEY=your-fresh-key
-OPENAI_MODEL=gpt-4.1-mini
-OPENAI_TIMEOUT_SECONDS=20
-OPENAI_CACHE_MAX_ENTRIES=128
+NVIDIA_NIM_KEY=your-fresh-key
+NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-pro
+NVIDIA_NIM_TIMEOUT_SECONDS=20
+NVIDIA_NIM_CACHE_MAX_ENTRIES=128
 ATTACK_ROUND_MAX_CANDIDATES=12
 ```
 
-Without `OPENAI_API_KEY`, the arena uses its transparent deterministic boundary
-library and consumes zero OpenAI credits. Without `JUDGE0_API_URL`, execution
+Without `NVIDIA_NIM_KEY`, the arena uses its transparent deterministic boundary
+library and makes no NVIDIA NIM requests. Without `JUDGE0_API_URL`, execution
 fails closed; it never falls back to running player code on the web server.
 
 Start the API:
@@ -231,11 +232,11 @@ trust boundary.
 ```bash
 export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 export JUDGE0_API_URL="https://your-judge0-host.example"
-export OPENAI_API_KEY=""
+export NVIDIA_NIM_KEY=""
 docker compose up --build
 ```
 
-Set a fresh `OPENAI_API_KEY` only when you want live model generation.
+Set a fresh `NVIDIA_NIM_KEY` only when you want live model generation.
 
 ## API
 
@@ -318,7 +319,7 @@ The test suite covers:
 - duplicate and invalid candidate rejection;
 - verified witness selection;
 - baseline qualification;
-- exactly one typed Responses API call;
+- exactly one typed NVIDIA NIM streaming Chat Completions call;
 - identical-pair model caching;
 - Judge0 request/resource-limit normalization;
 - fail-closed behavior when Judge0 is missing;
@@ -334,7 +335,7 @@ The test suite covers:
 secret manager:
 
 - `DATABASE_URL`
-- `OPENAI_API_KEY` (optional but required for live OpenAI candidate generation)
+- `NVIDIA_NIM_KEY` (optional but required for live NVIDIA NIM candidate generation)
 - `JUDGE0_API_URL`
 - `JUDGE0_AUTH_TOKEN` when the runner requires it
 
@@ -387,7 +388,7 @@ challenge generation, persistence, and the visual language of the landing page.
 ### Work added during Build Week
 
 The `build-week/attack-round` branch adds the Adversarial Test Arena, the typed
-OpenAI integration, deterministic problem contract and oracle, verified witness
+NVIDIA NIM integration, deterministic problem contract and oracle, verified witness
 engine, Judge0-only execution boundary, zero-credit fallback, cache, complete
 Attack Arena UI, real public statistics, integrity-claim corrections, deployment
 secret cleanup, migration-surface removal, tests, and current documentation.
@@ -400,7 +401,7 @@ verification ledger.
 - One adversarial problem contract is productionized today.
 - Python is the only supported Attack Arena language.
 - Live arbitrary execution requires an available Judge0 service.
-- The zero-credit candidate library is deterministic, not an OpenAI model.
+- The zero-credit candidate library is deterministic, not an NVIDIA NIM model.
 - The cache is per backend process and is not shared across multiple workers.
 - Attack results are returned to the client but are not yet persisted.
 - The system finds counterexamples in a bounded candidate set; it does not prove
@@ -417,7 +418,7 @@ those credentials.
 
 ## Further reading
 
-- [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+- [NVIDIA NIM](https://build.nvidia.com/)
 - [Judge0 official repository](https://github.com/judge0/judge0)
 - [Judge0 CE API documentation](https://ce.judge0.com/)
 

@@ -27,7 +27,7 @@ class CandidateInput(BaseModel):
 
 
 class CandidateBatch(BaseModel):
-    """Structured output returned by the configured OpenAI model in one bounded call."""
+    """Structured output returned by the configured NVIDIA NIM model in one bounded call."""
 
     candidates: list[CandidateInput] = Field(min_length=1, max_length=12)
 
@@ -87,7 +87,7 @@ class AttackTrial(BaseModel):
 
 class AttackRoundResponse(BaseModel):
     problem: AttackProblem
-    generation_source: Literal["openai", "deterministic-fallback"]
+    generation_source: Literal["nvidia-nim", "deterministic-fallback"]
     model: Optional[str] = None
     generation_note: str
     baseline_passed: bool

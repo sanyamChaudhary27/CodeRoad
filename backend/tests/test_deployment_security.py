@@ -11,8 +11,9 @@ def test_render_blueprint_contains_no_inline_secrets() -> None:
 
     assert "sk-" not in blueprint
     assert "postgresql://" not in blueprint
-    for key in ("DATABASE_URL", "OPENAI_API_KEY", "JUDGE0_API_URL", "JUDGE0_AUTH_TOKEN"):
+    for key in ("DATABASE_URL", "NVIDIA_NIM_KEY", "JUDGE0_AUTH_TOKEN"):
         assert re.search(rf"- key: {key}\n\s+sync: false", blueprint)
+    assert re.search(r"- key: JUDGE0_API_URL\n\s+value: https://ce\.judge0\.com", blueprint)
     assert re.search(r"- key: SECRET_KEY\n\s+generateValue: true", blueprint)
 
 

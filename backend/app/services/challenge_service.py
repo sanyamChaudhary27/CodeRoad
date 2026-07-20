@@ -131,7 +131,7 @@ class ChallengeService:
                 try:
                     challenge_data = self._take_prewarmed_template('dsa', difficulty)
                     if challenge_data:
-                        challenge_data['generation_method'] = 'openai_selected_template'
+                        challenge_data['generation_method'] = 'nvidia_nim_selected_template'
                     else:
                         logger.info(f"Using template generation for {difficulty} challenge")
                         challenge_data = self._generate_template_challenge(difficulty, domain)
@@ -506,7 +506,7 @@ Generate a problem appropriate for rating {player_rating}!"""
         return challenge
 
     def _take_prewarmed_template(self, challenge_type: str, difficulty: str) -> Optional[Dict[str, Any]]:
-        """Return an OpenAI-selected local template without making a network request."""
+        """Return a NIM-selected local template without making a network request."""
         with self._prewarm_lock:
             templates = self._prewarmed_templates[(challenge_type, difficulty)]
             if not templates:
@@ -520,8 +520,8 @@ Generate a problem appropriate for rating {player_rating}!"""
         return template
 
     def prewarm_template(self, challenge_type: str, difficulty: str) -> None:
-        """Schedule one bounded OpenAI template selection for a future match."""
-        if not settings.OPENAI_API_KEY:
+        """Schedule one bounded NVIDIA NIM template selection for a future match."""
+        if not settings.NVIDIA_NIM_KEY:
             return
 
         key = (challenge_type, difficulty)
@@ -545,30 +545,43 @@ Generate a problem appropriate for rating {player_rating}!"""
             candidates = [template for template in templates if template['difficulty'] == difficulty] or templates
             titles = [template['title'] for template in candidates]
             client = OpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                timeout=settings.OPENAI_TIMEOUT_SECONDS,
+                base_url=settings.NVIDIA_NIM_BASE_URL,
+                api_key=settings.NVIDIA_NIM_KEY,
+                timeout=settings.NVIDIA_NIM_TIMEOUT_SECONDS,
                 max_retries=0,
             )
-            response = client.responses.create(
-                model=settings.OPENAI_MODEL,
-                input=(
-                    "Select exactly one challenge title from this JSON array for the next "
-                    f"{difficulty} {challenge_type} match. Return only the exact title. "
-                    f"Titles: {json.dumps(titles)}"
-                ),
-                max_output_tokens=64,
-                store=False,
+            response = client.chat.completions.create(
+                model=settings.NVIDIA_NIM_MODEL,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            "Return only one exact challenge title from this list for the next "
+                            f"{difficulty} {challenge_type} match. Titles: {json.dumps(titles)}"
+                        ),
+                    }
+                ],
+                temperature=0,
+                top_p=0.95,
+                max_tokens=64,
+                extra_body={"chat_template_kwargs": {"thinking": False}},
+                stream=True,
             )
-            title = response.output_text.strip()
+            title = "".join(
+                chunk.choices[0].delta.content
+                for chunk in response
+                if getattr(chunk, "choices", None)
+                and chunk.choices[0].delta.content is not None
+            ).strip()
             selected = next((template for template in candidates if template['title'] == title), None)
             if selected is None:
-                logger.warning("OpenAI prewarm returned an unknown template title")
+                logger.warning("NVIDIA NIM prewarm returned an unknown template title")
                 return
             with self._prewarm_lock:
                 self._prewarmed_templates[key].append(selected.copy())
-            logger.info("Prewarmed %s %s template with OpenAI", difficulty, challenge_type)
+            logger.info("Prewarmed %s %s template with NVIDIA NIM", difficulty, challenge_type)
         except Exception:
-            logger.exception("OpenAI template prewarm failed; deterministic templates remain available")
+            logger.exception("NVIDIA NIM template prewarm failed; deterministic templates remain available")
         finally:
             with self._prewarm_lock:
                 self._prewarming.discard(key)
@@ -680,7 +693,7 @@ Generate a problem appropriate for rating {player_rating}!"""
                 try:
                     challenge_data = self._take_prewarmed_template('debug', difficulty)
                     if challenge_data:
-                        challenge_data['generation_method'] = 'openai_selected_template'
+                        challenge_data['generation_method'] = 'nvidia_nim_selected_template'
                     else:
                         logger.info(f"Using template generation for {difficulty} debug challenge")
                         challenge_data = self._generate_template_debug_challenge(difficulty, recent_titles)

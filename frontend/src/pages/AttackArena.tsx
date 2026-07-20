@@ -136,10 +136,10 @@ const AttackArena = () => {
 
         <section className="attack-hero">
           <div>
-            <div className="attack-eyebrow"><Sparkles size={15} /> Build Week · OpenAI-assisted</div>
+            <div className="attack-eyebrow"><Sparkles size={15} /> Build Week · NVIDIA NIM-assisted</div>
             <h1>Passing tests is only the <span>first round.</span></h1>
             <p>
-              Both solutions clear the ordinary suite. Cached OpenAI hypotheses and deterministic
+              Both solutions clear the ordinary suite. Cached NVIDIA hypotheses and deterministic
               templates attack their assumptions; isolated tools decide what is actually true.
             </p>
           </div>
@@ -240,7 +240,7 @@ const AttackArena = () => {
               <>
                 <div className="attack-stage-heading attack-stage-heading--second">
                   <div><span>02</span><div><small>ADVERSARIAL SWARM</small><h2>{result.candidates_verified} verified attacks</h2></div></div>
-                  <div className="attack-source"><CircleDot size={14} />{result.generation_source === 'openai' ? result.model : 'Zero-credit fallback'}</div>
+                  <div className="attack-source"><CircleDot size={14} />{result.generation_source === 'nvidia-nim' ? result.model : 'Zero-credit fallback'}</div>
                 </div>
                 <p className="attack-generation-note">{result.generation_note}</p>
 

@@ -42,7 +42,7 @@ export interface AttackTrial extends BaselineTrial {
 
 export interface AttackRoundResponse {
   problem: AttackProblem;
-  generation_source: 'openai' | 'deterministic-fallback';
+  generation_source: 'nvidia-nim' | 'deterministic-fallback';
   model: string | null;
   generation_note: string;
   baseline_passed: boolean;

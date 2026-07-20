@@ -81,8 +81,8 @@ class FixedGenerator:
                     ),
                 ]
             ),
-            source="openai",
-            model="gpt-4.1-mini",
+            source="nvidia-nim",
+            model="deepseek-ai/deepseek-v4-pro",
             note="typed hypotheses",
         )
 

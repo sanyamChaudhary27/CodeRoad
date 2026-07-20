@@ -84,14 +84,22 @@ class Settings(BaseSettings):
     JUDGE0_AUTH_HEADER: str = os.getenv("JUDGE0_AUTH_HEADER", "X-Auth-Token")
     JUDGE0_PYTHON_LANGUAGE_ID: int = int(os.getenv("JUDGE0_PYTHON_LANGUAGE_ID", "71"))
 
-    # OpenAI powers hypothesis generation only. Candidate counterexamples still
-    # have to pass deterministic validation and isolated execution.
-    OPENAI_API_KEY: Optional[str] = (
-        os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_AI_API_KEY") or None
+    # NVIDIA NIM powers optional hypothesis generation. Candidate
+    # counterexamples still have to pass deterministic validation and isolated
+    # execution.
+    NVIDIA_NIM_KEY: Optional[str] = os.getenv("NVIDIA_NIM_KEY") or None
+    NVIDIA_NIM_BASE_URL: str = os.getenv(
+        "NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"
+    ).rstrip("/")
+    NVIDIA_NIM_MODEL: str = os.getenv(
+        "NVIDIA_NIM_MODEL", "deepseek-ai/deepseek-v4-pro"
     )
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-    OPENAI_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "20"))
-    OPENAI_CACHE_MAX_ENTRIES: int = int(os.getenv("OPENAI_CACHE_MAX_ENTRIES", "128"))
+    NVIDIA_NIM_TIMEOUT_SECONDS: float = float(
+        os.getenv("NVIDIA_NIM_TIMEOUT_SECONDS", "20")
+    )
+    NVIDIA_NIM_CACHE_MAX_ENTRIES: int = int(
+        os.getenv("NVIDIA_NIM_CACHE_MAX_ENTRIES", "128")
+    )
     ATTACK_ROUND_MAX_CANDIDATES: int = int(os.getenv("ATTACK_ROUND_MAX_CANDIDATES", "12"))
     ATTACK_ROUND_EXECUTION_WORKERS: int = int(os.getenv("ATTACK_ROUND_EXECUTION_WORKERS", "4"))
     
