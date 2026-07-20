@@ -373,7 +373,7 @@ Before a public demo, confirm:
 - worker CPU, wall-time, memory, process, and file limits are enforced;
 - the Attack Arena returns the expected witness for the preloaded duel.
 
-## Build Week provenance
+## OpenAI Build Week provenance
 
 CodeRoad was created by Sanyam Chaudhary before OpenAI Build Week. It is being
 used as a pre-existing foundation, not presented as a new-from-scratch project.
@@ -387,11 +387,26 @@ challenge generation, persistence, and the visual language of the landing page.
 
 ### Work added during Build Week
 
-The `build-week/attack-round` branch adds the Adversarial Test Arena, the typed
-NVIDIA NIM integration, deterministic problem contract and oracle, verified witness
-engine, Judge0-only execution boundary, zero-credit fallback, cache, complete
-Attack Arena UI, real public statistics, integrity-claim corrections, deployment
-secret cleanup, migration-surface removal, tests, and current documentation.
+The release adds the Adversarial Test Arena, the typed NVIDIA NIM integration,
+deterministic problem contract and oracle, verified witness engine, Judge0-only
+execution boundary, zero-credit fallback, cache, complete Attack Arena UI, real
+public statistics, integrity-claim corrections, deployment secret cleanup,
+migration-surface removal, and automated tests.
+
+### How Codex and GPT-5.6 were used
+
+This project was developed with Codex using **GPT-5.6 Terra (High)** for
+implementation, code review, debugging, test planning, and release verification.
+GPT-5.6 is a development tool for this submission; it is **not** the production
+runtime model in CodeRoad. The deployed app uses NVIDIA NIM for optional,
+bounded candidate generation and keeps a deterministic fallback when NIM is
+unavailable.
+
+For the Build Week submission, the demo video should show the working product
+and explain this development workflow in the team's own words. Include the
+primary Codex feedback session ID, the public code repository, setup steps, and
+the provenance statement above. Do not claim that GPT-5.6 powers a live product
+feature unless the deployed configuration is changed and independently verified.
 
 See [BUILD_WEEK_CHANGES.md](BUILD_WEEK_CHANGES.md) for a file-by-file diff and
 verification ledger.

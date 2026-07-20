@@ -10,6 +10,7 @@
 *.p12
 secrets/
 DEPLOYMENT_SECRETS.md
+railway.env.example
 backend/railway.env.example
 
 # ========================
@@ -37,6 +38,7 @@ MANIFEST
 # Virtual environments
 venv/
 .venv/
+.venv-*/
 env/
 .env/
 ENV/

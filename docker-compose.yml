@@ -8,6 +8,11 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -18,10 +23,15 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - DEBUG=true
       - SECRET_KEY=${SECRET_KEY:-local-development-only-do-not-deploy}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
+      - NVIDIA_NIM_KEY=${NVIDIA_NIM_KEY:-}
+      - NVIDIA_NIM_BASE_URL=${NVIDIA_NIM_BASE_URL:-https://integrate.api.nvidia.com/v1}
+      - NVIDIA_NIM_MODEL=${NVIDIA_NIM_MODEL:-deepseek-ai/deepseek-v4-flash}
+      - NVIDIA_NIM_TIMEOUT_SECONDS=${NVIDIA_NIM_TIMEOUT_SECONDS:-20}
+      - NVIDIA_NIM_CACHE_MAX_ENTRIES=${NVIDIA_NIM_CACHE_MAX_ENTRIES:-128}
       - JUDGE0_API_URL=${JUDGE0_API_URL:-}
       - JUDGE0_AUTH_TOKEN=${JUDGE0_AUTH_TOKEN:-}
+      - JUDGE0_AUTH_HEADER=${JUDGE0_AUTH_HEADER:-X-Auth-Token}
+      - JUDGE0_PYTHON_LANGUAGE_ID=${JUDGE0_PYTHON_LANGUAGE_ID:-71}
       - PYTHONPATH=/app
     depends_on:
       redis:
