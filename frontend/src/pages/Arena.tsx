@@ -611,6 +611,7 @@ const Arena = () => {
   }
 
   const isSubmitting = status === 'submitting' || status === 'polling';
+  const isWrongAnswer = submissionResult?.error_details?.startsWith('Wrong answer:') ?? false;
 
   return (
     <div className="bg-mesh-background min-h-screen">
@@ -831,9 +832,9 @@ const Arena = () => {
                  {submissionResult && (
                    <div className="space-y-4 animate-fade-in">
                      <div className="flex items-center gap-3 border-b border-border-light pb-3">
-                       {submissionResult.status === 'success' ? <CheckCircle2 size={24} className="text-success" /> : <XCircle size={24} className="text-danger" />}
-                       <span className={`text-xl font-bold ${submissionResult.status === 'success' ? 'text-success' : 'text-danger'}`}>
-                         {submissionResult.status === 'success' ? 'Tests Passed' : 'Execution Error'}
+                       {submissionResult.status === 'success' ? <CheckCircle2 size={24} className="text-success" /> : <XCircle size={24} className={isWrongAnswer ? 'text-warning' : 'text-danger'} />}
+                       <span className={`text-xl font-bold ${submissionResult.status === 'success' ? 'text-success' : isWrongAnswer ? 'text-warning' : 'text-danger'}`}>
+                         {submissionResult.status === 'success' ? 'Tests Passed' : isWrongAnswer ? 'Wrong Answer' : 'Execution Error'}
                        </span>
                      </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
