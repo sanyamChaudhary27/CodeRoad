@@ -82,7 +82,7 @@ class FixedGenerator:
                 ]
             ),
             source="nvidia-nim",
-            model="deepseek-ai/deepseek-v4-pro",
+            model="deepseek-ai/deepseek-v4-flash",
             note="typed hypotheses",
         )
 
