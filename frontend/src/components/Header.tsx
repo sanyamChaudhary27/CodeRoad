@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Swords, Trophy } from 'lucide-react';
 import { authService, type User } from '../services/authService';
+import './Header.css';
 
 interface HeaderProps {
   user: User;
@@ -16,79 +17,69 @@ const Header = ({ user, showLeaderboard = true }: HeaderProps) => {
   };
 
   return (
-    <header className="flex-between mb-8 glass-panel px-6 py-3 relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 animate-gradient"></div>
-      
-      {/* Left side - Logo + Brand */}
-      <div className="flex items-center relative z-10">
-        <div 
-          className="relative cursor-pointer group/logo flex items-center gap-3"
-          onClick={() => navigate('/dashboard')}
-        >
-          {/* Logo container - Perfect square */}
-          <div className="relative h-12 w-12 flex-center group-hover/logo:scale-110 transition-transform">
-            <img src="/logo.svg" alt="CodeRoad" className="h-full w-full object-contain drop-shadow-lg" />
-          </div>
-          {/* Brand name */}
-          <span className="text-2xl font-black text-gradient group-hover/logo:text-primary transition-colors">
-            CodeRoad
-          </span>
-        </div>
-      </div>
-      
-      {/* Right side - Actions */}
-      <div className="flex items-center gap-4 relative z-10">
+    <header className="app-header">
+      <button
+        type="button"
+        className="app-header__brand"
+        onClick={() => navigate('/dashboard')}
+        aria-label="Go to dashboard"
+      >
+        <img src="/logo.svg" alt="" className="app-header__logo" />
+        <span>CodeRoad</span>
+      </button>
+
+      <nav className="app-header__nav" aria-label="Primary navigation">
         <button
+          type="button"
           onClick={() => navigate('/attack-arena')}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-danger/20 to-accent/10 border border-danger/40 hover:border-danger/70 transition-all text-white font-bold shadow-lg hover:scale-105 group"
+          className="app-header__link app-header__link--attack"
         >
-          <Swords size={19} className="text-danger group-hover:rotate-12 transition-transform" />
-          <span>Attack Arena</span>
+          <Swords size={16} />
+          <span>Attack</span>
         </button>
         {showLeaderboard && (
-          <button 
+          <button
+            type="button"
             onClick={() => navigate('/leaderboard')}
-            className="flex items-center gap-3 px-10 py-4 rounded-xl bg-gradient-to-r from-warning/20 to-warning/10 border border-warning/40 hover:border-warning/60 hover:from-warning/30 hover:to-warning/20 transition-all text-warning font-bold shadow-lg hover:shadow-warning/20 hover:scale-105 group min-w-[200px] justify-center"
+            className="app-header__link"
           >
-            <Trophy size={20} className="group-hover:rotate-12 transition-transform" />
-            <span>Leaderboard</span>
+            <Trophy size={16} />
+            <span>Rankings</span>
           </button>
         )}
-        
-        <button 
+
+        <button
+          type="button"
           onClick={() => navigate('/profile')}
-          className="flex items-center gap-4 px-6 py-4 rounded-xl hover:bg-white/10 transition-all border border-white/10 hover:border-primary/40 group"
+          className="app-header__profile"
         >
-          <div className="text-right">
-            <p className="text-white font-bold text-sm group-hover:text-primary transition-colors">{user.username}</p>
-            <p className="text-xs text-text-muted">View Profile</p>
-          </div>
+          <span className="app-header__identity">
+            <strong>{user.username}</strong>
+            <small>Profile</small>
+          </span>
           {user.profile_picture ? (
-            <img 
-              src={user.profile_picture} 
+            <img
+              src={user.profile_picture}
               alt={user.username}
-              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px' }}
-              className="rounded-full object-cover shadow-lg border-2 border-primary/50 group-hover:border-primary transition-all shrink-0 group-hover:scale-110"
+              className="app-header__avatar"
             />
           ) : (
-            <div 
-              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
-              className="rounded-full bg-gradient-to-br from-primary to-accent flex-center text-white font-bold shadow-lg border-2 border-primary/50 group-hover:border-primary transition-all shrink-0 group-hover:scale-110"
-            >
+            <span className="app-header__avatar app-header__avatar--fallback">
               {user.username.charAt(0).toUpperCase()}
-            </div>
+            </span>
           )}
         </button>
-        
-        <button 
-          onClick={handleLogout} 
-          className="text-text-muted hover:text-danger transition-all p-4 rounded-xl hover:bg-danger/10 border border-transparent hover:border-danger/40 group"
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="app-header__logout"
           title="Logout"
+          aria-label="Logout"
         >
-          <LogOut size={22} className="group-hover:scale-110 transition-transform" />
+          <LogOut size={18} />
         </button>
-      </div>
+      </nav>
     </header>
   );
 };
