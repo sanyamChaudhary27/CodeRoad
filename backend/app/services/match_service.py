@@ -250,7 +250,7 @@ class MatchService:
                 
                 # Automatically start competitive matches
                 self.start_match(match_data["match_id"])
-                challenge_service.prewarm_template(challenge_type, difficulty)
+                challenge_service.prewarm_challenge(challenge_type, difficulty)
                 
                 return {
                     "player_id": player_id,
@@ -499,7 +499,7 @@ class MatchService:
                     player_id=player_id,
                     use_ai=False,
                 )
-            challenge_service.prewarm_template(challenge_type, difficulty)
+            challenge_service.prewarm_challenge(challenge_type, difficulty)
         
         # Create WebSocket room ID
         websocket_room = f"match_solo_{uuid.uuid4().hex[:16]}"

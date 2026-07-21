@@ -31,6 +31,14 @@ async def lifespan(app: FastAPI):
     # Production data must be migrated through an authenticated, reviewed job.
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables created successfully")
+
+    if settings.NVIDIA_NIM_KEY:
+        from .services.challenge_service import get_challenge_service
+
+        challenge_service = get_challenge_service()
+        for challenge_type in ("dsa", "debug"):
+            challenge_service.prewarm_challenge(challenge_type, "beginner")
+        logger.info("Scheduled NVIDIA NIM challenge prewarming")
     
     yield
     

@@ -22,11 +22,11 @@ class ChallengeService:
         self.groq_clients = []
         self.current_key_index = 0
         self._recently_used_titles: Set[str] = set()
-        self._prewarmed_templates: DefaultDict[Tuple[str, str], List[Dict[str, Any]]] = defaultdict(list)
+        self._prewarmed_challenges: DefaultDict[Tuple[str, str], List[Dict[str, Any]]] = defaultdict(list)
         self._prewarming: Set[Tuple[str, str]] = set()
         self._prewarm_lock = Lock()
         self._prewarm_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="challenge-prewarm")
-        logger.info("ChallengeService initialized with deterministic live-match templates")
+        logger.info("ChallengeService initialized with NVIDIA NIM prewarming and deterministic fallbacks")
         
         self.templates = self._load_templates()
         
@@ -129,9 +129,9 @@ class ChallengeService:
             # Fall back to templates if AI fails or disabled
             if not challenge_data:
                 try:
-                    challenge_data = self._take_prewarmed_template('dsa', difficulty)
+                    challenge_data = self._take_prewarmed_challenge('dsa', difficulty)
                     if challenge_data:
-                        challenge_data['generation_method'] = 'nvidia_nim_selected_template'
+                        challenge_data['generation_method'] = 'nvidia_nim'
                     else:
                         logger.info(f"Using template generation for {difficulty} challenge")
                         challenge_data = self._generate_template_challenge(difficulty, domain)
@@ -159,6 +159,7 @@ class ChallengeService:
                 time_limit_seconds=challenge_data.get('time_limit_seconds', 5),
                 boilerplate_code=challenge_data.get('boilerplate_code', ''),
                 test_cases=json.dumps(challenge_data.get('test_cases', [])),
+                generated_by_ai=challenge_data.get('generation_method') == 'nvidia_nim',
                 coverage_metrics=json.dumps(challenge_data.get('coverage_metrics', {}))
             )
             db.add(new_challenge)
@@ -505,45 +506,38 @@ Generate a problem appropriate for rating {player_rating}!"""
         
         return challenge
 
-    def _take_prewarmed_template(self, challenge_type: str, difficulty: str) -> Optional[Dict[str, Any]]:
-        """Return a NIM-selected local template without making a network request."""
+    def _take_prewarmed_challenge(self, challenge_type: str, difficulty: str) -> Optional[Dict[str, Any]]:
+        """Return a schema-validated NIM challenge without a network request."""
         with self._prewarm_lock:
-            templates = self._prewarmed_templates[(challenge_type, difficulty)]
-            if not templates:
+            challenges = self._prewarmed_challenges[(challenge_type, difficulty)]
+            if not challenges:
                 return None
-            template = templates.pop(0).copy()
+            challenge = challenges.pop(0).copy()
 
-        template['id'] = str(uuid.uuid4())
-        template['generated_at'] = datetime.utcnow().isoformat()
-        template.setdefault('coverage_metrics', {})
-        template.setdefault('challenge_type', challenge_type)
-        return template
+        challenge['id'] = str(uuid.uuid4())
+        challenge['generated_at'] = datetime.utcnow().isoformat()
+        challenge.setdefault('coverage_metrics', {})
+        challenge.setdefault('challenge_type', challenge_type)
+        return challenge
 
-    def prewarm_template(self, challenge_type: str, difficulty: str) -> None:
-        """Schedule one bounded NVIDIA NIM template selection for a future match."""
+    def prewarm_challenge(self, challenge_type: str, difficulty: str) -> None:
+        """Generate one NVIDIA NIM challenge for a future match without blocking it."""
         if not settings.NVIDIA_NIM_KEY:
             return
 
         key = (challenge_type, difficulty)
         with self._prewarm_lock:
-            if self._prewarmed_templates[key] or key in self._prewarming:
+            if self._prewarmed_challenges[key] or key in self._prewarming:
                 return
             self._prewarming.add(key)
 
-        self._prewarm_executor.submit(self._prewarm_template, challenge_type, difficulty)
+        self._prewarm_executor.submit(self._prewarm_challenge, challenge_type, difficulty)
 
-    def _prewarm_template(self, challenge_type: str, difficulty: str) -> None:
+    def _prewarm_challenge(self, challenge_type: str, difficulty: str) -> None:
         key = (challenge_type, difficulty)
         try:
             from openai import OpenAI
 
-            templates = (
-                self._get_debug_templates()
-                if challenge_type == 'debug'
-                else self.templates
-            )
-            candidates = [template for template in templates if template['difficulty'] == difficulty] or templates
-            titles = [template['title'] for template in candidates]
             client = OpenAI(
                 base_url=settings.NVIDIA_NIM_BASE_URL,
                 api_key=settings.NVIDIA_NIM_KEY,
@@ -552,39 +546,131 @@ Generate a problem appropriate for rating {player_rating}!"""
             )
             response = client.chat.completions.create(
                 model=settings.NVIDIA_NIM_MODEL,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": (
-                            "Return only one exact challenge title from this list for the next "
-                            f"{difficulty} {challenge_type} match. Titles: {json.dumps(titles)}"
-                        ),
-                    }
-                ],
-                temperature=0,
+                messages=[{"role": "user", "content": self._nim_challenge_prompt(challenge_type, difficulty)}],
+                temperature=0.7,
                 top_p=0.95,
-                max_tokens=64,
+                max_tokens=1400 if challenge_type == 'debug' else 1000,
                 extra_body={"chat_template_kwargs": {"thinking": False}},
                 stream=True,
             )
-            title = "".join(
+            content = "".join(
                 chunk.choices[0].delta.content
                 for chunk in response
                 if getattr(chunk, "choices", None)
                 and chunk.choices[0].delta.content is not None
             ).strip()
-            selected = next((template for template in candidates if template['title'] == title), None)
-            if selected is None:
-                logger.warning("NVIDIA NIM prewarm returned an unknown template title")
-                return
+            challenge = self._parse_nim_challenge(content, challenge_type, difficulty)
             with self._prewarm_lock:
-                self._prewarmed_templates[key].append(selected.copy())
-            logger.info("Prewarmed %s %s template with NVIDIA NIM", difficulty, challenge_type)
+                self._prewarmed_challenges[key].append(challenge)
+            logger.info("Prewarmed %s %s challenge with NVIDIA NIM", difficulty, challenge_type)
         except Exception:
-            logger.exception("NVIDIA NIM template prewarm failed; deterministic templates remain available")
+            logger.exception("NVIDIA NIM challenge prewarm failed; deterministic templates remain available")
         finally:
             with self._prewarm_lock:
                 self._prewarming.discard(key)
+
+    @staticmethod
+    def _nim_challenge_prompt(challenge_type: str, difficulty: str) -> str:
+        shared = (
+            "Return exactly one valid JSON object and no markdown. Create a "
+            f"{difficulty} Python coding challenge. It must be self-contained, use a single "
+            "function named solve(arr), and provide four independent correct test cases. Every "
+            "test case input is a space-separated integer array and every expected_output is the "
+            "exact output from the correct implementation. Do not include a reference solution. "
+            "Required JSON fields: title, description, domain, input_format, output_format, "
+            "constraints, test_cases. constraints must be an object. Each test case must contain "
+            "input, expected_output, category, and description."
+        )
+        if challenge_type == 'debug':
+            return shared + (
+                " This is a debugging challenge. Also include broken_code, bug_count, and "
+                "bug_types. broken_code must define solve(arr), contain an intentional bug, and "
+                "not label or explain the bug in comments. Test outputs must be correct outputs."
+            )
+        return shared + (
+            " Also include boilerplate_code containing only def solve(arr), one short comment, "
+            "and a placeholder return value. The description must clearly state the required result."
+        )
+
+    def _parse_nim_challenge(
+        self,
+        content: str,
+        challenge_type: str,
+        difficulty: str,
+    ) -> Dict[str, Any]:
+        if content.startswith("```"):
+            content = "\n".join(content.splitlines()[1:-1]).strip()
+        start = content.find("{")
+        end = content.rfind("}")
+        if start < 0 or end < start:
+            raise ValueError("NVIDIA NIM did not return a JSON object")
+        data = json.loads(content[start:end + 1])
+        if not isinstance(data, dict):
+            raise ValueError("NVIDIA NIM response must be a JSON object")
+
+        required_text = ("title", "description", "domain", "input_format", "output_format")
+        normalized: Dict[str, Any] = {}
+        for field in required_text:
+            value = data.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"NVIDIA NIM challenge is missing {field}")
+            normalized[field] = value.strip()
+        if len(normalized["title"]) > 200 or len(normalized["description"]) < 20:
+            raise ValueError("NVIDIA NIM challenge metadata is out of bounds")
+
+        constraints = data.get("constraints")
+        if not isinstance(constraints, dict):
+            raise ValueError("NVIDIA NIM challenge constraints must be an object")
+        normalized["constraints"] = constraints
+
+        raw_cases = data.get("test_cases")
+        if not isinstance(raw_cases, list) or not 3 <= len(raw_cases) <= 8:
+            raise ValueError("NVIDIA NIM challenge must include three to eight test cases")
+        test_cases = []
+        for index, raw_case in enumerate(raw_cases):
+            if not isinstance(raw_case, dict):
+                raise ValueError("NVIDIA NIM test case must be an object")
+            input_value = raw_case.get("input")
+            output_value = raw_case.get("expected_output")
+            if not isinstance(input_value, (str, int)) or not isinstance(output_value, (str, int, float)):
+                raise ValueError("NVIDIA NIM test case has invalid input or output")
+            test_cases.append({
+                "id": f"tc{index + 1}",
+                "input": str(input_value).strip(),
+                "expected_output": str(output_value).strip(),
+                "category": str(raw_case.get("category", "basic"))[:40],
+                "description": str(raw_case.get("description", "Generated test case"))[:200],
+                "is_hidden": index >= 2,
+            })
+        if any(not case["input"] or not case["expected_output"] for case in test_cases):
+            raise ValueError("NVIDIA NIM test cases cannot be empty")
+
+        normalized.update({
+            "id": str(uuid.uuid4()),
+            "difficulty": difficulty,
+            "challenge_type": challenge_type,
+            "time_limit_seconds": 300,
+            "test_cases": test_cases,
+            "example_input": test_cases[0]["input"],
+            "example_output": test_cases[0]["expected_output"],
+            "coverage_metrics": {},
+        })
+        if challenge_type == 'debug':
+            broken_code = data.get("broken_code")
+            if not isinstance(broken_code, str) or "def solve(" not in broken_code:
+                raise ValueError("NVIDIA NIM debug challenge must define solve(arr)")
+            bug_types = data.get("bug_types", [])
+            if not isinstance(bug_types, list):
+                raise ValueError("NVIDIA NIM debug bug_types must be a list")
+            normalized.update({
+                "broken_code": broken_code.strip(),
+                "bug_count": max(1, min(int(data.get("bug_count", 1)), 5)),
+                "bug_types": [str(item)[:80] for item in bug_types[:5]],
+            })
+        else:
+            boilerplate = data.get("boilerplate_code", "def solve(arr):\n    # Write your solution here\n    return 0")
+            normalized["boilerplate_code"] = self._clean_boilerplate(str(boilerplate))
+        return normalized
     
     def _generate_minimal_challenge(self, difficulty: str) -> Dict[str, Any]:
         """Generate minimal fallback challenge"""
@@ -691,9 +777,9 @@ Generate a problem appropriate for rating {player_rating}!"""
             # Fall back to debug templates
             if not challenge_data:
                 try:
-                    challenge_data = self._take_prewarmed_template('debug', difficulty)
+                    challenge_data = self._take_prewarmed_challenge('debug', difficulty)
                     if challenge_data:
-                        challenge_data['generation_method'] = 'nvidia_nim_selected_template'
+                        challenge_data['generation_method'] = 'nvidia_nim'
                     else:
                         logger.info(f"Using template generation for {difficulty} debug challenge")
                         challenge_data = self._generate_template_debug_challenge(difficulty, recent_titles)
@@ -723,6 +809,7 @@ Generate a problem appropriate for rating {player_rating}!"""
                 time_limit_seconds=challenge_data.get('time_limit_seconds', 5),
                 boilerplate_code=challenge_data.get('broken_code', ''),  # For debug, boilerplate IS the broken code
                 test_cases=json.dumps(challenge_data.get('test_cases', [])),
+                generated_by_ai=challenge_data.get('generation_method') == 'nvidia_nim',
                 coverage_metrics=json.dumps(challenge_data.get('coverage_metrics', {}))
             )
             db.add(new_challenge)
