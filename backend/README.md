@@ -45,7 +45,7 @@ uses deterministic challenge/candidate templates:
 ```env
 NVIDIA_NIM_KEY=
 NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
-NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-flash
+NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-pro
 NVIDIA_NIM_TIMEOUT_SECONDS=20
 NVIDIA_NIM_CACHE_MAX_ENTRIES=128
 ```

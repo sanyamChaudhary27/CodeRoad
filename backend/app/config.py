@@ -92,7 +92,7 @@ class Settings(BaseSettings):
         "NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"
     ).rstrip("/")
     NVIDIA_NIM_MODEL: str = os.getenv(
-        "NVIDIA_NIM_MODEL", "deepseek-ai/deepseek-v4-flash"
+        "NVIDIA_NIM_MODEL", "deepseek-ai/deepseek-v4-pro"
     )
     NVIDIA_NIM_TIMEOUT_SECONDS: float = float(
         os.getenv("NVIDIA_NIM_TIMEOUT_SECONDS", "20")

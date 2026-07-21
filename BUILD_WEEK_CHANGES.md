@@ -35,8 +35,8 @@ does not require the app to make an OpenAI API call at runtime.
 ### Production runtime
 
 The deployed application uses NVIDIA NIM's OpenAI-compatible API for optional,
-bounded hypothesis generation and future challenge-template prewarming. The
-default configured model is `deepseek-ai/deepseek-v4-flash`.
+bounded hypothesis generation and future AI challenge prewarming. The default
+configured model is `deepseek-ai/deepseek-v4-pro`.
 
 The model is never the source of truth:
 
@@ -101,7 +101,7 @@ DATABASE_URL=postgresql://...
 SECRET_KEY=replace-with-a-unique-secret
 NVIDIA_NIM_KEY=optional-key
 NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
-NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-flash
+NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-pro
 NVIDIA_NIM_TIMEOUT_SECONDS=20
 JUDGE0_API_URL=https://your-private-runner.example
 JUDGE0_AUTH_TOKEN=optional-runner-token

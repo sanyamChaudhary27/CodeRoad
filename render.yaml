@@ -22,7 +22,7 @@ services:
       - key: NVIDIA_NIM_BASE_URL
         value: https://integrate.api.nvidia.com/v1
       - key: NVIDIA_NIM_MODEL
-        value: deepseek-ai/deepseek-v4-flash
+        value: deepseek-ai/deepseek-v4-pro
       - key: JUDGE0_API_URL
         value: https://ce.judge0.com
       - key: JUDGE0_AUTH_TOKEN

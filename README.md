@@ -111,7 +111,7 @@ deterministic path owns all safety- and correctness-critical decisions.
 - Frontend: React 19, TypeScript, Vite 7, Monaco Editor, Lucide icons.
 - Backend: FastAPI, Pydantic, SQLAlchemy, PostgreSQL or SQLite.
 - AI: NVIDIA NIM's OpenAI-compatible streaming Chat Completions API with a
-  validated Pydantic `CandidateBatch`; default model `deepseek-ai/deepseek-v4-flash`.
+  validated Pydantic `CandidateBatch`; default model `deepseek-ai/deepseek-v4-pro`.
 - Execution: separately hosted Judge0 CE or managed Judge0.
 - Existing real-time layer: WebSockets and Redis configuration.
 
@@ -191,7 +191,7 @@ Optional live NVIDIA NIM generation:
 ```env
 NVIDIA_NIM_KEY=your-fresh-key
 NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
-NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-flash
+NVIDIA_NIM_MODEL=deepseek-ai/deepseek-v4-pro
 NVIDIA_NIM_TIMEOUT_SECONDS=20
 NVIDIA_NIM_CACHE_MAX_ENTRIES=128
 ATTACK_ROUND_MAX_CANDIDATES=12
