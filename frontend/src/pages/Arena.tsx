@@ -14,6 +14,27 @@ interface ArenaRouteState {
   challengeType?: 'dsa' | 'debug';
 }
 
+const resolveWebSocketBaseUrl = (): string => {
+  const configuredUrl = import.meta.env.VITE_WS_URL?.replace(/\/$/, '');
+  const isSecurePage = window.location.protocol === 'https:';
+
+  if (configuredUrl) {
+    try {
+      const configuredProtocol = new URL(configuredUrl).protocol;
+      if (!isSecurePage || configuredProtocol === 'wss:') {
+        return configuredUrl;
+      }
+      console.warn('Ignoring insecure VITE_WS_URL on an HTTPS page.');
+    } catch {
+      console.warn('Ignoring invalid VITE_WS_URL.');
+    }
+  }
+
+  return isSecurePage
+    ? 'wss://coderoad-gmq6.onrender.com/ws'
+    : 'ws://localhost:8000/ws';
+};
+
 // Final Results Component (Moved to top for hoisting/scope clarity)
 const MatchResults = ({ data, user, onDashboard, challengeType }: { data: MatchDetails, user: User, onDashboard: () => void, challengeType?: 'dsa' | 'debug' }) => {
   const isDraw = data.result === 'draw_draw' || data.result?.includes('draw');
@@ -371,11 +392,17 @@ const Arena = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Use environment variable for WebSocket URL
-    const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
+    const wsBaseUrl = resolveWebSocketBaseUrl();
     const socketUrl = `${wsBaseUrl}/${matchId}`;
-    
-    const socket = new WebSocket(socketUrl, ['coderoad', `coderoad-auth.${token}`]);
+
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(socketUrl, ['coderoad', `coderoad-auth.${token}`]);
+    } catch (socketError) {
+      console.error('WebSocket initialization failed:', socketError);
+      setWs(null);
+      return;
+    }
 
     socket.onopen = () => {
       setWs(socket);
